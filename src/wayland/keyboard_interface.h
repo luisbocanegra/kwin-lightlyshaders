@@ -58,6 +58,7 @@ public:
 
 private:
     void setFocusedSurface(SurfaceInterface *surface, quint32 serial);
+    void setModifierFocusSurface(SurfaceInterface *surface);
     friend class SeatInterface;
     friend class KeyboardInterfacePrivate;
     explicit KeyboardInterface(SeatInterface *seat);
