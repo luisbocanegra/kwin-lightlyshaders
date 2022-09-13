@@ -104,7 +104,7 @@ private:
     std::unique_ptr<QSocketNotifier> m_socketNotifier;
     Session *m_session;
     QVector<DrmAbstractOutput *> m_outputs;
-    DrmVirtualOutput *m_placeHolderOutput = nullptr;
+    QVector<QUuid> m_recentlyUnpluggedDpmsOffOutputs;
 
     bool m_active = false;
     const QStringList m_explicitGpus;
