@@ -11,6 +11,7 @@
 #include <QPointer>
 
 #include "qwayland-server-pointer-constraints-unstable-v1.h"
+#include <QPointer>
 
 namespace KWaylandServer
 {
@@ -40,15 +41,15 @@ class LockedPointerV1InterfacePrivate : public QtWaylandServer::zwp_locked_point
 public:
     static LockedPointerV1InterfacePrivate *get(LockedPointerV1Interface *pointer);
 
-    LockedPointerV1InterfacePrivate(LockedPointerV1Interface *q, SurfaceInterface *surface, LockedPointerV1Interface::LifeTime lifeTime, const QRegion &region, ::wl_resource *resource);
+    LockedPointerV1InterfacePrivate(LockedPointerV1Interface *q, SurfaceInterface *surface, LockedPointerV1Interface::LifeTime lifeTime, const KWin::RegionF &region, ::wl_resource *resource);
 
     void commit();
 
     LockedPointerV1Interface *q;
     QPointer<SurfaceInterface> surface;
     LockedPointerV1Interface::LifeTime lifeTime;
-    QRegion region;
-    QRegion pendingRegion;
+    KWin::RegionF region;
+    KWin::RegionF pendingRegion;
     QPointF hint = QPointF(-1, -1);
     QPointF pendingHint;
     bool hasPendingRegion = false;
@@ -69,7 +70,7 @@ public:
 
     ConfinedPointerV1InterfacePrivate(ConfinedPointerV1Interface *q, SurfaceInterface *surface,
                                       ConfinedPointerV1Interface::LifeTime lifeTime,
-                                      const QRegion &region,
+                                      const KWin::RegionF &region,
                                       ::wl_resource *resource);
 
     void commit();
@@ -77,8 +78,8 @@ public:
     ConfinedPointerV1Interface *q;
     QPointer<SurfaceInterface> surface;
     ConfinedPointerV1Interface::LifeTime lifeTime;
-    QRegion region;
-    QRegion pendingRegion;
+    KWin::RegionF region;
+    KWin::RegionF pendingRegion;
     bool hasPendingRegion = false;
     bool isConfined = false;
 

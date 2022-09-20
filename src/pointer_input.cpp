@@ -592,10 +592,10 @@ void PointerInputRedirection::disconnectPointerConstraintsConnection()
 }
 
 template<typename T>
-static QRegion getConstraintRegion(Window *window, T *constraint)
+static RegionF getConstraintRegion(Window *window, T *constraint)
 {
-    const QRegion windowShape = window->inputShape();
-    const QRegion intersected = constraint->region().isEmpty() ? windowShape : windowShape.intersected(constraint->region());
+    const RegionF windowShape = window->inputShape();
+    const RegionF intersected = constraint->region().isEmpty() ? windowShape : constraint->region() & windowShape;
     return intersected.translated(QPointF(window->pos() + window->clientPos()).toPoint());
 }
 
@@ -634,8 +634,8 @@ void PointerInputRedirection::updatePointerConstraints()
             }
             return;
         }
-        const QRegion r = getConstraintRegion(focus(), cf);
-        if (canConstrain && r.contains(m_pos.toPoint())) {
+        const RegionF r = getConstraintRegion(focus(), cf);
+        if (canConstrain && r.contains(m_pos)) {
             cf->setConfined(true);
             m_confined = true;
             m_confinedPointerRegionConnection = connect(cf, &KWaylandServer::ConfinedPointerV1Interface::regionChanged, this, [this]() {
@@ -647,7 +647,7 @@ void PointerInputRedirection::updatePointerConstraints()
                     return;
                 }
                 const auto cf = s->confinedPointer();
-                if (!getConstraintRegion(focus(), cf).contains(m_pos.toPoint())) {
+                if (!getConstraintRegion(focus(), cf).contains(m_pos)) {
                     // pointer no longer in confined region, break the confinement
                     cf->setConfined(false);
                     m_confined = false;
@@ -678,7 +678,7 @@ void PointerInputRedirection::updatePointerConstraints()
             }
             return;
         }
-        const QRegion r = getConstraintRegion(focus(), lock);
+        const RegionF r = getConstraintRegion(focus(), lock);
         if (canConstrain && r.contains(m_pos.toPoint())) {
             lock->setLocked(true);
             m_locked = true;
@@ -722,7 +722,7 @@ QPointF PointerInputRedirection::applyPointerConfinement(const QPointF &pos) con
         return pos;
     }
 
-    const QRegion confinementRegion = getConstraintRegion(focus(), cf);
+    const RegionF confinementRegion = getConstraintRegion(focus(), cf);
     if (confinementRegion.contains(flooredPoint(pos))) {
         return pos;
     }
