@@ -313,7 +313,7 @@ void DataDeviceInterface::updateDragTarget(SurfaceInterface *surface, quint32 se
     } else if (d->seat->isDragTouch()) {
         pos = d->seat->dragSurfaceTransformation().map(d->seat->firstTouchPointPosition());
     }
-    d->send_enter(serial, surface->resource(), wl_fixed_from_double(pos.x()), wl_fixed_from_double(pos.y()), offer ? offer->resource() : nullptr);
+    d->send_enter(serial, surface->resource(), wl_fixed_from_double(pos.x() * surface->compositorToClientScale()), wl_fixed_from_double(pos.y() * surface->compositorToClientScale()), offer ? offer->resource() : nullptr);
     if (offer) {
         auto matchOffers = [dragSource, offer] {
             const DataDeviceManagerInterface::DnDAction action = chooseDndAction(dragSource, offer);
