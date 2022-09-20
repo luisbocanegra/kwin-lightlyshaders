@@ -10,6 +10,8 @@
 
 #include "qwayland-server-wayland.h"
 
+#include "utils/regionf.h"
+
 namespace KWaylandServer
 {
 class RegionInterface : public QtWaylandServer::wl_region
@@ -19,6 +21,7 @@ public:
     explicit RegionInterface(wl_resource *resource);
 
     QRegion region() const;
+    KWin::RegionF region(double scale) const;
 
 protected:
     void region_destroy_resource(Resource *resource) override;
