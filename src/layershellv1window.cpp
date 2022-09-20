@@ -224,7 +224,7 @@ void LayerShellV1Window::moveResizeInternal(const QRectF &rect, MoveResizeMode m
 
     const QSizeF requestedClientSize = frameSizeToClientSize(rect.size());
     if (requestedClientSize != clientSize()) {
-        m_shellSurface->sendConfigure(rect.size().toSize());
+        m_shellSurface->sendConfigure(rect.size());
     } else {
         updateGeometry(rect);
         return;

@@ -9,6 +9,7 @@
 #include "display.h"
 
 #include <QMargins>
+#include <QSizeF>
 
 namespace KWaylandServer
 {
@@ -93,7 +94,7 @@ public:
     /**
      * Returns the desired size for this layer shell surface, in the surface-local coordinates.
      */
-    QSize desiredSize() const;
+    QSizeF desiredSize() const;
 
     /**
      * Returns the stacking order layer where this layer surface has to be rendered.
@@ -164,7 +165,7 @@ public:
      *
      * @see configureAcknowledged()
      */
-    quint32 sendConfigure(const QSize &size);
+    quint32 sendConfigure(const QSizeF &size);
 
     /**
      * Sends a closed event to the client. The client should destroy the surface after receiving
