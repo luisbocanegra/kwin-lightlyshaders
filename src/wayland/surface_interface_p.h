@@ -127,6 +127,9 @@ public:
     qreal scaleOverride = 1.;
     qreal pendingScaleOverride = 1.;
 
+    double clientToCompositorScale = 1;
+    double compositorToClientScale = 1;
+
     QVector<OutputInterface *> outputs;
 
     LockedPointerV1Interface *lockedPointer = nullptr;
