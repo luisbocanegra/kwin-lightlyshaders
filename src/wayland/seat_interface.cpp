@@ -478,6 +478,7 @@ void SeatInterface::notifyPointerMotion(const QPointF &pos)
     if (focusedSurface != effectiveFocusedSurface) {
         localPosition = focusedSurface->mapToChild(effectiveFocusedSurface, localPosition);
     }
+    localPosition *= effectiveFocusedSurface->compositorToClientScale();
 
     if (d->pointer->focusedSurface() != effectiveFocusedSurface) {
         d->pointer->sendEnter(effectiveFocusedSurface, localPosition, display()->nextSerial());
@@ -529,7 +530,7 @@ void SeatInterface::setDragTarget(AbstractDropHandler *dropTarget,
 
     if (d->drag.target) {
         QMatrix4x4 surfaceInputTransformation = inputTransformation;
-        surfaceInputTransformation.scale(surface->scaleOverride());
+        surfaceInputTransformation.scale(surface->scaleOverride() * surface->compositorToClientScale());
         d->drag.surface = surface;
         d->drag.transformation = surfaceInputTransformation;
         d->drag.target->updateDragTarget(surface, serial);
@@ -598,7 +599,7 @@ void SeatInterface::notifyPointerEnter(SurfaceInterface *surface, const QPointF 
     if (surface != effectiveFocusedSurface) {
         localPosition = surface->mapToChild(effectiveFocusedSurface, localPosition);
     }
-    d->pointer->sendEnter(effectiveFocusedSurface, localPosition, serial);
+    d->pointer->sendEnter(effectiveFocusedSurface, localPosition * effectiveFocusedSurface->compositorToClientScale(), serial);
 }
 
 void SeatInterface::notifyPointerLeave()
@@ -1078,6 +1079,7 @@ void SeatInterface::notifyTouchDown(qint32 id, const QPointF &globalPosition)
     } else if (!effectiveFocusedSurface) {
         effectiveFocusedSurface = focusedTouchSurface();
     }
+    pos *= effectiveFocusedSurface->compositorToClientScale();
     d->touch->sendDown(id, serial, pos, effectiveFocusedSurface);
 
     if (id == 0) {
@@ -1115,6 +1117,7 @@ void SeatInterface::notifyTouchMotion(qint32 id, const QPointF &globalPosition)
     if (effectiveFocusedSurface && focusedTouchSurface() != effectiveFocusedSurface) {
         pos = focusedTouchSurface()->mapToChild(effectiveFocusedSurface, pos);
     }
+    pos *= effectiveFocusedSurface->compositorToClientScale();
 
     if (isDragTouch()) {
         // handled by DataDevice
