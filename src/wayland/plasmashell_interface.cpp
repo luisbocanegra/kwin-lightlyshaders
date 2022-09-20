@@ -39,7 +39,7 @@ public:
 
     QPointer<SurfaceInterface> surface;
     PlasmaShellSurfaceInterface *q;
-    QPoint m_globalPos;
+    QPointF m_globalPos;
     PlasmaShellSurfaceInterface::Role m_role = PlasmaShellSurfaceInterface::Role::Normal;
     PlasmaShellSurfaceInterface::PanelBehavior m_panelBehavior = PlasmaShellSurfaceInterface::PanelBehavior::AlwaysVisible;
     bool m_positionSet = false;
@@ -137,7 +137,7 @@ void PlasmaShellSurfaceInterfacePrivate::org_kde_plasma_surface_set_output(Resou
 
 void PlasmaShellSurfaceInterfacePrivate::org_kde_plasma_surface_set_position(Resource *resource, int32_t x, int32_t y)
 {
-    QPoint globalPos(x, y);
+    QPointF globalPos(x / surface->clientToCompositorScale(), y / surface->clientToCompositorScale());
     if (m_globalPos == globalPos && m_positionSet) {
         return;
     }
@@ -257,7 +257,7 @@ void PlasmaShellSurfaceInterfacePrivate::org_kde_plasma_surface_set_panel_takes_
     Q_EMIT q->panelTakesFocusChanged();
 }
 
-QPoint PlasmaShellSurfaceInterface::position() const
+QPointF KWaylandServer::PlasmaShellSurfaceInterface::position() const
 {
     return d->m_globalPos;
 }

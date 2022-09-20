@@ -69,7 +69,7 @@ public:
     /**
      * @returns the requested position in global coordinates.
      */
-    QPoint position() const;
+    QPointF position() const;
     /**
      * @returns Whether a global position has been requested.
      */
