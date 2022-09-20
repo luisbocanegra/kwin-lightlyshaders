@@ -102,10 +102,11 @@ void SubSurfaceInterfacePrivate::subsurface_destroy(Resource *resource)
 
 void SubSurfaceInterfacePrivate::subsurface_set_position(Resource *resource, int32_t x, int32_t y)
 {
-    if (pendingPosition == QPoint(x, y)) {
+    QPointF pos = QPointF(x, y) / parent->clientToCompositorScale();
+    if (pendingPosition == pos) {
         return;
     }
-    pendingPosition = QPoint(x, y);
+    pendingPosition = pos;
     hasPendingPosition = true;
 }
 
@@ -210,7 +211,7 @@ SubSurfaceInterface::~SubSurfaceInterface()
     }
 }
 
-QPoint SubSurfaceInterface::position() const
+QPointF SubSurfaceInterface::position() const
 {
     return d->position;
 }

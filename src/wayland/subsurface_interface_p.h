@@ -40,8 +40,8 @@ public:
     void parentCommit();
 
     SubSurfaceInterface *q;
-    QPoint position = QPoint(0, 0);
-    QPoint pendingPosition = QPoint(0, 0);
+    QPointF position = QPointF(0, 0);
+    QPointF pendingPosition = QPointF(0, 0);
     SubSurfaceInterface::Mode mode = SubSurfaceInterface::Mode::Synchronized;
     QPointer<SurfaceInterface> surface;
     QPointer<SurfaceInterface> parent;
