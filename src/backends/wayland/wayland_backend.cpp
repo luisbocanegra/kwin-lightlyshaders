@@ -103,7 +103,7 @@ void WaylandCursor::doInstallImage(wl_buffer *image, const QSize &size, qreal sc
     if (!pointer || !pointer->isValid()) {
         return;
     }
-    pointer->setCursor(m_surface.get(), image ? Cursors::self()->currentCursor()->hotspot() : QPoint());
+    pointer->setCursor(m_surface.get(), image ? Cursors::self()->currentCursor()->hotspot().toPoint() : QPoint());
     drawSurface(image, size, scale);
 }
 
@@ -187,8 +187,8 @@ void WaylandSubSurfaceCursor::move(const QPointF &globalPosition)
         return;
     }
     // place the sub-surface relative to the output it is on and factor in the hotspot
-    const auto relativePosition = globalPosition.toPoint() - Cursors::self()->currentCursor()->hotspot() - m_output->geometry().topLeft();
-    m_subSurface->setPosition(relativePosition);
+    const auto relativePosition = globalPosition - Cursors::self()->currentCursor()->hotspot() - m_output->geometry().topLeft();
+    m_subSurface->setPosition(relativePosition.toPoint());
     Compositor::self()->scene()->addRepaintFull();
 }
 

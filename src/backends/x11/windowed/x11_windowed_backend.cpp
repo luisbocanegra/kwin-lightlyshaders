@@ -575,7 +575,7 @@ void X11WindowedBackend::updateSize(xcb_configure_notify_event_t *event)
     Q_EMIT sizeChanged();
 }
 
-void X11WindowedBackend::createCursor(const QImage &srcImage, const QPoint &hotspot)
+void X11WindowedBackend::createCursor(const QImage &srcImage, const QPointF &hotspot)
 {
     xcb_pixmap_t pix = XCB_PIXMAP_NONE;
     xcb_gcontext_t gc = XCB_NONE;

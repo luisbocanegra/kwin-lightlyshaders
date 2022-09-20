@@ -428,7 +428,7 @@ void ScreenCastStream::recordFrame(const QRegion &_damagedRegion)
         auto cursor = Cursors::self()->currentCursor();
         if (m_cursor.mode == KWaylandServer::ScreencastV1Interface::Embedded && m_cursor.viewport.contains(cursor->pos())) {
             QPainter painter(&dest);
-            const auto position = (cursor->pos() - m_cursor.viewport.topLeft() - cursor->hotspot()) * m_cursor.scale;
+            const auto position = ((cursor->pos() - m_cursor.viewport.topLeft() - cursor->hotspot()) * m_cursor.scale).toPoint();
             painter.drawImage(QRect{position, cursor->image().size()}, cursor->image());
         }
     } else {
@@ -679,7 +679,7 @@ QRect ScreenCastStream::cursorGeometry(Cursor *cursor) const
         return {};
     }
 
-    const auto position = (cursor->pos() - m_cursor.viewport.topLeft() - cursor->hotspot()) * m_cursor.scale;
+    const auto position = ((cursor->pos() - m_cursor.viewport.topLeft() - cursor->hotspot()) * m_cursor.scale).toPoint();
     return QRect{position, m_cursor.texture->size()};
 }
 

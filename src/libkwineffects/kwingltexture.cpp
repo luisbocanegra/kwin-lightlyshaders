@@ -506,12 +506,12 @@ void GLTexture::unbind()
     glBindTexture(d->m_target, 0);
 }
 
-void GLTexture::render(const QRect &rect, qreal scale)
+void GLTexture::render(const QRectF &rect, qreal scale)
 {
     render(infiniteRegion(), rect, scale, false);
 }
 
-void GLTexture::render(const QRegion &region, const QRect &rect, qreal scale, bool hardwareClipping)
+void GLTexture::render(const QRegion &region, const QRectF &rect, qreal scale, bool hardwareClipping)
 {
     Q_D(GLTexture);
     if (rect.isEmpty()) {

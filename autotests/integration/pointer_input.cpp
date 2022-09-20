@@ -1676,7 +1676,7 @@ void PointerInputTest::testResizeCursor()
     cursorSurface->attachBuffer(Test::waylandShmPool()->createBuffer(arrowCursor.image()));
     cursorSurface->damage(arrowCursor.image().rect());
     cursorSurface->commit();
-    pointer->setCursor(cursorSurface.get(), arrowCursor.hotSpot());
+    pointer->setCursor(cursorSurface.get(), arrowCursor.hotSpot().toPoint());
     QVERIFY(cursorRenderedSpy.wait());
 
     // start resizing the window
@@ -1689,7 +1689,7 @@ void PointerInputTest::testResizeCursor()
     const PlatformCursorImage resizeCursor = loadReferenceThemeCursor(cursorShape);
     QVERIFY(!resizeCursor.isNull());
     QCOMPARE(kwinApp()->platform()->cursorImage().image(), resizeCursor.image());
-    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot(), resizeCursor.hotSpot());
+    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot().toPoint(), resizeCursor.hotSpot().toPoint());
 
     // finish resizing the window
     Test::keyboardKeyReleased(KEY_LEFTMETA, timestamp++);
@@ -1697,7 +1697,7 @@ void PointerInputTest::testResizeCursor()
     QVERIFY(!window->isInteractiveResize());
 
     QCOMPARE(kwinApp()->platform()->cursorImage().image(), arrowCursor.image());
-    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot(), arrowCursor.hotSpot());
+    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot().toPoint(), arrowCursor.hotSpot().toPoint());
 }
 
 void PointerInputTest::testMoveCursor()
@@ -1745,7 +1745,7 @@ void PointerInputTest::testMoveCursor()
     cursorSurface->attachBuffer(Test::waylandShmPool()->createBuffer(arrowCursor.image()));
     cursorSurface->damage(arrowCursor.image().rect());
     cursorSurface->commit();
-    pointer->setCursor(cursorSurface.get(), arrowCursor.hotSpot());
+    pointer->setCursor(cursorSurface.get(), arrowCursor.hotSpot().toPoint());
     QVERIFY(cursorRenderedSpy.wait());
 
     // start moving the window
@@ -1757,7 +1757,7 @@ void PointerInputTest::testMoveCursor()
     const PlatformCursorImage sizeAllCursor = loadReferenceThemeCursor(Qt::SizeAllCursor);
     QVERIFY(!sizeAllCursor.isNull());
     QCOMPARE(kwinApp()->platform()->cursorImage().image(), sizeAllCursor.image());
-    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot(), sizeAllCursor.hotSpot());
+    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot().toPoint(), sizeAllCursor.hotSpot().toPoint());
 
     // finish moving the window
     Test::keyboardKeyReleased(KEY_LEFTMETA, timestamp++);
@@ -1765,7 +1765,7 @@ void PointerInputTest::testMoveCursor()
     QVERIFY(!window->isInteractiveMove());
 
     QCOMPARE(kwinApp()->platform()->cursorImage().image(), arrowCursor.image());
-    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot(), arrowCursor.hotSpot());
+    QCOMPARE(kwinApp()->platform()->cursorImage().hotSpot().toPoint(), arrowCursor.hotSpot().toPoint());
 }
 
 void PointerInputTest::testHideShowCursor()

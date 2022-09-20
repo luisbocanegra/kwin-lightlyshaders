@@ -442,7 +442,8 @@ void Compositor::addOutput(Output *output)
     auto updateCursorLayer = [output, cursorLayer]() {
         const Cursor *cursor = Cursors::self()->currentCursor();
         cursorLayer->setVisible(cursor->isOnOutput(output) && output->usesSoftwareCursor());
-        cursorLayer->setGeometry(output->mapFromGlobal(cursor->geometry()));
+        // TODO layers need to either be in pixels or fractional logical coordinates
+        cursorLayer->setGeometry(output->mapFromGlobal(cursor->geometry().toRect()));
         cursorLayer->addRepaintFull();
     };
     updateCursorLayer();

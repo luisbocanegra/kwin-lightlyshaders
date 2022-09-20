@@ -185,7 +185,7 @@ public:
     struct Image
     {
         QImage image;
-        QPoint hotspot;
+        QPointF hotspot;
     };
 
     void loadThemeCursor(const CursorShape &shape, Image *cursorImage);
@@ -215,7 +215,7 @@ public:
     void removeWindowSelectionCursor();
 
     QImage image() const;
-    QPoint hotSpot() const;
+    QPointF hotSpot() const;
     void markAsRendered(std::chrono::milliseconds timestamp);
 
 Q_SIGNALS:

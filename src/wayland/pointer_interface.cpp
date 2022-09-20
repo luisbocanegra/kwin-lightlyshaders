@@ -28,10 +28,10 @@ public:
     Cursor *q;
     PointerInterface *pointer;
     quint32 enteredSerial = 0;
-    QPoint hotspot;
+    QPointF hotspot;
     QPointer<SurfaceInterface> surface;
 
-    void update(SurfaceInterface *surface, quint32 serial, const QPoint &hotspot);
+    void update(SurfaceInterface *surface, quint32 serial, const QPointF &hotspot);
 };
 
 PointerInterfacePrivate *PointerInterfacePrivate::get(PointerInterface *pointer)
@@ -84,13 +84,14 @@ void PointerInterfacePrivate::pointer_set_cursor(Resource *resource, uint32_t se
         }
     }
 
+    const double scale = surface ? surface->clientToCompositorScale() : 1;
     if (!cursor) { // TODO: Assign the cursor surface role.
         cursor = new Cursor(q);
-        cursor->d->update(surface, serial, QPoint(hotspot_x, hotspot_y));
+        cursor->d->update(surface, serial, QPointF(hotspot_x, hotspot_y) / scale);
         QObject::connect(cursor, &Cursor::changed, q, &PointerInterface::cursorChanged);
         Q_EMIT q->cursorChanged();
     } else {
-        cursor->d->update(surface, serial, QPoint(hotspot_x, hotspot_y));
+        cursor->d->update(surface, serial, QPointF(hotspot_x, hotspot_y) / scale);
     }
 }
 
@@ -105,7 +106,8 @@ void PointerInterfacePrivate::pointer_bind_resource(Resource *resource)
 
     if (focusedClient && focusedClient->client() == resource->client()) {
         const quint32 serial = seat->display()->nextSerial();
-        send_enter(resource->handle, serial, focusedSurface->resource(), wl_fixed_from_double(lastPosition.x()), wl_fixed_from_double(lastPosition.y()));
+        const QPointF localPosition = focusedSurface->toSurfaceLocal(lastPosition);
+        send_enter(resource->handle, serial, focusedSurface->resource(), wl_fixed_from_double(localPosition.x()), wl_fixed_from_double(localPosition.y()));
         if (resource->version() >= WL_POINTER_FRAME_SINCE_VERSION) {
             send_frame(resource->handle);
         }
@@ -330,7 +332,7 @@ CursorPrivate::CursorPrivate(Cursor *q, PointerInterface *pointer)
 {
 }
 
-void CursorPrivate::update(SurfaceInterface *s, quint32 serial, const QPoint &p)
+void CursorPrivate::update(SurfaceInterface *s, quint32 serial, const QPointF &p)
 {
     bool emitChanged = false;
     if (enteredSerial != serial) {
@@ -374,7 +376,7 @@ quint32 Cursor::enteredSerial() const
     return d->enteredSerial;
 }
 
-QPoint Cursor::hotspot() const
+QPointF Cursor::hotspot() const
 {
     return d->hotspot;
 }

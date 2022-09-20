@@ -193,7 +193,7 @@ public:
         , m_hotSpot()
     {
     }
-    explicit PlatformCursorImage(const QImage &image, const QPoint &hotSpot)
+    explicit PlatformCursorImage(const QImage &image, const QPointF &hotSpot)
         : m_image(image)
         , m_hotSpot(hotSpot)
     {
@@ -208,14 +208,14 @@ public:
     {
         return m_image;
     }
-    QPoint hotSpot() const
+    QPointF hotSpot() const
     {
         return m_hotSpot;
     }
 
 private:
     QImage m_image;
-    QPoint m_hotSpot;
+    QPointF m_hotSpot;
 };
 
 /**

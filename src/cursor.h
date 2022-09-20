@@ -178,19 +178,19 @@ public:
     {
         return m_image;
     }
-    QPoint hotspot() const
+    QPointF hotspot() const
     {
         return m_hotspot;
     }
-    QRect geometry() const;
-    QRect rect() const;
+    QRectF geometry() const;
+    QRectF rect() const;
 
     /**
      * Returns @c true if the cursor is visible on the given output; otherwise returns @c false.
      */
     bool isOnOutput(Output *output) const;
 
-    void updateCursor(const QImage &image, const QPoint &hotspot);
+    void updateCursor(const QImage &image, const QPointF &hotspot);
     void markAsRendered(std::chrono::milliseconds timestamp);
 
 Q_SIGNALS:
@@ -263,7 +263,7 @@ private:
     void loadThemeFromKConfig();
     QHash<QByteArray, xcb_cursor_t> m_cursors;
     QPoint m_pos;
-    QPoint m_hotspot;
+    QPointF m_hotspot;
     QImage m_image;
     int m_mousePollingCounter;
     int m_cursorTrackingCounter;

@@ -180,14 +180,14 @@ bool Cursor::isOnOutput(Output *output) const
     return !image().isNull();
 }
 
-QRect Cursor::geometry() const
+QRectF Cursor::geometry() const
 {
     return rect().translated(m_pos - hotspot());
 }
 
-QRect Cursor::rect() const
+QRectF Cursor::rect() const
 {
-    return QRect(QPoint(0, 0), image().size() / image().devicePixelRatio());
+    return QRectF(QPointF(0, 0), QSizeF(image().size()) / image().devicePixelRatio());
 }
 
 QPoint Cursor::pos()
@@ -216,7 +216,7 @@ void Cursor::setPos(int x, int y)
     setPos(QPoint(x, y));
 }
 
-void Cursor::updateCursor(const QImage &image, const QPoint &hotspot)
+void Cursor::updateCursor(const QImage &image, const QPointF &hotspot)
 {
     m_image = image;
     m_hotspot = hotspot;

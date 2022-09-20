@@ -160,12 +160,12 @@ void DrmOutput::updateCursor()
     }
     bool rendered = false;
     const QMatrix4x4 monitorMatrix = logicalToNativeMatrix(geometry(), scale(), transform());
-    const QRect cursorRect = monitorMatrix.mapRect(cursor->geometry());
+    const QRectF cursorRect = monitorMatrix.mapRect(cursor->geometry());
     if (cursorRect.width() <= m_gpu->cursorSize().width() && cursorRect.height() <= m_gpu->cursorSize().height()) {
         if (const auto beginInfo = layer->beginFrame()) {
             const auto &[renderTarget, repaint] = beginInfo.value();
             if (dynamic_cast<EglGbmBackend *>(m_gpu->platform()->renderBackend())) {
-                renderCursorOpengl(renderTarget, cursor->geometry().size() * scale());
+                renderCursorOpengl(renderTarget, (cursor->geometry().size() * scale()).toSize());
             } else {
                 renderCursorQPainter(renderTarget);
             }
@@ -181,12 +181,12 @@ void DrmOutput::updateCursor()
         return;
     }
 
-    const QSize surfaceSize = m_gpu->cursorSize() / scale();
-    const QRect layerRect = monitorMatrix.mapRect(QRect(cursor->geometry().topLeft(), surfaceSize));
+    const QSizeF surfaceSize = QSizeF(m_gpu->cursorSize()) / scale();
+    const QRect layerRect = monitorMatrix.mapRect(QRectF(cursor->geometry().topLeft(), surfaceSize)).toRect();
     layer->setPosition(layerRect.topLeft());
     layer->setVisible(cursor->geometry().intersects(geometry()));
     if (layer->isVisible()) {
-        m_setCursorSuccessful = m_pipeline->setCursor(logicalToNativeMatrix(QRect(QPoint(), layerRect.size()), scale(), transform()).map(cursor->hotspot()));
+        m_setCursorSuccessful = m_pipeline->setCursor(logicalToNativeMatrix(QRect(QPoint(), layerRect.size()), scale(), transform()).map(cursor->hotspot()).toPoint());
         layer->setVisible(m_setCursorSuccessful);
     }
 }
@@ -206,8 +206,8 @@ void DrmOutput::moveCursor()
         return;
     }
     const QMatrix4x4 monitorMatrix = logicalToNativeMatrix(geometry(), scale(), transform());
-    const QSize surfaceSize = m_gpu->cursorSize() / scale();
-    const QRect cursorRect = monitorMatrix.mapRect(QRect(cursor->geometry().topLeft(), surfaceSize));
+    const QSizeF surfaceSize = QSizeF(m_gpu->cursorSize()) / scale();
+    const QRect cursorRect = monitorMatrix.mapRect(QRectF(cursor->geometry().topLeft(), surfaceSize)).toRect();
     layer->setVisible(true);
     layer->setPosition(cursorRect.topLeft());
     m_moveCursorSuccessful = m_pipeline->moveCursor();
@@ -525,7 +525,7 @@ void DrmOutput::renderCursorQPainter(const RenderTarget &renderTarget)
 
     QPainter p;
     p.begin(c);
-    p.setWorldTransform(logicalToNativeMatrix(cursor->rect(), 1, transform()).toTransform());
+    p.setWorldTransform(logicalToNativeMatrix(cursor->rect().toRect(), 1, transform()).toTransform());
     p.setRenderHint(QPainter::SmoothPixmapTransform);
     p.drawImage(QPoint(0, 0), cursorImage);
     p.end();

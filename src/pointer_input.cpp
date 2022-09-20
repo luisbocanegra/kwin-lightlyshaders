@@ -1340,7 +1340,7 @@ QImage CursorImage::image() const
     }
 }
 
-QPoint CursorImage::hotSpot() const
+QPointF CursorImage::hotSpot() const
 {
     switch (m_currentSource) {
     case CursorSource::EffectsOverride:

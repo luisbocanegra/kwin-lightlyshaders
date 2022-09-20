@@ -142,7 +142,7 @@ private:
     void handleButtonPress(xcb_button_press_event_t *event);
     void handleExpose(xcb_expose_event_t *event);
     void updateSize(xcb_configure_notify_event_t *event);
-    void createCursor(const QImage &img, const QPoint &hotspot);
+    void createCursor(const QImage &img, const QPointF &hotspot);
     void initXInput();
     X11WindowedOutput *findOutput(xcb_window_t window) const;
 
