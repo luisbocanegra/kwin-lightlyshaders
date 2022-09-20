@@ -329,11 +329,6 @@ public:
      * Convert a co-ordinate from kwin logical space to surface logical space
      * @internal
      */
-    QPoint toSurfaceLocal(const QPoint &point) const;
-    /**
-     * Convert a co-ordinate from kwin logical space to surface logical space
-     * @internal
-     */
     QPointF toSurfaceLocal(const QPointF &point) const;
 
 Q_SIGNALS:
