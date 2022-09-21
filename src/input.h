@@ -306,6 +306,7 @@ Q_SIGNALS:
     void hasPointerChanged(bool set);
     void hasTouchChanged(bool set);
     void hasTabletModeSwitchChanged(bool set);
+    void lastInputHandlerChanged();
 
 public Q_SLOTS:
     void addInputDevice(InputDevice *device);

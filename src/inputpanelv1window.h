@@ -76,7 +76,6 @@ public:
     {
         return m_mode;
     }
-    void allow();
     void show();
     void hide();
 

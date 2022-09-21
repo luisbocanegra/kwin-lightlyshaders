@@ -76,6 +76,8 @@ public:
         return m_xkb->modifiersRelevantForGlobalShortcuts();
     }
 
+    InputDevice *lastDevice() const;
+
 Q_SIGNALS:
     void ledsChanged(KWin::LEDs);
 
@@ -86,6 +88,7 @@ private:
     QMetaObject::Connection m_activeWindowSurfaceChangedConnection;
     ModifiersChangedSpy *m_modifiersChangedSpy = nullptr;
     KeyboardLayout *m_keyboardLayout = nullptr;
+    QPointer<InputDevice> m_lastInputDevice;
 };
 
 }
