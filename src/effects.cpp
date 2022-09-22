@@ -2114,6 +2114,7 @@ MANAGED_HELPER(QIcon, icon, icon, QIcon())
 MANAGED_HELPER(bool, isSkipSwitcher, skipSwitcher, false)
 MANAGED_HELPER(bool, decorationHasAlpha, decorationHasAlpha, false)
 MANAGED_HELPER(bool, isUnresponsive, unresponsive, false)
+MANAGED_HELPER(bool, isHidden, isHiddenInternal, true)
 
 #undef MANAGED_HELPER
 

@@ -82,8 +82,14 @@ public:
     QString captionNormal() const override { return m_caption; }
     QString captionSuffix() const override { return {}; }
     bool isCloseable() const override { return false; }
-    bool isShown() const override { return false; }
-    bool isHiddenInternal() const override { return false; }
+    bool isShown() const override
+    {
+        return !m_isHidden;
+    }
+    bool isHiddenInternal() const override
+    {
+        return m_isHidden;
+    }
     void hideClient() override { /* nothing to do */ }
     void showClient() override { /* nothing to do */ }
     Window *findModal(bool /*allow_itself*/) override { return nullptr; }
@@ -167,6 +173,7 @@ private:
     bool m_wasPopupWindow;
     bool m_wasOutline;
     bool m_wasLockScreen;
+    bool m_isHidden;
 };
 
 inline void Deleted::refWindow()
