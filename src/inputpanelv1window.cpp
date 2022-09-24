@@ -45,7 +45,6 @@ InputPanelV1Window::InputPanelV1Window(InputPanelSurfaceV1Interface *panelSurfac
 
 void InputPanelV1Window::showOverlayPanel()
 {
-    setOutput(nullptr);
     m_mode = Overlay;
     if (m_shouldBeShown && surface()->isMapped()) {
         setReadyForPainting();
@@ -58,7 +57,6 @@ void InputPanelV1Window::showTopLevel(OutputInterface *output, InputPanelSurface
 {
     Q_UNUSED(position);
     m_mode = Toplevel;
-    setOutput(output);
     if (m_allowed && m_shouldBeShown && surface()->isMapped()) {
         setReadyForPainting();
         reposition();
@@ -108,17 +106,11 @@ void KWin::InputPanelV1Window::reposition()
         }
 
         QRectF availableArea;
-        QRectF outputArea;
-        if (m_output) {
-            outputArea = m_output->geometry();
-            if (waylandServer()->isScreenLocked()) {
-                availableArea = outputArea;
-            } else {
-                availableArea = workspace()->clientArea(MaximizeArea, this, m_output);
-            }
+        QRectF outputArea = workspace()->activeOutput()->geometry();
+        if (waylandServer()->isScreenLocked()) {
+            availableArea = outputArea;
         } else {
-            availableArea = workspace()->clientArea(MaximizeArea, this);
-            outputArea = workspace()->clientArea(FullScreenArea, this);
+            availableArea = workspace()->clientArea(MaximizeArea, this, workspace()->activeOutput());
         }
 
         panelSize = panelSize.boundedTo(availableArea.size());
@@ -187,19 +179,6 @@ NET::WindowType InputPanelV1Window::windowType(bool, int) const
 QRectF InputPanelV1Window::inputGeometry() const
 {
     return readyForPainting() ? QRectF(surface()->input().boundingRect()).translated(pos()) : QRectF();
-}
-
-void InputPanelV1Window::setOutput(OutputInterface *outputIface)
-{
-    if (m_output) {
-        disconnect(m_output, &Output::geometryChanged, this, &InputPanelV1Window::reposition);
-    }
-
-    m_output = outputIface ? outputIface->handle() : nullptr;
-
-    if (m_output) {
-        connect(m_output, &Output::geometryChanged, this, &InputPanelV1Window::reposition);
-    }
 }
 
 void InputPanelV1Window::moveResizeInternal(const QRectF &rect, MoveResizeMode mode)

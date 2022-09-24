@@ -87,9 +87,7 @@ private:
     void showTopLevel(KWaylandServer::OutputInterface *output, KWaylandServer::InputPanelSurfaceV1Interface::Position position);
     void showOverlayPanel();
     void reposition();
-    void setOutput(KWaylandServer::OutputInterface *output);
 
-    QPointer<Output> m_output;
     Mode m_mode = Toplevel;
     bool m_allowed = false;
     bool m_shouldBeShown = false;
