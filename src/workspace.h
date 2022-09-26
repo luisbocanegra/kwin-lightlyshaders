@@ -183,6 +183,8 @@ public:
     Output *activeOutput() const;
     void setActiveOutput(Output *output);
     void setActiveOutput(const QPointF &pos);
+    void setActiveCursorOutput(Output *output);
+    void setActiveCursorOutput(const QPointF &pos);
 
     /**
      * Returns the active window, i.e. the window that has the focus (or None
@@ -667,6 +669,7 @@ private:
 
     QList<Output *> m_outputs;
     Output *m_activeOutput = nullptr;
+    Output *m_activeCursorOutput = nullptr;
     Output *m_primaryOutput = nullptr;
     QString m_outputsHash;
 
