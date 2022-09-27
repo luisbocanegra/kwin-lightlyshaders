@@ -15,53 +15,17 @@
 #include <QStandardPaths>
 
 #include <KLocalizedString>
+#include <optional>
+
+extern "C" {
+#include <libdisplay-info/edid.h>
+#include <libdisplay-info/info.h>
+}
 
 namespace KWin
 {
 
-static bool verifyHeader(const uint8_t *data)
-{
-    if (data[0] != 0x0 || data[7] != 0x0) {
-        return false;
-    }
-
-    return std::all_of(data + 1, data + 7,
-                       [](uint8_t byte) {
-                           return byte == 0xff;
-                       });
-}
-
-static QSize parsePhysicalSize(const uint8_t *data)
-{
-    // Convert physical size from centimeters to millimeters.
-    return QSize(data[0x15], data[0x16]) * 10;
-}
-
-static QByteArray parsePnpId(const uint8_t *data)
-{
-    // Decode PNP ID from three 5 bit words packed into 2 bytes:
-    //
-    // | Byte |        Bit                    |
-    // |      | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-    // ----------------------------------------
-    // |  1   | 0)| (4| 3 | 2 | 1 | 0)| (4| 3 |
-    // |      | * |    Character 1    | Char 2|
-    // ----------------------------------------
-    // |  2   | 2 | 1 | 0)| (4| 3 | 2 | 1 | 0)|
-    // |      | Character2|      Character 3  |
-    // ----------------------------------------
-    const uint offset = 0x8;
-
-    char pnpId[4];
-    pnpId[0] = 'A' + ((data[offset + 0] >> 2) & 0x1f) - 1;
-    pnpId[1] = 'A' + (((data[offset + 0] & 0x3) << 3) | ((data[offset + 1] >> 5) & 0x7)) - 1;
-    pnpId[2] = 'A' + (data[offset + 1] & 0x1f) - 1;
-    pnpId[3] = '\0';
-
-    return QByteArray(pnpId);
-}
-
-static QByteArray parseEisaId(const uint8_t *data)
+static std::optional<QByteArray> parseEisaId(const uint8_t *data)
 {
     for (int i = 72; i <= 108; i += 18) {
         // Skip the block if it isn't used as monitor descriptor.
@@ -78,65 +42,11 @@ static QByteArray parseEisaId(const uint8_t *data)
         }
     }
 
-    // If there isn't an ASCII EISA ID descriptor, try to decode PNP ID
-    return parsePnpId(data);
+    return std::nullopt;
 }
 
-static QByteArray parseMonitorName(const uint8_t *data)
+static QByteArray parseVendor(const QByteArray &pnpId)
 {
-    for (int i = 72; i <= 108; i += 18) {
-        // Skip the block if it isn't used as monitor descriptor.
-        if (data[i]) {
-            continue;
-        }
-        if (data[i + 1]) {
-            continue;
-        }
-
-        // We have found the monitor name, it's stored as ASCII.
-        if (data[i + 3] == 0xfc) {
-            return QByteArray(reinterpret_cast<const char *>(&data[i + 5]), 12).trimmed();
-        }
-    }
-
-    return QByteArray();
-}
-
-static QByteArray parseSerialNumber(const uint8_t *data)
-{
-    for (int i = 72; i <= 108; i += 18) {
-        // Skip the block if it isn't used as monitor descriptor.
-        if (data[i]) {
-            continue;
-        }
-        if (data[i + 1]) {
-            continue;
-        }
-
-        // We have found the serial number, it's stored as ASCII.
-        if (data[i + 3] == 0xff) {
-            return QByteArray(reinterpret_cast<const char *>(&data[i + 5]), 12).trimmed();
-        }
-    }
-
-    // Maybe there isn't an ASCII serial number descriptor, so use this instead.
-    const uint32_t offset = 0xc;
-
-    uint32_t serialNumber = data[offset + 0];
-    serialNumber |= uint32_t(data[offset + 1]) << 8;
-    serialNumber |= uint32_t(data[offset + 2]) << 16;
-    serialNumber |= uint32_t(data[offset + 3]) << 24;
-    if (serialNumber) {
-        return QByteArray::number(serialNumber);
-    }
-
-    return QByteArray();
-}
-
-static QByteArray parseVendor(const uint8_t *data)
-{
-    const auto pnpId = parsePnpId(data);
-
     // Map to vendor name
     QFile pnpFile(QStandardPaths::locate(QStandardPaths::GenericDataLocation, QStringLiteral("hwdata/pnp.ids")));
     if (pnpFile.exists() && pnpFile.open(QIODevice::ReadOnly)) {
@@ -157,24 +67,23 @@ Edid::Edid()
 
 Edid::Edid(const void *data, uint32_t size)
 {
+    m_info = di_info_parse_edid(data, size);
+    if (!m_info) {
+        return;
+    }
+
     m_raw.resize(size);
     memcpy(m_raw.data(), data, size);
 
-    const uint8_t *bytes = static_cast<const uint8_t *>(data);
+    const di_edid *edid = di_info_get_edid(m_info);
+    const di_edid_vendor_product *productInfo = di_edid_get_vendor_product(edid);
+    const di_edid_screen_size *screenSize = di_edid_get_screen_size(edid);
 
-    if (size < 128) {
-        return;
-    }
-
-    if (!verifyHeader(bytes)) {
-        return;
-    }
-
-    m_physicalSize = parsePhysicalSize(bytes);
-    m_eisaId = parseEisaId(bytes);
-    m_monitorName = parseMonitorName(bytes);
-    m_serialNumber = parseSerialNumber(bytes);
-    m_vendor = parseVendor(bytes);
+    m_physicalSize = QSize(screenSize->width_cm, screenSize->height_cm) * 10;
+    m_eisaId = parseEisaId(reinterpret_cast<const uint8_t *>(data)).value_or(QByteArray(productInfo->manufacturer, 3));
+    m_monitorName = di_info_get_product_name(m_info);
+    m_serialNumber = QByteArray::number(productInfo->serial);
+    m_vendor = parseVendor(QByteArray(productInfo->manufacturer, 3));
 
     m_isValid = true;
 }

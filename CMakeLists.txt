@@ -467,6 +467,22 @@ file(GLOB_RECURSE ALL_CLANG_FORMAT_SOURCE_FILES *.cpp *.h)
 kde_clang_format(${ALL_CLANG_FORMAT_SOURCE_FILES})
 kde_configure_git_pre_commit_hook(CHECKS CLANG_FORMAT)
 
+ExternalProject_Add(displayinfo
+    PREFIX "libdisplayinfo"
+    GIT_REPOSITORY https://gitlab.freedesktop.org/emersion/libdisplay-info.git
+    GIT_TAG 40d8018a7e658514be6f205ba64470071e6efb74
+    CONFIGURE_COMMAND meson ../libdisplayinfo
+    BUILD_COMMAND ninja
+    INSTALL_COMMAND ""
+)
+ExternalProject_Get_Property(displayinfo SOURCE_DIR)
+ExternalProject_Get_Property(displayinfo BINARY_DIR)
+add_library (libdisplayinfo STATIC IMPORTED GLOBAL)
+set_target_properties(libdisplayinfo PROPERTIES
+    IMPORTED_LOCATION "${BINARY_DIR}/libdisplay-info.so"
+    INTERFACE_INCLUDE_DIRECTORIES "${SOURCE_DIR}/include"
+)
+
 feature_summary(WHAT ALL INCLUDE_QUIET_PACKAGES FATAL_ON_MISSING_REQUIRED_PACKAGES)
 
 include(CMakePackageConfigHelpers)

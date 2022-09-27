@@ -14,6 +14,8 @@
 #include <QByteArray>
 #include <QSize>
 
+struct di_info;
+
 namespace KWin
 {
 
@@ -83,6 +85,7 @@ private:
 
     QByteArray m_raw;
     bool m_isValid = false;
+    di_info *m_info = nullptr;
 };
 
 } // namespace KWin
