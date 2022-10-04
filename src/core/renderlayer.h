@@ -75,6 +75,8 @@ public:
     QRegion repaints() const;
     void resetRepaints();
 
+    void setCursor();
+
 private:
     void addSublayer(RenderLayer *sublayer);
     void removeSublayer(RenderLayer *sublayer);
@@ -92,6 +94,7 @@ private:
     QList<RenderLayer *> m_sublayers;
     bool m_effectiveVisible = true;
     bool m_explicitVisible = true;
+    bool m_isCursor = false;
 };
 
 } // namespace KWin

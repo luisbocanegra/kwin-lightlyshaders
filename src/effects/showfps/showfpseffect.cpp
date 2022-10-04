@@ -115,7 +115,7 @@ void ShowFpsEffect::postPaintScreen()
     m_paintDuration = m_paintDurationTimer.elapsed();
     Q_EMIT paintChanged();
 
-    effects->addRepaint(m_scene->geometry());
+    // effects->addRepaint(m_scene->geometry());
 }
 
 bool ShowFpsEffect::supported()

@@ -101,10 +101,17 @@ DrmOutput::DrmOutput(DrmPipeline *pipeline, KWaylandServer::DrmLeaseDeviceV1Inte
             conn->id(),
             conn->modelName(),
             QStringLiteral("%1 %2").arg(conn->edid()->manufacturerString(), conn->modelName()));
-    } else {
+    } else if (!m_gpu->atomicModeSetting()) {
         connect(Cursors::self(), &Cursors::currentCursorChanged, this, &DrmOutput::updateCursor);
         connect(Cursors::self(), &Cursors::hiddenChanged, this, &DrmOutput::updateCursor);
         connect(Cursors::self(), &Cursors::positionChanged, this, &DrmOutput::moveCursor);
+    } else {
+        const auto scheduleCursor = [this]() {
+            m_renderLoop->scheduleCursorRepaint();
+        };
+        connect(Cursors::self(), &Cursors::currentCursorChanged, this, scheduleCursor);
+        connect(Cursors::self(), &Cursors::hiddenChanged, this, scheduleCursor);
+        connect(Cursors::self(), &Cursors::positionChanged, this, scheduleCursor);
     }
 }
 
@@ -199,6 +206,9 @@ void DrmOutput::updateCursor()
         m_setCursorSuccessful = m_pipeline->setCursor(logicalToNativeMatrix(QRect(QPoint(), layerRect.size()), scale(), transform()).map(cursor->hotspot()));
         layer->setVisible(m_setCursorSuccessful);
     }
+    if (m_setCursorSuccessful && !m_gpu->atomicModeSetting()) {
+        m_renderLoop->scheduleCursorRepaint();
+    }
 }
 
 void DrmOutput::moveCursor()
@@ -224,6 +234,9 @@ void DrmOutput::moveCursor()
     layer->setVisible(m_moveCursorSuccessful);
     if (!m_moveCursorSuccessful) {
         m_pipeline->setCursor();
+    }
+    if (m_moveCursorSuccessful && !m_gpu->atomicModeSetting()) {
+        m_renderLoop->scheduleCursorRepaint();
     }
 }
 
@@ -353,6 +366,9 @@ void DrmOutput::updateDpmsMode(DpmsMode dpmsMode)
 
 bool DrmOutput::present()
 {
+    if (m_gpu->atomicModeSetting()) {
+        updateCursor();
+    }
     RenderLoopPrivate *renderLoopPrivate = RenderLoopPrivate::get(m_renderLoop.get());
     if (m_pipeline->syncMode() != renderLoopPrivate->presentMode) {
         m_pipeline->setSyncMode(renderLoopPrivate->presentMode);

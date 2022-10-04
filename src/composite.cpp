@@ -424,6 +424,7 @@ void Compositor::addOutput(Output *output)
 
     auto cursorLayer = new RenderLayer(output->renderLoop());
     cursorLayer->setVisible(false);
+    cursorLayer->setCursor();
     if (m_backend->compositingType() == OpenGLCompositing) {
         cursorLayer->setDelegate(new CursorDelegateOpenGL());
     } else {

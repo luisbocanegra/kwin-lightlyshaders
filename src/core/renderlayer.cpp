@@ -164,6 +164,11 @@ void RenderLayer::addRepaint(const QRect &rect)
     addRepaint(QRegion(rect));
 }
 
+void RenderLayer::setCursor()
+{
+    m_isCursor = true;
+}
+
 void RenderLayer::addRepaint(const QRegion &region)
 {
     if (!m_effectiveVisible) {
@@ -171,7 +176,11 @@ void RenderLayer::addRepaint(const QRegion &region)
     }
     if (!region.isEmpty()) {
         m_repaints += region;
-        m_loop->scheduleRepaint();
+        if (m_isCursor) {
+            m_loop->scheduleCursorRepaint();
+        } else {
+            m_loop->scheduleRepaint();
+        }
     }
 }
 

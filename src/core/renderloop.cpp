@@ -279,7 +279,7 @@ void RenderLoop::scheduleCursorRepaint()
     if (d->presentMode == RenderLoopPrivate::SyncMode::Fixed) {
         scheduleRepaint();
     } else {
-        const std::chrono::nanoseconds vblankInterval(1'000'000'000'000ull / 40000ul);
+        const std::chrono::nanoseconds vblankInterval(1'000'000'000'000ull / 100000ul);
         const std::chrono::nanoseconds now = std::chrono::steady_clock::now().time_since_epoch();
         std::chrono::nanoseconds plannedPresentationTimestamp = d->lastPresentationTimestamp + vblankInterval;
         if (plannedPresentationTimestamp < now) {
