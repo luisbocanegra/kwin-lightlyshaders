@@ -16,6 +16,7 @@
 #include "core/platform.h"
 #include "core/renderlayer.h"
 #include "core/renderloop.h"
+#include "core/renderloop_p.h"
 #include "cursordelegate_opengl.h"
 #include "cursordelegate_qpainter.h"
 #include "dbusinterface.h"
@@ -641,6 +642,7 @@ void Compositor::composite(RenderLoop *renderLoop)
         }
     }
 
+    bool frameSubmitted = directScanout;
     if (!directScanout) {
         QRegion surfaceDamage = outputLayer->repaints();
         outputLayer->resetRepaints();
@@ -654,13 +656,19 @@ void Compositor::composite(RenderLoop *renderLoop)
             outputLayer->aboutToStartPainting(bufferDamage);
 
             paintPass(superLayer, &renderTarget, bufferDamage);
-            outputLayer->endFrame(bufferDamage, surfaceDamage);
+            frameSubmitted = outputLayer->endFrame(bufferDamage, surfaceDamage);
         }
     }
     renderLoop->endFrame();
 
     postPaintPass(superLayer);
 
+    if (!frameSubmitted) {
+        // something went wrong
+        RenderLoopPrivate::get(renderLoop)->notifyFrameFailed();
+        reinitialize();
+        return;
+    }
     m_backend->present(output);
 
     // TODO: Put it inside the cursor layer once the cursor layer can be backed by a real output layer.
