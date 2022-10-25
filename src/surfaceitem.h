@@ -8,6 +8,7 @@
 
 #include "core/output.h"
 #include "item.h"
+#include "utils/regionf.h"
 
 namespace KWin
 {
@@ -29,7 +30,7 @@ public:
 
     Window *window() const;
 
-    void addDamage(const QRegion &region);
+    void addDamage(const RegionF &region);
     void resetDamage();
     QRegion damage() const;
 

@@ -1108,7 +1108,7 @@ void CursorImage::updateDragCursor()
         if (auto buffer = qobject_cast<KWaylandServer::ShmClientBuffer *>(dragIcon->surface()->buffer())) {
             additionalIcon = buffer->data().copy();
             additionalIcon.setDevicePixelRatio(dragIcon->surface()->bufferScale());
-            additionalIcon.setOffset(dragIcon->position());
+            additionalIcon.setOffset(dragIcon->position().toPoint());
         }
     }
     auto p = waylandServer()->seat()->pointer();

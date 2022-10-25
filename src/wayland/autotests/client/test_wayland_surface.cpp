@@ -276,7 +276,7 @@ void TestWaylandSurface::testDamage()
     QVERIFY(damageSpy.wait());
     QCOMPARE(serverSurface->offset(), QPoint(55, 55)); // offset is surface local so scale doesn't change this
     QCOMPARE(serverSurface->damage(), QRegion(0, 0, 5, 5)); // scale is 2
-    QCOMPARE(damageSpy.first().first().value<QRegion>(), QRegion(0, 0, 5, 5));
+    QCOMPARE(damageSpy.first().first().value<KWin::RegionF>(), QRegion(0, 0, 5, 5));
     QVERIFY(serverSurface->isMapped());
     QCOMPARE(committedSpy.count(), 2);
 
@@ -292,7 +292,7 @@ void TestWaylandSurface::testDamage()
     s->commit(KWayland::Client::Surface::CommitFlag::None);
     QVERIFY(damageSpy.wait());
     QCOMPARE(serverSurface->damage(), testRegion);
-    QCOMPARE(damageSpy.first().first().value<QRegion>(), testRegion);
+    QCOMPARE(damageSpy.first().first().value<KWin::RegionF>(), testRegion);
     QVERIFY(serverSurface->isMapped());
     QCOMPARE(committedSpy.count(), 3);
 
@@ -308,7 +308,7 @@ void TestWaylandSurface::testDamage()
     s->commit(KWayland::Client::Surface::CommitFlag::None);
     QVERIFY(damageSpy.wait());
     QCOMPARE(serverSurface->damage(), cmpRegion2);
-    QCOMPARE(damageSpy.first().first().value<QRegion>(), cmpRegion2);
+    QCOMPARE(damageSpy.first().first().value<KWin::RegionF>(), cmpRegion2);
     QVERIFY(serverSurface->isMapped());
 
     // combined regular damage and damaged buffer
@@ -326,7 +326,7 @@ void TestWaylandSurface::testDamage()
     QVERIFY(serverSurface->damage() != testRegion2);
     QVERIFY(serverSurface->damage() != cmpRegion2);
     QCOMPARE(serverSurface->damage(), testRegion3);
-    QCOMPARE(damageSpy.first().first().value<QRegion>(), testRegion3);
+    QCOMPARE(damageSpy.first().first().value<KWin::RegionF>(), testRegion3);
     QVERIFY(serverSurface->isMapped());
 }
 
@@ -616,7 +616,7 @@ void TestWaylandSurface::testOpaque()
     s->commit(Surface::CommitFlag::None);
     QVERIFY(opaqueRegionChangedSpy.wait());
     QCOMPARE(opaqueRegionChangedSpy.count(), 1);
-    QCOMPARE(opaqueRegionChangedSpy.last().first().value<QRegion>(), QRegion(0, 10, 20, 30));
+    QCOMPARE(opaqueRegionChangedSpy.last().first().value<KWin::RegionF>(), QRegion(0, 10, 20, 30));
     QCOMPARE(serverSurface->opaque(), QRegion(0, 10, 20, 30));
 
     // committing without setting a new region shouldn't change
@@ -631,7 +631,7 @@ void TestWaylandSurface::testOpaque()
     s->commit(Surface::CommitFlag::None);
     QVERIFY(opaqueRegionChangedSpy.wait());
     QCOMPARE(opaqueRegionChangedSpy.count(), 2);
-    QCOMPARE(opaqueRegionChangedSpy.last().first().value<QRegion>(), QRegion(10, 20, 10, 20));
+    QCOMPARE(opaqueRegionChangedSpy.last().first().value<KWin::RegionF>(), QRegion(10, 20, 10, 20));
     QCOMPARE(serverSurface->opaque(), QRegion(10, 20, 10, 20));
 
     // and let's go back to an empty region
@@ -639,7 +639,7 @@ void TestWaylandSurface::testOpaque()
     s->commit(Surface::CommitFlag::None);
     QVERIFY(opaqueRegionChangedSpy.wait());
     QCOMPARE(opaqueRegionChangedSpy.count(), 3);
-    QCOMPARE(opaqueRegionChangedSpy.last().first().value<QRegion>(), QRegion());
+    QCOMPARE(opaqueRegionChangedSpy.last().first().value<KWin::RegionF>(), QRegion());
     QCOMPARE(serverSurface->opaque(), QRegion());
 }
 

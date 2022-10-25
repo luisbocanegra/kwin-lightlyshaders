@@ -8,6 +8,7 @@
 
 #include "core/output.h"
 #include "output_interface.h"
+#include "utils/regionf.h"
 
 #include <QMatrix4x4>
 #include <QObject>
@@ -60,15 +61,15 @@ class KWIN_EXPORT SurfaceInterface : public QObject
     /**
      * The current damage region.
      */
-    Q_PROPERTY(QRegion damage READ damage NOTIFY damaged)
+    Q_PROPERTY(KWin::RegionF damage READ damage NOTIFY damaged)
     /**
      * The opaque region for a translucent buffer.
      */
-    Q_PROPERTY(QRegion opaque READ opaque NOTIFY opaqueChanged)
+    Q_PROPERTY(KWin::RegionF opaque READ opaque NOTIFY opaqueChanged)
     /**
      * The current input region.
      */
-    Q_PROPERTY(QRegion input READ input NOTIFY inputChanged)
+    Q_PROPERTY(KWin::RegionF input READ input NOTIFY inputChanged)
     Q_PROPERTY(qint32 bufferScale READ bufferScale NOTIFY bufferScaleChanged)
     Q_PROPERTY(KWin::Output::Transform bufferTransform READ bufferTransform NOTIFY bufferTransformChanged)
     Q_PROPERTY(QSizeF size READ size NOTIFY sizeChanged)
@@ -128,7 +129,7 @@ public:
      *
      * @see surfaceToBufferMatrix(), surfaceToBufferMatrixChanged()
      */
-    QRegion mapToBuffer(const QRegion &region) const;
+    KWin::RegionF mapToBuffer(const KWin::RegionF &region) const;
     /**
      * Maps the specified @a region from the buffer pixel coordinates to surface-local coordinates.
      *
@@ -140,7 +141,7 @@ public:
      *
      * @see surfaceToBufferMatrix(), surfaceToBufferMatrixChanged()
      */
-    QRegion mapFromBuffer(const QRegion &region) const;
+    KWin::RegionF mapFromBuffer(const KWin::RegionF &region) const;
     /**
      * Returns the projection matrix from the surface-local coordinates to buffer coordinates.
      *
@@ -159,9 +160,9 @@ public:
     void frameRendered(quint32 msec);
     bool hasFrameCallbacks() const;
 
-    QRegion damage() const;
-    QRegion opaque() const;
-    QRegion input() const;
+    KWin::RegionF damage() const;
+    KWin::RegionF opaque() const;
+    KWin::RegionF input() const;
     qint32 bufferScale() const;
     /**
      * Returns the buffer transform that had been applied to the buffer to compensate for
@@ -175,7 +176,7 @@ public:
      * @returns the current ClientBuffer, might be @c nullptr.
      */
     ClientBuffer *buffer() const;
-    QPoint offset() const;
+    QPointF offset() const;
     /**
      * Returns the current size of the surface, in surface coordinates.
      *
@@ -361,9 +362,9 @@ Q_SIGNALS:
      * @see buffer
      * @see damage
      */
-    void damaged(const QRegion &);
-    void opaqueChanged(const QRegion &);
-    void inputChanged(const QRegion &);
+    void damaged(const KWin::RegionF &);
+    void opaqueChanged(const KWin::RegionF &);
+    void inputChanged(const KWin::RegionF &);
     /**
      * This signal is emitted when the scale of the attached buffer has changed.
      */

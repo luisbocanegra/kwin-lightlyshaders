@@ -61,7 +61,7 @@ QRegion SurfaceItemWayland::shape() const
 QRegion SurfaceItemWayland::opaque() const
 {
     if (m_surface) {
-        return m_surface->opaque();
+        return m_surface->opaque().toAlignedRegion();
     }
     return QRegion();
 }

@@ -653,13 +653,13 @@ void Window::setDepth(int depth)
     }
 }
 
-QRegion Window::inputShape() const
+RegionF Window::inputShape() const
 {
     if (m_surface) {
         return m_surface->input();
     } else {
         // TODO: maybe also for X11?
-        return QRegion();
+        return RegionF();
     }
 }
 

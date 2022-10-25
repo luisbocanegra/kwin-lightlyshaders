@@ -37,12 +37,13 @@ void SurfaceItem::setSurfaceToBufferMatrix(const QMatrix4x4 &matrix)
     m_surfaceToBufferMatrix = matrix;
 }
 
-void SurfaceItem::addDamage(const QRegion &region)
+void SurfaceItem::addDamage(const RegionF &region)
 {
-    m_damage += region;
-    scheduleRepaint(region);
+    const QRegion aligned = region.toAlignedRegion();
+    m_damage += aligned;
+    scheduleRepaint(aligned);
 
-    Q_EMIT m_window->damaged(m_window, region);
+    Q_EMIT m_window->damaged(m_window, aligned);
 }
 
 void SurfaceItem::resetDamage()

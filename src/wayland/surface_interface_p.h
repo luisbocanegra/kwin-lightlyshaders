@@ -8,6 +8,7 @@
 
 #include "surface_interface.h"
 #include "utils.h"
+#include "utils/regionf.h"
 // Qt
 #include <QHash>
 #include <QVector>
@@ -25,10 +26,10 @@ struct SurfaceState
 {
     void mergeInto(SurfaceState *target);
 
-    QRegion damage = QRegion();
-    QRegion bufferDamage = QRegion();
-    QRegion opaque = QRegion();
-    QRegion input = infiniteRegion();
+    KWin::RegionF damage;
+    QRegion bufferDamage;
+    KWin::RegionF opaque;
+    KWin::RegionF input = infiniteRegion();
     bool inputIsSet = false;
     bool opaqueIsSet = false;
     bool bufferIsSet = false;
@@ -40,10 +41,11 @@ struct SurfaceState
     bool bufferScaleIsSet = false;
     bool bufferTransformIsSet = false;
     bool contentTypeIsSet = false;
-    qint32 bufferScale = 1;
+    qint32 integerBufferScale = 1;
+    double bufferScale = 1.0;
     KWin::Output::Transform bufferTransform = KWin::Output::Transform::Normal;
     wl_list frameCallbacks;
-    QPoint offset = QPoint();
+    QPointF offset = QPointF();
     QPointer<ClientBuffer> buffer;
     QPointer<ShadowInterface> shadow;
     QPointer<BlurInterface> blur;
@@ -60,7 +62,7 @@ struct SurfaceState
     struct
     {
         QRectF sourceGeometry = QRectF();
-        QSize destinationSize = QSize();
+        QSizeF destinationSize = QSizeF();
         bool sourceGeometryIsSet = false;
         bool destinationSizeIsSet = false;
     } viewport;
@@ -119,8 +121,8 @@ public:
     QSizeF implicitSurfaceSize = QSizeF(0, 0);
     QSizeF surfaceSize = QSizeF(0, 0);
 
-    QRegion inputRegion;
-    QRegion opaqueRegion;
+    KWin::RegionF inputRegion;
+    KWin::RegionF opaqueRegion;
     ClientBuffer *bufferRef = nullptr;
     bool mapped = false;
     bool hasCacheState = false;

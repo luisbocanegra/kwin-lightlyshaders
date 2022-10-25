@@ -26,7 +26,7 @@ public:
 
     void commit() override;
 
-    QPoint position;
+    QPointF position;
 };
 
 DragAndDropIconPrivate::DragAndDropIconPrivate(SurfaceInterface *surface)
@@ -49,7 +49,7 @@ DragAndDropIcon::~DragAndDropIcon()
 {
 }
 
-QPoint DragAndDropIcon::position() const
+QPointF DragAndDropIcon::position() const
 {
     return d->position;
 }

@@ -13,6 +13,7 @@
 #include "options.h"
 #include "rules.h"
 #include "utils/common.h"
+#include "utils/regionf.h"
 #include "utils/xcbutils.h"
 
 #include <functional>
@@ -731,7 +732,7 @@ public:
     bool readyForPainting() const; // true if the window has been already painted its contents
     xcb_visualid_t visual() const;
     bool shape() const;
-    QRegion inputShape() const;
+    RegionF inputShape() const;
     void setOpacity(qreal opacity);
     qreal opacity() const;
     int depth() const;
