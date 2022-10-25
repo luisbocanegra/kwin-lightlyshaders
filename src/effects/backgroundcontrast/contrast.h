@@ -8,6 +8,7 @@
 #ifndef CONTRAST_H
 #define CONTRAST_H
 
+#include "utils/regionf.h"
 #include <kwineffects.h>
 #include <kwinglplatform.h>
 #include <kwinglutils.h>
@@ -57,12 +58,12 @@ public Q_SLOTS:
     void slotScreenGeometryChanged();
 
 private:
-    QRegion contrastRegion(const EffectWindow *w) const;
+    RegionF contrastRegion(const EffectWindow *w) const;
     bool shouldContrast(const EffectWindow *w, int mask, const WindowPaintData &data) const;
     void updateContrastRegion(EffectWindow *w);
-    void doContrast(EffectWindow *w, const QRegion &shape, const QRect &screen, const float opacity, const QMatrix4x4 &screenProjection);
-    void uploadRegion(QVector2D *&map, const QRegion &region, qreal scale);
-    void uploadGeometry(GLVertexBuffer *vbo, const QRegion &region, qreal scale);
+    void doContrast(EffectWindow *w, const RegionF &shape, const QRectF &screen, const float opacity, const QMatrix4x4 &screenProjection);
+    void uploadRegion(QVector2D *&map, const RegionF &region, qreal scale);
+    void uploadGeometry(GLVertexBuffer *vbo, const RegionF &region, qreal scale);
 
 private:
     std::unique_ptr<ContrastShader> m_shader;
@@ -71,7 +72,7 @@ private:
     struct Data
     {
         QMatrix4x4 colorMatrix;
-        QRegion contrastRegion;
+        RegionF contrastRegion;
     };
     QHash<const EffectWindow *, Data> m_windowData;
     static KWaylandServer::ContrastManagerInterface *s_contrastManager;
