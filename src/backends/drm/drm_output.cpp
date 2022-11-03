@@ -439,6 +439,12 @@ void DrmOutput::applyQueuedChanges(const OutputConfiguration &config)
     }
 
     updateCursor();
+
+    if (m_pipeline->renderOrientation() == m_pipeline->bufferOrientation()) {
+        qCDebug(KWIN_DRM) << "Using hardware rotation on" << this;
+    } else {
+        qCDebug(KWIN_DRM) << "Falling back to software rotation on" << this;
+    }
 }
 
 void DrmOutput::revertQueuedChanges()
