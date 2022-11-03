@@ -506,7 +506,7 @@ void DrmOutput::renderCursorOpengl(const RenderTarget &renderTarget, const QSize
     QMatrix4x4 mvp;
     mvp.ortho(QRect(QPoint(), renderTarget.size()));
 
-    glClearColor(0, 0, 0, 0);
+    glClearColor(1, 1, 1, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glEnable(GL_BLEND);
