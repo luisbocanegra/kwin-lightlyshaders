@@ -389,7 +389,7 @@ DrmPipeline *DrmOutput::pipeline() const
 bool DrmOutput::queueChanges(const OutputConfiguration &config)
 {
     static bool valid;
-    static int envOnlySoftwareRotations = qEnvironmentVariableIntValue("KWIN_DRM_SW_ROTATIONS_ONLY", &valid) == 1 || !valid;
+    static int envOnlySoftwareRotations = qEnvironmentVariableIntValue("KWIN_DRM_SW_ROTATIONS_ONLY", &valid) == 1 && valid;
 
     const auto props = config.constChangeSet(this);
     m_pipeline->setMode(std::static_pointer_cast<DrmConnectorMode>(props->mode));
