@@ -6,6 +6,7 @@ target_sources(kwin PRIVATE
     filedescriptor.cpp
     ramfile.cpp
     realtime.cpp
+    regionf.cpp
     subsurfacemonitor.cpp
     udev.cpp
     xcbutils.cpp
