@@ -115,7 +115,7 @@ void KWin::InputPanelV1Window::reposition()
     case Mode::Overlay: {
         auto textInputSurface = waylandServer()->seat()->focusedTextInputSurface();
         auto textWindow = waylandServer()->findWindow(textInputSurface);
-        QRect cursorRectangle;
+        QRectF cursorRectangle;
         auto textInputV2 = waylandServer()->seat()->textInputV2();
         if (textInputV2 && textInputV2->isEnabled() && textInputV2->surface() == textInputSurface) {
             cursorRectangle = textInputV2->cursorRectangle();
@@ -125,7 +125,7 @@ void KWin::InputPanelV1Window::reposition()
             cursorRectangle = textInputV3->cursorRectangle();
         }
         if (textWindow) {
-            cursorRectangle.translate(textWindow->bufferGeometry().topLeft().toPoint());
+            cursorRectangle.translate(textWindow->bufferGeometry().topLeft());
             const QRectF screen = Workspace::self()->clientArea(PlacementArea, this, cursorRectangle.bottomLeft());
 
             // Reuse the similar logic like xdg popup
