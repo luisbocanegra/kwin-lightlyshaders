@@ -34,6 +34,7 @@
 #include "wayland/dpms_interface.h"
 #include "wayland/drmlease_v1_interface.h"
 #include "wayland/filtered_display.h"
+#include "wayland/fractional_scale_v1_interface.h"
 #include "wayland/idle_interface.h"
 #include "wayland/idleinhibit_v1_interface.h"
 #include "wayland/idlenotify_v1_interface.h"
@@ -487,6 +488,8 @@ bool WaylandServer::init(InitializationFlags flags)
     });
 
     m_contentTypeManager = new KWaylandServer::ContentTypeManagerV1Interface(m_display, m_display);
+
+    m_fractionalScaleManager = new KWaylandServer::FractionalScaleManagerV1(m_display, m_display);
 
     return true;
 }

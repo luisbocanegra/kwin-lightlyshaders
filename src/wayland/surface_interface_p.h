@@ -21,6 +21,7 @@ class IdleInhibitorV1Interface;
 class SurfaceRole;
 class ViewportInterface;
 class ContentTypeV1Interface;
+class FractionalScaleV1;
 
 struct SurfaceState
 {
@@ -144,6 +145,7 @@ public:
     std::unique_ptr<LinuxDmaBufV1Feedback> dmabufFeedbackV1;
     QPointer<ContentTypeV1Interface> contentTypeInterface;
     ClientConnection *client = nullptr;
+    FractionalScaleV1 *fractionalScale = nullptr;
 
 protected:
     void surface_destroy_resource(Resource *resource) override;

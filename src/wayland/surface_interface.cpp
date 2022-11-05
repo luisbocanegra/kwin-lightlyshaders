@@ -10,6 +10,7 @@
 #include "compositor_interface.h"
 #include "contenttype_v1_interface.h"
 #include "display.h"
+#include "fractional_scale_v1_interface.h"
 #include "idleinhibit_v1_interface_p.h"
 #include "linuxdmabufv1clientbuffer.h"
 #include "pointerconstraints_v1_interface_p.h"
@@ -934,6 +935,13 @@ void SurfaceInterface::setOutputs(const QVector<OutputInterface *> &outputs)
     }
 
     d->outputs = outputs;
+    if (d->fractionalScale) {
+        double maxScale = 1;
+        for (OutputInterface *output : outputs) {
+            maxScale = std::max(maxScale, output->handle()->scale());
+        }
+        d->fractionalScale->setFractionalScale(maxScale);
+    }
     for (auto child : std::as_const(d->current.below)) {
         child->surface()->setOutputs(outputs);
     }
