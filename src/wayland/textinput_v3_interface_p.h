@@ -51,7 +51,7 @@ public:
         return inputInterface->d.get();
     }
 
-    QRect cursorRectangle;
+    QRectF cursorRectangle;
     TextInputContentHints contentHints = TextInputContentHint::None;
     TextInputContentPurpose contentPurpose = TextInputContentPurpose::Normal;
 
@@ -69,7 +69,7 @@ public:
 
     struct
     {
-        QRect cursorRectangle;
+        QRectF cursorRectangle;
         TextInputChangeCause surroundingTextChangeCause = TextInputChangeCause::InputMethod;
         TextInputContentHints contentHints = TextInputContentHint::None;
         TextInputContentPurpose contentPurpose = TextInputContentPurpose::Normal;
