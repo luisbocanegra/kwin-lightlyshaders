@@ -1845,7 +1845,9 @@ QRectF XdgPopupWindow::transientPlacement(const QRectF &bounds) const
 {
     const XdgPositioner positioner = m_shellSurface->positioner();
 
-    const QSize desiredSize = positioner.size();
+    const QSizeF desiredSize = positioner.size(surface());
+    const QRectF anchorRect = positioner.anchorRect(surface());
+    const QPointF offset = positioner.offset(surface());
 
     const QPointF parentPosition = transientFor()->framePosToClientPos(transientFor()->pos());
 
@@ -1867,7 +1869,7 @@ QRectF XdgPopupWindow::transientPlacement(const QRectF &bounds) const
         return true;
     };
 
-    QRectF popupRect(popupOffset(positioner.anchorRect(), positioner.anchorEdges(), positioner.gravityEdges(), desiredSize) + positioner.offset() + parentPosition, desiredSize);
+    QRectF popupRect(popupOffset(anchorRect, positioner.anchorEdges(), positioner.gravityEdges(), desiredSize) + offset + parentPosition, desiredSize);
 
     // if that fits, we don't need to do anything
     if (inBounds(popupRect)) {
@@ -1886,7 +1888,7 @@ QRectF XdgPopupWindow::transientPlacement(const QRectF &bounds) const
             if (flippedGravity & (Qt::LeftEdge | Qt::RightEdge)) {
                 flippedGravity ^= (Qt::LeftEdge | Qt::RightEdge);
             }
-            auto flippedPopupRect = QRectF(popupOffset(positioner.anchorRect(), flippedAnchorEdge, flippedGravity, desiredSize) + positioner.offset() + parentPosition, desiredSize);
+            auto flippedPopupRect = QRectF(popupOffset(anchorRect, flippedAnchorEdge, flippedGravity, desiredSize) + offset + parentPosition, desiredSize);
 
             // if it still doesn't fit we should continue with the unflipped version
             if (inBounds(flippedPopupRect, Qt::LeftEdge | Qt::RightEdge)) {
@@ -1928,7 +1930,7 @@ QRectF XdgPopupWindow::transientPlacement(const QRectF &bounds) const
             if (flippedGravity & (Qt::TopEdge | Qt::BottomEdge)) {
                 flippedGravity ^= (Qt::TopEdge | Qt::BottomEdge);
             }
-            auto flippedPopupRect = QRectF(popupOffset(positioner.anchorRect(), flippedAnchorEdge, flippedGravity, desiredSize) + positioner.offset() + parentPosition, desiredSize);
+            auto flippedPopupRect = QRectF(popupOffset(anchorRect, flippedAnchorEdge, flippedGravity, desiredSize) + offset + parentPosition, desiredSize);
 
             // if it still doesn't fit we should continue with the unflipped version
             if (inBounds(flippedPopupRect, Qt::TopEdge | Qt::BottomEdge)) {

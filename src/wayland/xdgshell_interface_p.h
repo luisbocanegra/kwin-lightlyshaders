@@ -84,7 +84,7 @@ protected:
 
 struct XdgSurfaceState
 {
-    QRect windowGeometry;
+    QRectF windowGeometry;
     quint32 acknowledgedConfigure;
     bool acknowledgedConfigureIsSet = false;
     bool windowGeometryIsSet = false;
@@ -141,8 +141,8 @@ public:
 
     struct State
     {
-        QSize minimumSize;
-        QSize maximumSize;
+        QSizeF minimumSize;
+        QSizeF maximumSize;
     };
 
     State next;

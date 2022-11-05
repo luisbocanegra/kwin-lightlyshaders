@@ -153,7 +153,7 @@ public:
      *
      * This method will return an invalid QRect if the window geometry is not set by the client.
      */
-    QRect windowGeometry() const;
+    QRectF windowGeometry() const;
 
     /**
      * Returns the XdgSurfaceInterface for the specified wayland resource object \a resource.
@@ -174,7 +174,7 @@ Q_SIGNALS:
     /**
      * This signal is emitted when the window geometry has been changed.
      */
-    void windowGeometryChanged(const QRect &rect);
+    void windowGeometryChanged(const QRectF &rect);
 
     /**
      * This signal is emitted when the surface has been unmapped and its state has been reset.
@@ -273,18 +273,18 @@ public:
     /**
      * Returns the minimum window geometry size of the toplevel surface.
      */
-    QSize minimumSize() const;
+    QSizeF minimumSize() const;
 
     /**
      * Returns the maximum window geometry size of the toplevel surface.
      */
-    QSize maximumSize() const;
+    QSizeF maximumSize() const;
 
     /**
      * Sends a configure event to the client. \a size specifies the new window geometry size. A size
      * of zero means the client should decide its own window dimensions.
      */
-    quint32 sendConfigure(const QSize &size, const States &states);
+    quint32 sendConfigure(const QSizeF &size, const States &states);
 
     /**
      * Sends a close event to the client. The client may choose to ignore this request.
@@ -338,12 +338,12 @@ Q_SIGNALS:
     /**
      * This signal is emitted when the toplevel's minimum size has been changed.
      */
-    void minimumSizeChanged(const QSize &size);
+    void minimumSizeChanged(const QSizeF &size);
 
     /**
      * This signal is emitted when the toplevel's maximum size has been changed.
      */
-    void maximumSizeChanged(const QSize &size);
+    void maximumSizeChanged(const QSizeF &size);
 
     /**
      * This signal is emitted when the toplevel wants to be interactively moved. The \a seat and
@@ -459,19 +459,19 @@ public:
     /**
      * Returns the window geometry size of the surface that is to be positioned.
      */
-    QSize size() const;
+    QSizeF size(SurfaceInterface *surface) const;
 
     /**
      * Returns the anchor rectangle relative to the upper left corner of the window geometry of
      * the parent surface that the popup should be positioned around.
      */
-    QRect anchorRect() const;
+    QRectF anchorRect(SurfaceInterface *surface) const;
 
     /**
      * Returns the surface position offset relative to the position of the anchor on the anchor
      * rectangle and the anchor on the surface.
      */
-    QPoint offset() const;
+    QPointF offset(SurfaceInterface *surface) const;
 
     /**
      * Returns whether the surface should respond to movements in its parent window.
@@ -481,7 +481,7 @@ public:
     /**
      * Returns the parent size to use when positioning the popup.
      */
-    QSize parentSize() const;
+    QSizeF parentSize(SurfaceInterface *surface) const;
 
     /**
      * Returns the serial of the configure event for the parent window.
@@ -546,7 +546,7 @@ public:
     /**
      * Sends a configure event to the client and returns the serial number of the event.
      */
-    quint32 sendConfigure(const QRect &rect);
+    quint32 sendConfigure(const QRectF &rect);
 
     /**
      * Sends a popup done event to the client.
