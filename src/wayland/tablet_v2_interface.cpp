@@ -78,11 +78,11 @@ public:
 
     void update(quint32 serial, SurfaceInterface *surface, const QPoint &hotspot)
     {
-        const bool diff = m_serial != serial || m_surface != surface || m_hotspot != hotspot;
+        const bool diff = m_serial != serial || m_surface != surface || m_hotspot != hotspot / surface->clientToCompositorScale();
         if (diff) {
             m_serial = serial;
             m_surface = surface;
-            m_hotspot = hotspot;
+            m_hotspot = hotspot / surface->clientToCompositorScale();
 
             Q_EMIT q->changed();
         }
@@ -92,7 +92,7 @@ public:
 
     quint32 m_serial = 0;
     QPointer<SurfaceInterface> m_surface;
-    QPoint m_hotspot;
+    QPointF m_hotspot;
 };
 
 TabletCursorV2::TabletCursorV2()
@@ -103,7 +103,7 @@ TabletCursorV2::TabletCursorV2()
 
 TabletCursorV2::~TabletCursorV2() = default;
 
-QPoint TabletCursorV2::hotspot() const
+QPointF TabletCursorV2::hotspot() const
 {
     return d->m_hotspot;
 }

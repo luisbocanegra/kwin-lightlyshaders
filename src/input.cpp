@@ -1909,7 +1909,7 @@ public:
     {
     }
 
-    void updateCursorSurface(KWaylandServer::SurfaceInterface *surface, const QPoint &hotspot)
+    void updateCursorSurface(KWaylandServer::SurfaceInterface *surface, const QPointF &hotspot)
     {
         if (m_surface == surface && hotspot == m_hotspot) {
             return;
@@ -1941,7 +1941,7 @@ private:
     }
 
     QPointer<KWaylandServer::SurfaceInterface> m_surface;
-    QPoint m_hotspot;
+    QPointF m_hotspot;
 };
 
 /**
