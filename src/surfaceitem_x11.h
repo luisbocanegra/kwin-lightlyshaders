@@ -32,8 +32,8 @@ public:
     void waitForDamage();
     void destroyDamage();
 
-    QRegion shape() const override;
-    QRegion opaque() const override;
+    RegionF shape() const override;
+    RegionF opaque() const override;
 
 private Q_SLOTS:
     void handleBufferGeometryChanged(Window *window, const QRectF &old);

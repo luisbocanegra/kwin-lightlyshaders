@@ -387,7 +387,7 @@ void SceneOpenGL::createRenderNode(Item *item, RenderContext *context)
         if (pixmap) {
             if (!geometry.isEmpty()) {
                 // Don't bother with blending if the entire surface is opaque
-                bool hasAlpha = pixmap->hasAlphaChannel() && !surfaceItem->shape().subtracted(surfaceItem->opaque()).isEmpty();
+                bool hasAlpha = pixmap->hasAlphaChannel() && !surfaceItem->opaque().contains(surfaceItem->shape());
                 context->renderNodes.append(RenderNode{
                     .texture = bindSurfaceTexture(surfaceItem),
                     .geometry = geometry,

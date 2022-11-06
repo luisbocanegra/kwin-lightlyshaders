@@ -29,8 +29,7 @@ public:
     explicit SurfaceItemWayland(KWaylandServer::SurfaceInterface *surface,
                                 Window *window, Item *parent = nullptr);
 
-    QRegion shape() const override;
-    QRegion opaque() const override;
+    RegionF opaque() const override;
     ContentType contentType() const override;
 
     KWaylandServer::SurfaceInterface *surface() const;
@@ -88,7 +87,7 @@ class KWIN_EXPORT SurfaceItemXwayland : public SurfaceItemWayland
 public:
     explicit SurfaceItemXwayland(Window *window, Item *parent = nullptr);
 
-    QRegion shape() const override;
+    RegionF shape() const override;
 };
 
 } // namespace KWin

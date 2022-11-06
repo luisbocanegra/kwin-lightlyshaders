@@ -169,14 +169,14 @@ void Item::updateBoundingRect()
     }
 }
 
-QRegion Item::shape() const
+RegionF Item::shape() const
 {
-    return rect().toAlignedRect();
+    return rect();
 }
 
-QRegion Item::opaque() const
+RegionF Item::opaque() const
 {
-    return QRegion();
+    return RegionF();
 }
 
 QPointF Item::rootPosition() const

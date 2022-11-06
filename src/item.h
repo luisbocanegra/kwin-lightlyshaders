@@ -8,6 +8,7 @@
 
 #include "kwineffects.h"
 #include "kwinglobals.h"
+#include "utils/regionf.h"
 
 #include <QMatrix4x4>
 #include <QObject>
@@ -51,8 +52,8 @@ public:
      */
     QRectF boundingRect() const;
 
-    virtual QRegion shape() const;
-    virtual QRegion opaque() const;
+    virtual RegionF shape() const;
+    virtual RegionF opaque() const;
 
     /**
      * Returns the visual parent of the item. Note that the visual parent differs from

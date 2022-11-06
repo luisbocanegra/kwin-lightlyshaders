@@ -138,20 +138,20 @@ void SurfaceItemX11::handleGeometryShapeChanged()
     discardQuads();
 }
 
-QRegion SurfaceItemX11::shape() const
+RegionF SurfaceItemX11::shape() const
 {
     const QRectF clipRect = window()->clientGeometry().translated(-window()->bufferGeometry().topLeft());
-    const QRegion shape = window()->shapeRegion();
+    const RegionF shape = window()->shapeRegion();
 
     return shape & clipRect.toAlignedRect();
 }
 
-QRegion SurfaceItemX11::opaque() const
+RegionF SurfaceItemX11::opaque() const
 {
     if (!window()->hasAlpha()) {
         return shape();
     } else {
-        return window()->opaqueRegion() & shape();
+        return shape() & window()->opaqueRegion();
     }
 }
 

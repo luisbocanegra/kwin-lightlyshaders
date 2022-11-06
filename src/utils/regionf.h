@@ -29,6 +29,7 @@ public:
     RegionF translated(const QPointF &point) const;
     RegionF translated(double x, double y) const;
     void translate(const QPointF &point);
+    RegionF subtracted(const RegionF &region) const;
 
     void operator=(const QRegion &region);
     void operator=(const RegionF &region);

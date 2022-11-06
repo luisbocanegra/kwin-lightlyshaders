@@ -83,8 +83,8 @@ public:
     DecorationRenderer *renderer() const;
     Window *window() const;
 
-    QRegion shape() const override final;
-    QRegion opaque() const override final;
+    RegionF shape() const override final;
+    RegionF opaque() const override final;
 
 private Q_SLOTS:
     void handleFrameGeometryChanged();

@@ -25,8 +25,6 @@ class KWIN_EXPORT SurfaceItemInternal : public SurfaceItem
 public:
     explicit SurfaceItemInternal(InternalWindow *window, Item *parent = nullptr);
 
-    QRegion shape() const override;
-
 private Q_SLOTS:
     void handleBufferGeometryChanged(Window *window, const QRectF &old);
 
