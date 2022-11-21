@@ -559,7 +559,7 @@ void EffectsModel::defaults()
 
 bool EffectsModel::isDefaults() const
 {
-    return std::all_of(m_effects.constBegin(), m_effects.constEnd(), [](const EffectData &effect) {
+    return std::ranges::all_of(m_effects, [](const EffectData &effect) {
         if (effect.enabledByDefaultFunction && effect.status != Status::EnabledUndeterminded) {
             return false;
         }
@@ -572,18 +572,16 @@ bool EffectsModel::isDefaults() const
 
 bool EffectsModel::needsSave() const
 {
-    return std::any_of(m_effects.constBegin(), m_effects.constEnd(),
-                       [](const EffectData &data) {
-                           return data.changed;
-                       });
+    return std::ranges::any_of(m_effects, [](const EffectData &data) {
+        return data.changed;
+    });
 }
 
 QModelIndex EffectsModel::findByPluginId(const QString &pluginId) const
 {
-    auto it = std::find_if(m_effects.constBegin(), m_effects.constEnd(),
-                           [pluginId](const EffectData &data) {
-                               return data.serviceName == pluginId;
-                           });
+    auto it = std::ranges::find_if(std::as_const(m_effects), [pluginId](const EffectData &data) {
+        return data.serviceName == pluginId;
+    });
     if (it == m_effects.constEnd()) {
         return {};
     }

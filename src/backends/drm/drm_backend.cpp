@@ -452,7 +452,7 @@ DrmGpu *DrmBackend::primaryGpu() const
 
 DrmGpu *DrmBackend::findGpu(dev_t deviceId) const
 {
-    auto it = std::find_if(m_gpus.begin(), m_gpus.end(), [deviceId](const auto &gpu) {
+    auto it = std::ranges::find_if(m_gpus, [deviceId](const auto &gpu) {
         return gpu->deviceId() == deviceId;
     });
     return it == m_gpus.end() ? nullptr : it->get();

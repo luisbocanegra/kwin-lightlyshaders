@@ -336,7 +336,7 @@ void X11StandaloneBackend::doUpdateOutputs()
                     output->setRenderLoop(m_renderLoop.get());
                     output->setCrtc(crtc);
                     output->setGammaRampSize(gamma.isNull() ? 0 : gamma->size);
-                    auto it = std::find(crtcs.begin(), crtcs.end(), crtc);
+                    auto it = std::ranges::find(crtcs, crtc);
                     int crtcIndex = std::distance(crtcs.begin(), it);
                     output->setXineramaNumber(crtcIndex);
 
@@ -419,7 +419,7 @@ void X11StandaloneBackend::doUpdateOutputs()
 
     // Make sure that the position of an output in m_outputs matches its xinerama index, there
     // are X11 protocols that use xinerama indices to identify outputs.
-    std::sort(m_outputs.begin(), m_outputs.end(), [](const Output *a, const Output *b) {
+    std::ranges::sort(m_outputs, [](const Output *a, const Output *b) {
         const auto xa = qobject_cast<const X11Output *>(a);
         if (!xa) {
             return false;

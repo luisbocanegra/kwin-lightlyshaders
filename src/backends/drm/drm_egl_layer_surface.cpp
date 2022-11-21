@@ -247,7 +247,7 @@ std::optional<EglGbmLayerSurface::Surface> EglGbmLayerSurface::createSurface(con
         }
         return std::nullopt;
     };
-    std::sort(preferredFormats.begin(), preferredFormats.end(), sort);
+    std::ranges::sort(preferredFormats, sort);
     if (const auto surface = testFormats(preferredFormats, MultiGpuImportMode::Dmabuf)) {
         return surface;
     }
@@ -256,7 +256,7 @@ std::optional<EglGbmLayerSurface::Surface> EglGbmLayerSurface::createSurface(con
             return surface;
         }
     }
-    std::sort(fallbackFormats.begin(), fallbackFormats.end(), sort);
+    std::ranges::sort(fallbackFormats, sort);
     if (const auto surface = testFormats(fallbackFormats, MultiGpuImportMode::Dmabuf)) {
         return surface;
     }

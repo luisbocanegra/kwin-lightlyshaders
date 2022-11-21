@@ -204,7 +204,7 @@ QList<std::shared_ptr<DrmConnectorMode>> DrmConnector::modes() const
 
 std::shared_ptr<DrmConnectorMode> DrmConnector::findMode(const drmModeModeInfo &modeInfo) const
 {
-    const auto it = std::find_if(m_modes.constBegin(), m_modes.constEnd(), [&modeInfo](const auto &mode) {
+    const auto it = std::ranges::find_if(m_modes, [&modeInfo](const auto &mode) {
         return checkIfEqual(mode->nativeMode(), &modeInfo);
     });
     return it == m_modes.constEnd() ? nullptr : *it;
