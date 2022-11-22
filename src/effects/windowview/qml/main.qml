@@ -211,7 +211,9 @@ Item {
         }
     }
 
-    Repeater {
+    Instantiator {
+        asynchronous: true
+
         model: KWinComponents.ClientFilterModel {
             desktop: KWinComponents.Workspace.currentVirtualDesktop
             screenName: targetScreen.name
@@ -231,6 +233,13 @@ Item {
             Behavior on opacity {
                 NumberAnimation { duration: container.effect.animationDuration; easing.type: Easing.OutCubic }
             }
+        }
+
+        onObjectAdded: (index, object) => {
+            object.parent = container
+        }
+        onObjectRemoved: (index, object) => {
+            object.parent = null
         }
     }
 
