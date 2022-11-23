@@ -32,8 +32,6 @@
 namespace KWin
 {
 
-static EGLContext s_globalShareContext = EGL_NO_CONTEXT;
-
 static bool isOpenGLES_helper()
 {
     if (qstrcmp(qgetenv("KWIN_COMPOSE"), "O2ES") == 0) {
@@ -59,20 +57,9 @@ EGLContext AbstractEglBackend::ensureGlobalShareContext()
         return kwinApp()->outputBackend()->sceneEglGlobalShareContext();
     }
 
-    s_globalShareContext = createContextInternal(EGL_NO_CONTEXT);
-    kwinApp()->outputBackend()->setSceneEglGlobalShareContext(s_globalShareContext);
-    return s_globalShareContext;
-}
-
-void AbstractEglBackend::destroyGlobalShareContext()
-{
-    const EGLDisplay eglDisplay = kwinApp()->outputBackend()->sceneEglDisplay();
-    if (eglDisplay == EGL_NO_DISPLAY || s_globalShareContext == EGL_NO_CONTEXT) {
-        return;
-    }
-    eglDestroyContext(eglDisplay, s_globalShareContext);
-    s_globalShareContext = EGL_NO_CONTEXT;
-    kwinApp()->outputBackend()->setSceneEglGlobalShareContext(EGL_NO_CONTEXT);
+    EGLContext ret = createContextInternal(EGL_NO_CONTEXT);
+    kwinApp()->outputBackend()->setSceneEglGlobalShareContext(ret);
+    return ret;
 }
 
 void AbstractEglBackend::teardown()
@@ -80,7 +67,7 @@ void AbstractEglBackend::teardown()
     if (m_functions.eglUnbindWaylandDisplayWL && m_display != EGL_NO_DISPLAY) {
         m_functions.eglUnbindWaylandDisplayWL(m_display, *(WaylandServer::self()->display()));
     }
-    destroyGlobalShareContext();
+    kwinApp()->outputBackend()->destroySceneEglGlobalShareContext();
 }
 
 void AbstractEglBackend::cleanup()

@@ -625,6 +625,7 @@ void Compositor::composite(RenderLoop *renderLoop)
 #if KWIN_BUILD_NOTIFICATIONS
         KNotification::event(QStringLiteral("graphicsreset"), i18n("Desktop effects were restarted due to a graphics reset"));
 #endif
+        kwinApp()->outputBackend()->destroySceneEglGlobalShareContext();
         reinitialize();
         return;
     }

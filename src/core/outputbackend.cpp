@@ -126,4 +126,12 @@ void OutputBackend::setSceneEglGlobalShareContext(EGLContext context)
     m_globalShareContext = context;
 }
 
+void OutputBackend::destroySceneEglGlobalShareContext()
+{
+    if (m_eglDisplay != EGL_NO_DISPLAY && m_globalShareContext != EGL_NO_CONTEXT) {
+        eglDestroyContext(m_eglDisplay, m_globalShareContext);
+        m_globalShareContext = EGL_NO_CONTEXT;
+    }
+}
+
 } // namespace KWin

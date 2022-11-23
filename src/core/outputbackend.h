@@ -73,6 +73,10 @@ public:
      * by rendering backends.
      */
     void setSceneEglGlobalShareContext(EGLContext context);
+    /**
+     * Destroy the current global share context. This function is intended to be called only by rendering backends.
+     */
+    void destroySceneEglGlobalShareContext();
 
     /**
      * The CompositingTypes supported by the Platform.
