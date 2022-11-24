@@ -287,8 +287,7 @@ static GLTexture *bindSurfaceTexture(SurfaceItem *surfaceItem)
 
 static QRectF logicalRectToDeviceRect(const QRectF &logical, qreal deviceScale)
 {
-    return QRectF(QPointF(std::round(logical.left() * deviceScale), std::round(logical.top() * deviceScale)),
-                  QPointF(std::round(logical.right() * deviceScale), std::round(logical.bottom() * deviceScale)));
+    return scaledRect(logical, deviceScale).toAlignedRect();
 }
 
 static RenderGeometry clipQuads(const Item *item, const SceneOpenGL::RenderContext *context)
