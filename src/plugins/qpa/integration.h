@@ -28,6 +28,7 @@ class Output;
 namespace QPA
 {
 
+class Clipboard;
 class Screen;
 
 class Integration : public QObject, public QPlatformIntegration
@@ -48,6 +49,7 @@ public:
     QPlatformOpenGLContext *createPlatformOpenGLContext(QOpenGLContext *context) const override;
     QPlatformNativeInterface *nativeInterface() const override;
     QPlatformServices *services() const override;
+    QPlatformClipboard *clipboard() const override;
     void initialize() override;
 
     QHash<Output *, Screen *> screens() const;
@@ -63,6 +65,7 @@ private:
     QPlatformPlaceholderScreen *m_dummyScreen = nullptr;
     QHash<Output *, Screen *> m_screens;
     std::unique_ptr<QGenericUnixServices> m_services;
+    std::unique_ptr<Clipboard> m_clipboard;
 };
 
 }

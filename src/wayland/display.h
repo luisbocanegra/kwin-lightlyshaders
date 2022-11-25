@@ -146,7 +146,7 @@ public:
      */
     ClientBuffer *clientBufferForResource(wl_resource *resource) const;
 
-private Q_SLOTS:
+public Q_SLOTS:
     void flush();
 
 Q_SIGNALS:
