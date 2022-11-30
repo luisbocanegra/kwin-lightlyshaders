@@ -1589,6 +1589,13 @@ bool EffectsHandlerImpl::blocksDirectScanout() const
     });
 }
 
+bool EffectsHandlerImpl::transformsWindows() const
+{
+    return std::any_of(m_activeEffects.constBegin(), m_activeEffects.constEnd(), [](const Effect *effect) {
+        return effect->transformsWindows();
+    });
+}
+
 KWaylandServer::Display *EffectsHandlerImpl::waylandDisplay() const
 {
     if (waylandServer()) {

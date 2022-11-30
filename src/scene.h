@@ -173,6 +173,7 @@ public:
     void setRenderTargetScale(qreal scale);
 
     QRegion mapToRenderTarget(const QRegion &region) const;
+    QRegion checkOcclusion(Item *item, QRegion damage) const;
 
     virtual void render(Item *item, int mask, const QRegion &region, const WindowPaintData &data) = 0;
 

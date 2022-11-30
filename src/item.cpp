@@ -292,7 +292,10 @@ void Item::scheduleRepaint(const QRegion &region)
 void Item::scheduleRepaintInternal(const QRegion &region)
 {
     const QList<Output *> outputs = workspace()->outputs();
-    const QRegion globalRegion = mapToGlobal(region);
+    const QRegion globalRegion = Compositor::self()->scene()->checkOcclusion(this, mapToGlobal(region));
+    if (globalRegion.isEmpty()) {
+        return;
+    }
     if (kwinApp()->operationMode() != Application::OperationModeX11) {
         for (const auto &output : outputs) {
             const QRegion dirtyRegion = globalRegion & output->geometry();
