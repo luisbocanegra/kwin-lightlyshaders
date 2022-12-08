@@ -76,6 +76,14 @@ GbmBuffer::GbmBuffer(DrmGpu *gpu, gbm_bo *bo, const std::shared_ptr<GbmSurface> 
 {
 }
 
+GbmBuffer::GbmBuffer(gbm_bo *bo, const std::shared_ptr<GbmSwapchain> &swapchain)
+    : DrmGpuBuffer(swapchain->gpu(), swapchain->size(), swapchain->format(), swapchain->modifier(), getHandles(bo), getStrides(bo), getOffsets(bo), gbm_bo_get_plane_count(bo))
+    , m_bo(bo)
+    , m_swapchain(swapchain)
+    , m_flags(swapchain->flags())
+{
+}
+
 GbmBuffer::GbmBuffer(DrmGpu *gpu, gbm_bo *bo, uint32_t flags)
     : DrmGpuBuffer(gpu, QSize(gbm_bo_get_width(bo), gbm_bo_get_height(bo)), gbm_bo_get_format(bo), gbm_bo_get_modifier(bo), getHandles(bo), getStrides(bo), getOffsets(bo), gbm_bo_get_plane_count(bo))
     , m_bo(bo)
@@ -100,7 +108,9 @@ GbmBuffer::~GbmBuffer()
     if (m_mapping) {
         gbm_bo_unmap(m_bo, m_mapping);
     }
-    if (m_surface) {
+    if (const auto swapchain = m_swapchain.lock()) {
+        swapchain->releaseBuffer(this);
+    } else if (m_surface) {
         m_surface->releaseBuffer(this);
     } else {
         gbm_bo_destroy(m_bo);

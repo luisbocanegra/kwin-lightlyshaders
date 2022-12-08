@@ -27,12 +27,14 @@ namespace KWin
 {
 
 class GbmSurface;
+class GbmSwapchain;
 class GLTexture;
 
 class GbmBuffer : public DrmGpuBuffer
 {
 public:
     GbmBuffer(DrmGpu *gpu, gbm_bo *bo, uint32_t flags);
+    GbmBuffer(gbm_bo *bo, const std::shared_ptr<GbmSwapchain> &swapchain);
     GbmBuffer(DrmGpu *gpu, gbm_bo *bo, const std::shared_ptr<GbmSurface> &surface);
     GbmBuffer(DrmGpu *gpu, gbm_bo *bo, KWaylandServer::LinuxDmaBufV1ClientBuffer *clientBuffer, uint32_t flags);
     ~GbmBuffer() override;
@@ -51,6 +53,7 @@ private:
     void createFds() override;
 
     gbm_bo *const m_bo;
+    const std::weak_ptr<GbmSwapchain> m_swapchain;
     const std::shared_ptr<GbmSurface> m_surface;
     KWaylandServer::ClientBuffer *const m_clientBuffer = nullptr;
     const uint32_t m_flags;

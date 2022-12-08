@@ -405,7 +405,8 @@ EGLImageKHR AbstractEglBackend::importDmaBufAsImage(const DmaBufAttributes &dmab
     attribs
         << EGL_WIDTH << dmabuf.width
         << EGL_HEIGHT << dmabuf.height
-        << EGL_LINUX_DRM_FOURCC_EXT << dmabuf.format;
+        << EGL_LINUX_DRM_FOURCC_EXT << dmabuf.format
+        << EGL_IMAGE_PRESERVED_KHR << EGL_TRUE;
 
     attribs
         << EGL_DMA_BUF_PLANE0_FD_EXT << dmabuf.fd[0].get()
