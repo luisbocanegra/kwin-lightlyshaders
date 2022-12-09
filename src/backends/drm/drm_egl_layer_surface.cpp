@@ -119,14 +119,12 @@ std::optional<OutputLayerBeginFrameInfo> EglGbmLayerSurface::startRendering(cons
         GLFramebuffer::pushFramebuffer(m_shadowBuffer->fbo());
         // the blit after rendering will completely overwrite the back buffer anyways
         return OutputLayerBeginFrameInfo{
-            .renderTarget = RenderTarget(m_shadowBuffer->fbo()),
-            .repaint = {},
-        };
+            .renderTarget = RenderTarget(m_shadowBuffer->fbo(), true),
+            .repaint = {}};
     } else {
         return OutputLayerBeginFrameInfo{
-            .renderTarget = RenderTarget(fbo.get()),
-            .repaint = repaint,
-        };
+            .renderTarget = RenderTarget(fbo.get(), true),
+            .repaint = repaint};
     }
 }
 

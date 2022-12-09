@@ -371,11 +371,13 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &d
     glClear(GL_COLOR_BUFFER_BIT);
 
     QMatrix4x4 matrix;
+    matrix.scale(1, -1);
+    matrix *= data.projectionMatrix();
     matrix.translate(xTranslation * scale, yTranslation * scale);
     matrix.scale(zoom, zoom);
 
     auto shader = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture);
-    shader->setUniform(GLShader::ModelViewProjectionMatrix, data.projectionMatrix() * matrix);
+    shader->setUniform(GLShader::ModelViewProjectionMatrix, matrix);
     for (auto &[screen, data] : m_offscreenData) {
         data.texture->bind();
         data.vbo->render(GL_TRIANGLES);

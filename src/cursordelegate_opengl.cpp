@@ -62,6 +62,7 @@ void CursorDelegateOpenGL::paint(RenderTarget *renderTarget, const QRegion &regi
     const qreal scale = renderTarget->devicePixelRatio();
 
     QMatrix4x4 mvp;
+    mvp.scale(1, renderTarget->invertY() ? -1 : 1);
     mvp.ortho(QRect(QPoint(0, 0), renderTarget->size()));
     mvp.translate(cursorRect.x() * scale, cursorRect.y() * scale);
 

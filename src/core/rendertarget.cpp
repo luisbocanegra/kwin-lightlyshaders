@@ -14,13 +14,15 @@ RenderTarget::RenderTarget()
 {
 }
 
-RenderTarget::RenderTarget(GLFramebuffer *fbo)
+RenderTarget::RenderTarget(GLFramebuffer *fbo, bool invertY)
     : m_nativeHandle(fbo)
+    , m_invertY(invertY)
 {
 }
 
-RenderTarget::RenderTarget(QImage *image)
+RenderTarget::RenderTarget(QImage *image, bool invertY)
     : m_nativeHandle(image)
+    , m_invertY(invertY)
 {
 }
 
@@ -33,6 +35,11 @@ QSize RenderTarget::size() const
     } else {
         Q_UNREACHABLE();
     }
+}
+
+bool RenderTarget::invertY() const
+{
+    return m_invertY;
 }
 
 RenderTarget::NativeHandle RenderTarget::nativeHandle() const

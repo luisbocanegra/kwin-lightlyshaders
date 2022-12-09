@@ -86,6 +86,7 @@ bool SceneOpenGL::initFailed() const
 void SceneOpenGL::paint(RenderTarget *renderTarget, const QRegion &region)
 {
     GLVertexBuffer::streamingBuffer()->beginFrame();
+    setInvertY(renderTarget->invertY());
     paintScreen(region);
     GLVertexBuffer::streamingBuffer()->endOfFrame();
 }

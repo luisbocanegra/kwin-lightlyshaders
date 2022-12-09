@@ -489,6 +489,7 @@ void DrmOutput::renderCursorOpengl(const RenderTarget &renderTarget, const QSize
     }
 
     QMatrix4x4 mvp;
+    mvp.scale(1, renderTarget.invertY() ? -1 : 1);
     mvp.ortho(QRect(QPoint(), renderTarget.size()));
 
     glClearColor(0, 0, 0, 0);
@@ -515,7 +516,7 @@ void DrmOutput::renderCursorQPainter(const RenderTarget &renderTarget)
 
     QPainter p;
     p.begin(c);
-    p.setWorldTransform(logicalToNativeMatrix(cursorRect, 1, transform()).toTransform());
+    p.setWorldTransform(logicalToNativeMatrix(cursorRect, 1, transform()).toTransform().scale(1, renderTarget.invertY() ? -1 : 1));
     p.setRenderHint(QPainter::SmoothPixmapTransform);
     p.drawImage(QPoint(0, 0), m_cursor.image);
     p.end();

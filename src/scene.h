@@ -171,6 +171,7 @@ public:
     void setRenderTargetRect(const QRectF &rect);
     qreal renderTargetScale() const;
     void setRenderTargetScale(qreal scale);
+    void setInvertY(bool invert);
 
     QRegion mapToRenderTarget(const QRegion &region) const;
 
@@ -235,6 +236,7 @@ private:
     QMatrix4x4 m_renderTargetProjectionMatrix;
     QRectF m_renderTargetRect;
     qreal m_renderTargetScale = 1;
+    bool m_invertY = false;
     // how many times finalPaintScreen() has been called
     int m_paintScreenCount = 0;
     PaintContext m_paintContext;

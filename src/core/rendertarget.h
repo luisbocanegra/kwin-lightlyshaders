@@ -21,10 +21,11 @@ class KWIN_EXPORT RenderTarget
 {
 public:
     RenderTarget();
-    explicit RenderTarget(GLFramebuffer *fbo);
-    explicit RenderTarget(QImage *image);
+    explicit RenderTarget(GLFramebuffer *fbo, bool invertY = false);
+    explicit RenderTarget(QImage *image, bool invertY = false);
 
     QSize size() const;
+    bool invertY() const;
 
     using NativeHandle = std::variant<GLFramebuffer *, QImage *>;
     NativeHandle nativeHandle() const;
@@ -35,6 +36,7 @@ public:
 private:
     NativeHandle m_nativeHandle;
     qreal m_devicePixelRatio = 1;
+    bool m_invertY = false;
 };
 
 } // namespace KWin

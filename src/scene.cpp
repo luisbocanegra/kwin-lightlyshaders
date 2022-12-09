@@ -409,9 +409,10 @@ void Scene::postPaint()
     clearStackingOrder();
 }
 
-static QMatrix4x4 createProjectionMatrix(const QRectF &rect, qreal scale)
+static QMatrix4x4 createProjectionMatrix(const QRectF &rect, qreal scale, bool invertY)
 {
     QMatrix4x4 ret;
+    ret.scale(1, invertY ? -1 : 1);
     ret.ortho(QRectF(rect.left() * scale, rect.top() * scale, rect.width() * scale, rect.height() * scale));
     return ret;
 }
@@ -433,7 +434,7 @@ void Scene::setRenderTargetRect(const QRectF &rect)
     }
 
     m_renderTargetRect = rect;
-    m_renderTargetProjectionMatrix = createProjectionMatrix(rect, m_renderTargetScale);
+    m_renderTargetProjectionMatrix = createProjectionMatrix(rect, m_renderTargetScale, m_invertY);
 }
 
 qreal Scene::renderTargetScale() const
@@ -448,7 +449,15 @@ void Scene::setRenderTargetScale(qreal scale)
     }
 
     m_renderTargetScale = scale;
-    m_renderTargetProjectionMatrix = createProjectionMatrix(m_renderTargetRect, scale);
+    m_renderTargetProjectionMatrix = createProjectionMatrix(m_renderTargetRect, scale, m_invertY);
+}
+
+void Scene::setInvertY(bool invert)
+{
+    if (m_invertY != invert) {
+        m_invertY = invert;
+        m_renderTargetProjectionMatrix = createProjectionMatrix(m_renderTargetRect, m_renderTargetScale, m_invertY);
+    }
 }
 
 QRegion Scene::mapToRenderTarget(const QRegion &region) const

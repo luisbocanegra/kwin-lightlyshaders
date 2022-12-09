@@ -33,6 +33,7 @@ void CursorDelegateQPainter::paint(RenderTarget *renderTarget, const QRegion &re
     const Cursor *cursor = Cursors::self()->currentCursor();
     QPainter painter(buffer);
     painter.setClipRegion(region);
+    painter.setTransform(QTransform().scale(1, renderTarget->invertY() ? -1 : 1));
     painter.drawImage(layer()->mapToGlobal(layer()->rect()), cursor->image());
 }
 

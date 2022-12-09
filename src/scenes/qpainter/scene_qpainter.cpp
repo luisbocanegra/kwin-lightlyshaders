@@ -56,6 +56,7 @@ void SceneQPainter::paint(RenderTarget *target, const QRegion &region)
     if (buffer && !buffer->isNull()) {
         m_painter->begin(buffer);
         m_painter->setWindow(painted_screen->geometry());
+        setInvertY(target->invertY());
         paintScreen(region);
         m_painter->end();
     }
