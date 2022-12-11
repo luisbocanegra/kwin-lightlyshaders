@@ -11,6 +11,7 @@
 
 #include <errno.h>
 
+#include "core/colortransformation.h"
 #include "core/session.h"
 #include "drm_backend.h"
 #include "drm_buffer.h"
@@ -210,7 +211,13 @@ void DrmPipeline::prepareAtomicPresentation()
     }
 
     m_pending.crtc->setPending(DrmCrtc::PropertyIndex::VrrEnabled, m_pending.syncMode == RenderLoopPrivate::SyncMode::Adaptive || m_pending.syncMode == RenderLoopPrivate::SyncMode::AdaptiveAsync);
-    m_pending.crtc->setPending(DrmCrtc::PropertyIndex::Gamma_LUT, m_pending.gamma ? m_pending.gamma->blobId() : 0);
+    // use LUT if available, CTM if not
+    if (const auto gamma = m_pending.crtc->getProp(DrmCrtc::PropertyIndex::Gamma_LUT)) {
+        gamma->setPending(m_pending.gamma ? m_pending.gamma->blobId() : 0);
+        m_pending.crtc->setPending(DrmCrtc::PropertyIndex::CTM, 0);
+    } else {
+        m_pending.crtc->setPending(DrmCrtc::PropertyIndex::CTM, m_pending.ctm ? m_pending.ctm->blobId() : 0);
+    }
     const auto modeSize = m_pending.mode->size();
     const auto fb = m_pending.layer->currentBuffer().get();
     m_pending.crtc->primaryPlane()->set(QPoint(0, 0), fb->buffer()->size(), QPoint(0, 0), modeSize);
@@ -736,10 +743,48 @@ void DrmPipeline::setColorTransformation(const std::shared_ptr<ColorTransformati
 {
     m_pending.colorTransformation = transformation;
     m_pending.gamma = std::make_shared<DrmGammaRamp>(m_pending.crtc, transformation);
+    const auto one = std::numeric_limits<uint16_t>::max();
+    const auto [r, g, b] = transformation->transform(one, one, one);
+    m_pending.ctm = std::make_shared<DrmCTM>(gpu(), r / double(one), g / double(one), b / double(one));
 }
 
 void DrmPipeline::setContentType(DrmConnector::DrmContentType type)
 {
     m_pending.contentType = type;
+}
+
+static uint64_t doubleToFixed(double value)
+{
+    // ctm values are in S31.32 sign-magnitude format
+    uint64_t ret = std::abs(value) * (1ul << 32);
+    if (value < 0) {
+        ret |= 1ul << 63;
+    }
+    return ret;
+}
+
+DrmCTM::DrmCTM(DrmGpu *gpu, double r, double g, double b)
+    : m_gpu(gpu)
+{
+    drm_color_ctm blob = {
+        .matrix = {
+            doubleToFixed(r), doubleToFixed(0), doubleToFixed(0), //
+            doubleToFixed(0), doubleToFixed(g), doubleToFixed(0), //
+            doubleToFixed(0), doubleToFixed(0), doubleToFixed(b) //
+        } //
+    };
+    drmModeCreatePropertyBlob(m_gpu->fd(), &blob, sizeof(drm_color_ctm), &m_blobId);
+}
+
+DrmCTM::~DrmCTM()
+{
+    if (m_blobId) {
+        drmModeDestroyPropertyBlob(m_gpu->fd(), m_blobId);
+    }
+}
+
+uint32_t DrmCTM::blobId() const
+{
+    return m_blobId;
 }
 }

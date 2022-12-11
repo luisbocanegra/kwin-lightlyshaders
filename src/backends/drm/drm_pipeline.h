@@ -48,6 +48,19 @@ private:
     uint32_t m_blobId = 0;
 };
 
+class DrmCTM
+{
+public:
+    DrmCTM(DrmGpu *gpu, double r, double g, double b);
+    ~DrmCTM();
+
+    uint32_t blobId() const;
+
+private:
+    DrmGpu *const m_gpu;
+    uint32_t m_blobId = 0;
+};
+
 class DrmPipeline
 {
 public:
@@ -188,6 +201,7 @@ private:
         RenderLoopPrivate::SyncMode syncMode = RenderLoopPrivate::SyncMode::Fixed;
         std::shared_ptr<ColorTransformation> colorTransformation;
         std::shared_ptr<DrmGammaRamp> gamma;
+        std::shared_ptr<DrmCTM> ctm;
         DrmConnector::DrmContentType contentType = DrmConnector::DrmContentType::Graphics;
 
         std::shared_ptr<DrmPipelineLayer> layer;
