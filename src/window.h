@@ -1130,10 +1130,7 @@ public:
      * @param keyboard Defines whether to take keyboard cursor into account.
      */
     void setQuickTileMode(QuickTileMode mode, bool keyboard = false);
-    QuickTileMode quickTileMode() const
-    {
-        return QuickTileMode(m_quickTileMode);
-    }
+    QuickTileMode quickTileMode() const;
     virtual Layer layer() const;
     void updateLayer();
 
@@ -1712,10 +1709,7 @@ protected:
     void updateElectricGeometryRestore();
     QRectF quickTileGeometryRestore() const;
     QRectF quickTileGeometry(QuickTileMode mode, const QPointF &pos) const;
-    void updateQuickTileMode(QuickTileMode newMode)
-    {
-        m_quickTileMode = newMode;
-    }
+    void updateQuickTileMode(QuickTileMode newMode);
 
     // geometry handling
     void checkOffscreenPosition(QRectF *geom, const QRectF &screenArea);
@@ -1982,8 +1976,6 @@ private:
     QuickTileMode m_electricMode = QuickTileFlag::None;
     QRectF m_electricGeometryRestore;
     bool m_electricMaximizing = false;
-    // The quick tile mode of this window.
-    int m_quickTileMode = int(QuickTileFlag::None);
     QTimer *m_electricMaximizingDelay = nullptr;
 
     // geometry
