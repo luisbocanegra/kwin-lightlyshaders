@@ -584,7 +584,6 @@ void QuickTilingTest::testX11QuickTiling()
     QCOMPARE(window->quickTileMode(), mode);
     QTEST(window->frameGeometry(), "expectedGeometry");
     QCOMPARE(window->geometryRestore(), origGeo);
-    QEXPECT_FAIL("maximize", "For maximize we get two changed signals", Continue);
     QCOMPARE(quickTileChangedSpy.count(), 1);
 
     // quick tile to same edge again should also act like send to screen
@@ -670,7 +669,6 @@ void QuickTilingTest::testX11QuickTilingAfterVertMaximize()
     window->setQuickTileMode(mode, true);
     QCOMPARE(window->quickTileMode(), mode);
     QTEST(window->frameGeometry(), "expectedGeometry");
-    QEXPECT_FAIL("", "We get two changed events", Continue);
     QCOMPARE(quickTileChangedSpy.count(), 1);
 
     // and destroy the window again

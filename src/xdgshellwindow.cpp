@@ -10,6 +10,7 @@
 */
 #include "xdgshellwindow.h"
 #include "core/output.h"
+#include "utils/common.h"
 #if KWIN_BUILD_ACTIVITIES
 #include "activities.h"
 #endif
@@ -1735,11 +1736,14 @@ void XdgToplevelWindow::maximize(MaximizeMode mode)
     if (m_requestedMaximizeMode == MaximizeFull) {
         if (options->electricBorderMaximize()) {
             updateQuickTileMode(QuickTileFlag::Maximize);
+            updateMaximizeMode(MaximizeFull);
         } else {
             updateQuickTileMode(QuickTileFlag::None);
+            updateMaximizeMode(MaximizeRestore);
         }
     } else {
         updateQuickTileMode(QuickTileFlag::None);
+        updateMaximizeMode(MaximizeRestore);
     }
 
     moveResize(geometry);
