@@ -3944,7 +3944,7 @@ QuickTileMode Window::quickTileMode() const
     if (m_tile) {
         return m_tile->quickTileMode();
     } else {
-        switch (maximizeMode()) {
+        switch (requestedMaximizeMode()) {
         case MaximizeVertical:
             return QuickTileFlag::Vertical;
         case MaximizeHorizontal:
