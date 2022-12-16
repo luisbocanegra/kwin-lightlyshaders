@@ -38,6 +38,9 @@ Tile::~Tile()
     if (m_parentTile) {
         m_parentTile->removeChild(this);
     }
+    if (m_tiling->rootTile() == this) {
+        return;
+    }
     for (auto *w : std::as_const(m_windows)) {
         Tile *tile = m_tiling->bestTileForPosition(w->moveResizeGeometry().center());
         w->setTile(tile);
