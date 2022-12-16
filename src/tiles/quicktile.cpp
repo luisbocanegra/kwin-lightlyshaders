@@ -57,6 +57,7 @@ Tile *QuickRootTile::tileForMode(QuickTileMode mode)
     case QuickTileMode(QuickTileFlag::Maximize):
     case QuickTileMode(QuickTileFlag::Horizontal):
     case QuickTileMode(QuickTileFlag::Vertical):
+        return this;
     default:
         return nullptr;
     }
