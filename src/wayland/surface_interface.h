@@ -81,6 +81,15 @@ public:
     explicit SurfaceInterface(CompositorInterface *compositor, wl_resource *resource);
     ~SurfaceInterface() override;
 
+    enum class PresentationKind {
+        None = 0,
+        Vsync = 1 << 0,
+        HwClock = 1 << 1,
+        HwCompletion = 1 << 2,
+        ZeroCopy = 1 << 3
+    };
+    Q_DECLARE_FLAGS(PresentationKinds, PresentationKind)
+
     /**
      * Returns the object id for this Wayland surface.
      */
@@ -161,7 +170,7 @@ public:
      */
     QPointF mapToChild(SurfaceInterface *child, const QPointF &point) const;
 
-    void frameRendered(quint32 msec);
+    void frameRendered(quint32 msec, KWin::Output *painted_screen = nullptr);
     bool hasFrameCallbacks() const;
 
     QRegion damage() const;
@@ -282,6 +291,16 @@ public:
      * @see outputs
      */
     void setOutputs(const QVector<OutputInterface *> &outputs);
+
+    /**
+     * Sets the Largest Output of this SurfaceInterface overlaps with, may be empty.
+     *
+     * The compositor should update whenever the SurfaceInterface becomes visible on
+     * an OutputInterface by e.g. getting (un)mapped, resized, moved, etc.
+     *
+     * @see outputs
+     */
+    void setLargestOutput(OutputInterface *output);
 
     /**
      * @returns All OutputInterfaces the SurfaceInterface is on.

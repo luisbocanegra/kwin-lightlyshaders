@@ -301,6 +301,11 @@ QVector<wl_resource *> OutputInterface::clientResources(ClientConnection *client
     return ret;
 }
 
+wl_resource *OutputInterface::getOutputRessource()
+{
+    return d->resource()->handle;
+}
+
 void OutputInterface::scheduleDone()
 {
     if (!d->isGlobalRemoved()) {

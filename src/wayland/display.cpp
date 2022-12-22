@@ -173,6 +173,20 @@ QVector<OutputInterface *> Display::outputsIntersecting(const QRect &rect) const
     return outputs;
 }
 
+OutputInterface *Display::largestOutputIntersecting(const QRect &rect) const
+{
+    OutputInterface *returnOutput = nullptr;
+    int size = 0;
+    for (auto *output : std::as_const(d->outputs)) {
+        QRect intersect = output->handle()->geometry().intersected(rect);
+        if (intersect.width() + intersect.height() > size) {
+            size = intersect.width() + intersect.height();
+            returnOutput = output;
+        }
+    }
+    return returnOutput;
+}
+
 QVector<SeatInterface *> Display::seats() const
 {
     return d->seats;

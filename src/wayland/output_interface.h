@@ -48,6 +48,7 @@ public:
      * @returns all wl_resources bound for the @p client
      */
     QVector<wl_resource *> clientResources(ClientConnection *client) const;
+    wl_resource *getOutputRessource();
 
     /**
      * Submit changes to all clients.

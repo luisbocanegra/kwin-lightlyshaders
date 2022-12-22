@@ -14,6 +14,7 @@
 #include "idleinhibit_v1_interface_p.h"
 #include "linuxdmabufv1clientbuffer.h"
 #include "pointerconstraints_v1_interface_p.h"
+#include "presentation_time_interface.h"
 #include "region_interface_p.h"
 #include "subcompositor_interface.h"
 #include "subsurface_interface_p.h"
@@ -44,6 +45,7 @@ SurfaceInterfacePrivate::SurfaceInterfacePrivate(SurfaceInterface *q)
     wl_list_init(&current.frameCallbacks);
     wl_list_init(&pending.frameCallbacks);
     wl_list_init(&cached.frameCallbacks);
+    this->feedbacks = new PresentationFeedbacks();
 }
 
 SurfaceInterfacePrivate::~SurfaceInterfacePrivate()
@@ -349,6 +351,46 @@ void SurfaceInterfacePrivate::surface_offset(Resource *resource, int32_t x, int3
     pending.offset = QPoint(x, y);
 }
 
+void SurfaceInterfacePrivate::sendFeedback(KWin::Output *painted_screen)
+{
+    if (this->feedbacks->active() == false) {
+        return;
+    }
+
+    if (this->feedbacks->getOutput() == nullptr) {
+        // if we have a calculated Best Output, set it
+        if (largestOutput != nullptr) {
+            this->feedbacks->setOutput(largestOutput);
+        }
+        // take the current frame output
+        else {
+            KWaylandServer::OutputInterface *wayland_output_painted = nullptr;
+            for (auto output : outputs) {
+                if (output->handle() == painted_screen) {
+                    wayland_output_painted = output;
+                    break;
+                }
+            }
+            // if current frame output not finded, retry later
+            if (wayland_output_painted == nullptr) {
+                return;
+            }
+            this->feedbacks->setOutput(wayland_output_painted);
+        }
+    }
+
+    if (this->feedbacks->getOutput()->handle() == painted_screen) {
+        this->feedbacks->presented(painted_screen->renderLoop()->lastPresentationTimestamp(),
+                                   painted_screen->renderLoop()->nextPresentationTimestamp(),
+                                   SurfaceInterface::PresentationKind::Vsync);
+    }
+}
+
+void SurfaceInterfacePrivate::addPresentationFeedback(PresentationFeedbackInterface *feedback) const
+{
+    this->feedbacks->add(feedback);
+}
+
 SurfaceInterface::SurfaceInterface(CompositorInterface *compositor, wl_resource *resource)
     : QObject(compositor)
     , d(new SurfaceInterfacePrivate(this))
@@ -388,7 +430,7 @@ CompositorInterface *SurfaceInterface::compositor() const
     return d->compositor;
 }
 
-void SurfaceInterface::frameRendered(quint32 msec)
+void SurfaceInterface::frameRendered(quint32 msec, KWin::Output *painted_screen)
 {
     // notify all callbacks
     wl_resource *resource;
@@ -400,10 +442,14 @@ void SurfaceInterface::frameRendered(quint32 msec)
     }
 
     for (SubSurfaceInterface *subsurface : std::as_const(d->current.below)) {
-        subsurface->surface()->frameRendered(msec);
+        subsurface->surface()->frameRendered(msec, painted_screen);
     }
     for (SubSurfaceInterface *subsurface : std::as_const(d->current.above)) {
-        subsurface->surface()->frameRendered(msec);
+        subsurface->surface()->frameRendered(msec, painted_screen);
+    }
+
+    if (painted_screen != nullptr) { // cursor have no painted screen
+        d->sendFeedback(painted_screen);
     }
 }
 
@@ -900,6 +946,11 @@ QVector<OutputInterface *> SurfaceInterface::outputs() const
     return d->outputs;
 }
 
+void SurfaceInterface::setLargestOutput(OutputInterface *output)
+{
+    d->largestOutput = output;
+}
+
 void SurfaceInterface::setOutputs(const QVector<OutputInterface *> &outputs)
 {
     QVector<OutputInterface *> removedOutputs = d->outputs;
@@ -911,6 +962,7 @@ void SurfaceInterface::setOutputs(const QVector<OutputInterface *> &outputs)
         const auto resources = (*it)->clientResources(client());
         for (wl_resource *outputResource : resources) {
             d->send_leave(outputResource);
+            d->feedbacks->unsetOutput(*it);
         }
         disconnect(d->outputDestroyedConnections.take(*it));
         disconnect(d->outputBoundConnections.take(*it));
