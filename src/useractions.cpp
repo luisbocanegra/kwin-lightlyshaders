@@ -758,6 +758,23 @@ void UserActionsMenu::activityPopupAboutToShow()
             action->setChecked(true);
         }
     }
+
+    m_activityMenu->addSeparator();
+    for (const QString &id : activities) {
+        const KActivities::Info activity(id);
+        if (m_window->activities().size() == 1 && m_window->activities().front() == id) {
+            // no need to show a button that doesn't do anything
+            continue;
+        }
+        const QString name = i18n("Move to %1", activity.name().replace('&', "&&"));
+        const auto action = m_activityMenu->addAction(name);
+        if (const QString icon = activity.icon(); !icon.isEmpty()) {
+            action->setIcon(QIcon::fromTheme(icon));
+        }
+        const QString data = "Move to " + id;
+        action->setData(data);
+        m_activityMenu->addAction(action);
+    }
 #endif
 }
 
@@ -802,26 +819,31 @@ void UserActionsMenu::slotToggleOnActivity(QAction *action)
     if (!Workspace::self()->activities()) {
         return;
     }
-    QString activity = action->data().toString();
     if (m_window.isNull()) {
         return;
     }
-    if (activity.isEmpty()) {
-        // the 'on_all_activities' menu entry
-        m_window->setOnAllActivities(!m_window->isOnAllActivities());
-        return;
-    }
+    const QString actionData = action->data().toString();
+    if (actionData.startsWith("Move to ")) {
+        const QString activity = actionData.mid(std::string_view("Move to ").size());
+        m_window->setOnActivities({activity});
+    } else {
+        if (actionData.isEmpty()) {
+            // the 'on_all_activities' menu entry
+            m_window->setOnAllActivities(!m_window->isOnAllActivities());
+            return;
+        }
 
-    Workspace::self()->activities()->toggleWindowOnActivity(m_window, activity, false);
-    if (m_activityMenu && m_activityMenu->isVisible() && m_activityMenu->actions().count()) {
-        const bool isOnAll = m_window->isOnAllActivities();
-        m_activityMenu->actions().at(0)->setChecked(isOnAll);
-        if (isOnAll) {
-            // toggleClientOnActivity interprets "on all" as "on none" and
-            // susequent toggling ("off") would move the window to only that activity.
-            // bug #330838 -> set all but "on all" off to "force proper usage"
-            for (int i = 1; i < m_activityMenu->actions().count(); ++i) {
-                m_activityMenu->actions().at(i)->setChecked(true);
+        Workspace::self()->activities()->toggleWindowOnActivity(m_window, actionData, false);
+        if (m_activityMenu && m_activityMenu->isVisible() && m_activityMenu->actions().count()) {
+            const bool isOnAll = m_window->isOnAllActivities();
+            m_activityMenu->actions().at(0)->setChecked(isOnAll);
+            if (isOnAll) {
+                // toggleClientOnActivity interprets "on all" as "on none" and
+                // susequent toggling ("off") would move the window to only that activity.
+                // bug #330838 -> set all but "on all" off to "force proper usage"
+                for (int i = 1; i < m_activityMenu->actions().count(); ++i) {
+                    m_activityMenu->actions().at(i)->setChecked(true);
+                }
             }
         }
     }
