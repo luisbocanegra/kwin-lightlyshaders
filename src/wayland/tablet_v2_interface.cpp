@@ -712,7 +712,8 @@ TabletSeatV2Interface::~TabletSeatV2Interface() = default;
 TabletToolV2Interface *TabletSeatV2Interface::addTool(TabletToolV2Interface::Type type,
                                                       quint64 hardwareSerial,
                                                       quint64 hardwareId,
-                                                      const QVector<TabletToolV2Interface::Capability> &capabilities)
+                                                      const QVector<TabletToolV2Interface::Capability> &capabilities,
+                                                      QObject *parent)
 {
     constexpr auto MAX_UINT_32 = std::numeric_limits<quint32>::max();
     auto tool = new TabletToolV2Interface(d->m_display,
@@ -722,7 +723,7 @@ TabletToolV2Interface *TabletSeatV2Interface::addTool(TabletToolV2Interface::Typ
                                           hardwareId >> 32,
                                           hardwareId & MAX_UINT_32,
                                           capabilities,
-                                          this);
+                                          parent);
     for (QtWaylandServer::zwp_tablet_seat_v2::Resource *resource : d->resourceMap()) {
         d->sendToolAdded(resource, tool);
     }

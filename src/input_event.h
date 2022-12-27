@@ -15,6 +15,10 @@
 
 namespace KWin
 {
+namespace LibInput
+{
+class Device;
+}
 
 class InputDevice;
 
@@ -191,6 +195,7 @@ private:
 class TabletToolId
 {
 public:
+    LibInput::Device *device;
     InputRedirection::TabletToolType m_toolType;
     QVector<InputRedirection::Capability> m_capabilities;
     quint64 m_serialId;

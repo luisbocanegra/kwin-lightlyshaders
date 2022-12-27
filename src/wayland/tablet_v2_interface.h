@@ -274,7 +274,7 @@ public:
                                        quint32 currentMode,
                                        TabletV2Interface *tablet);
     TabletToolV2Interface *
-    addTool(TabletToolV2Interface::Type type, quint64 hardwareSerial, quint64 hardwareId, const QVector<TabletToolV2Interface::Capability> &capabilities);
+    addTool(TabletToolV2Interface::Type type, quint64 hardwareSerial, quint64 hardwareId, const QVector<TabletToolV2Interface::Capability> &capabilities, QObject *parent);
 
     TabletToolV2Interface *toolByHardwareId(quint64 hardwareId) const;
     TabletToolV2Interface *toolByHardwareSerial(quint64 hardwareSerial, TabletToolV2Interface::Type type) const;
