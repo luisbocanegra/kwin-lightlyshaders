@@ -382,6 +382,9 @@ void Connection::processEvents()
 #ifndef KWIN_BUILD_TESTING
             TouchEvent *te = static_cast<TouchEvent *>(event.get());
             const auto *output = te->device()->output();
+            if (!output) {
+                qCWarning(KWIN_LIBINPUT) << "Touch down received for device with no output assigned";
+            }
             const QPointF globalPos = devicePointToGlobalPosition(te->absolutePos(output->modeSize()), output);
             Q_EMIT te->device()->touchDown(te->id(), globalPos, te->time(), te->device());
             break;
@@ -389,6 +392,10 @@ void Connection::processEvents()
         }
         case LIBINPUT_EVENT_TOUCH_UP: {
             TouchEvent *te = static_cast<TouchEvent *>(event.get());
+            const auto *output = te->device()->output();
+            if (!output) {
+                return;
+            }
             Q_EMIT te->device()->touchUp(te->id(), te->time(), te->device());
             break;
         }
@@ -396,6 +403,9 @@ void Connection::processEvents()
 #ifndef KWIN_BUILD_TESTING
             TouchEvent *te = static_cast<TouchEvent *>(event.get());
             const auto *output = te->device()->output();
+            if (!output) {
+                return;
+            }
             const QPointF globalPos = devicePointToGlobalPosition(te->absolutePos(output->modeSize()), output);
             Q_EMIT te->device()->touchMotion(te->id(), globalPos, te->time(), te->device());
             break;
