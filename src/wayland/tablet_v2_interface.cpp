@@ -693,7 +693,7 @@ public:
     }
 
     TabletSeatV2Interface *const q;
-    QHash<QString, TabletToolV2Interface *> m_tools;
+    QHash<QString, QVector<TabletToolV2Interface *>> m_tools;
     QHash<QString, TabletV2Interface *> m_tablets;
     QHash<QString, TabletPadV2Interface *> m_pads;
     Display *const m_display;
