@@ -150,6 +150,16 @@ ContentType SurfaceItem::contentType() const
     return ContentType::None;
 }
 
+bool SurfaceItem::directScanout() const
+{
+    return m_directScanout;
+}
+
+void SurfaceItem::setDirectScanout(bool scanout)
+{
+    m_directScanout = scanout;
+}
+
 SurfaceTexture::~SurfaceTexture()
 {
 }

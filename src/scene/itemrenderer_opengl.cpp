@@ -61,8 +61,8 @@ static GLTexture *bindSurfaceTexture(SurfaceItem *surfaceItem)
     }
 
     if (platformSurfaceTexture->texture()) {
-        const QRegion region = surfaceItem->damage();
-        if (!region.isEmpty()) {
+        const QRegion region = surfaceItem->directScanout() ? QRegion() : surfaceItem->damage();
+        if (!region.isEmpty() || surfaceItem->directScanout()) {
             platformSurfaceTexture->update(region);
             surfaceItem->resetDamage();
         }
@@ -76,6 +76,7 @@ static GLTexture *bindSurfaceTexture(SurfaceItem *surfaceItem)
         }
         surfaceItem->resetDamage();
     }
+    surfaceItem->setDirectScanout(false);
 
     return platformSurfaceTexture->texture();
 }

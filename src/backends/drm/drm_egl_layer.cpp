@@ -149,6 +149,7 @@ bool EglGbmLayer::scanout(SurfaceItem *surfaceItem)
         m_dmabufFeedback.scanoutSuccessful(surface);
         m_currentDamage = surfaceItem->damage();
         surfaceItem->resetDamage();
+        surfaceItem->setDirectScanout(true);
         return true;
     } else {
         m_dmabufFeedback.scanoutFailed(surface, formats);

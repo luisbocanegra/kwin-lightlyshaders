@@ -162,6 +162,7 @@ bool VirtualEglGbmLayer::scanout(SurfaceItem *surfaceItem)
     // damage tracking for screen casting
     m_currentDamage = m_scanoutSurface == item->surface() ? surfaceItem->damage() : infiniteRegion();
     surfaceItem->resetDamage();
+    surfaceItem->setDirectScanout(true);
     m_scanoutSurface = item->surface();
     m_currentBuffer = scanoutBuffer;
     return true;

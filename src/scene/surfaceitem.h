@@ -41,6 +41,9 @@ public:
 
     virtual ContentType contentType() const;
 
+    bool directScanout() const;
+    void setDirectScanout(bool scanout);
+
 Q_SIGNALS:
     void damaged();
 
@@ -54,6 +57,7 @@ protected:
     QRegion m_damage;
     std::unique_ptr<SurfacePixmap> m_pixmap;
     std::unique_ptr<SurfacePixmap> m_previousPixmap;
+    bool m_directScanout = true;
     QMatrix4x4 m_surfaceToBufferMatrix;
     int m_referencePixmapCounter = 0;
 };
