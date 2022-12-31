@@ -281,7 +281,7 @@ void BlurEffect::reconfigure(ReconfigureFlags flags)
     effects->addRepaintFull();
 }
 
-void BlurEffect::updateBlurRegion(EffectWindow *w)
+void BlurEffect::updateBlurRegion(EffectWindow *w) const
 {
     QRegion region;
     bool valid = false;
@@ -316,10 +316,14 @@ void BlurEffect::updateBlurRegion(EffectWindow *w)
         }
     }
 
-    if (valid) {
-        blurRegions[w] = region;
+    // If the specified blur region is empty, enable blur for the whole window.
+    if (region.isEmpty() && valid) {
+        // Set the data to a dummy value.
+        // This is needed to be able to distinguish between the value not
+        // being set, and being set to an empty region.
+        w->setData(WindowBlurBehindRole, 1);
     } else {
-        blurRegions.remove(w);
+        w->setData(WindowBlurBehindRole, region);
     }
 }
 
@@ -344,7 +348,6 @@ void BlurEffect::slotWindowAdded(EffectWindow *w)
 
 void BlurEffect::slotWindowDeleted(EffectWindow *w)
 {
-    blurRegions.remove(w);
     auto it = windowBlurChangedConnections.find(w);
     if (it == windowBlurChangedConnections.end()) {
         return;
@@ -458,8 +461,9 @@ QRegion BlurEffect::blurRegion(const EffectWindow *w) const
 {
     QRegion region;
 
-    if (auto it = blurRegions.find(w); it != blurRegions.end()) {
-        const QRegion &appRegion = *it;
+    const QVariant value = w->data(WindowBlurBehindRole);
+    if (value.isValid()) {
+        const QRegion appRegion = qvariant_cast<QRegion>(value);
         if (!appRegion.isEmpty()) {
             if (w->decorationHasAlpha() && decorationSupportsBlurBehind(w)) {
                 region = decorationBlurRegion(w);
