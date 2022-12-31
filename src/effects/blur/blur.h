@@ -73,7 +73,7 @@ private:
     QRegion decorationBlurRegion(const EffectWindow *w) const;
     bool decorationSupportsBlurBehind(const EffectWindow *w) const;
     bool shouldBlur(const EffectWindow *w, int mask, const WindowPaintData &data) const;
-    void updateBlurRegion(EffectWindow *w);
+    void updateBlurRegion(EffectWindow *w) const;
     void doBlur(const QRegion &shape, const QRect &screen, const float opacity, const QMatrix4x4 &screenProjection, bool isDock, QRect windowRect);
     void uploadRegion(QVector2D *&map, const QRegion &region, const int downSampleIterations);
     void uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, const QRegion &windowRegion);
@@ -122,7 +122,6 @@ private:
     QVector<BlurValuesStruct> blurStrengthValues;
 
     QMap<EffectWindow *, QMetaObject::Connection> windowBlurChangedConnections;
-    QMap<const EffectWindow *, QRegion> blurRegions;
 
     static KWaylandServer::BlurManagerInterface *s_blurManager;
     static QTimer *s_blurManagerRemoveTimer;
