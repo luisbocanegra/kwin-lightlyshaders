@@ -11,7 +11,6 @@
 namespace KWin
 {
 
-class GLShader;
 class OffscreenEffectPrivate;
 class CrossFadeEffectPrivate;
 class ShaderEffectPrivate;
