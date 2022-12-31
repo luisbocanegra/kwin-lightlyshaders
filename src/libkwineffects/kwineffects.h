@@ -80,6 +80,7 @@ class OffscreenQuickView;
 class EffectScreen;
 class Effect;
 class WindowQuad;
+class GLShader;
 class WindowQuadList;
 class WindowPrePaintData;
 class WindowPaintData;
@@ -3428,6 +3429,11 @@ public:
      */
     std::optional<qreal> renderTargetScale() const;
     void setRenderTargetScale(qreal scale);
+
+    /**
+     * Shader to be used for rendering, if any.
+     */
+    GLShader *shader;
 
 private:
     const std::unique_ptr<WindowPaintDataPrivate> d;
