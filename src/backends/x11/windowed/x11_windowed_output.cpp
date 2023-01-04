@@ -8,14 +8,17 @@
 */
 #include "x11_windowed_output.h"
 #include "../common/kwinxrenderutils.h"
+#include "x11_windowed_backend.h"
 #include "x11_windowed_egl_backend.h"
 #include "x11_windowed_qpainter_backend.h"
 
 #include <config-kwin.h>
 
-#include "core/renderloop_p.h"
 #include "composite.h"
-#include "x11_windowed_backend.h"
+#include "core/renderlayer.h"
+#include "core/renderloop_p.h"
+#include "cursorsource.h"
+#include "scene/cursorscene.h"
 
 #include <NETWM>
 
@@ -282,12 +285,12 @@ QPointF X11WindowedOutput::mapFromGlobal(const QPointF &pos) const
     return (pos - hostPosition() + internalPosition()) / scale();
 }
 
-bool X11WindowedOutput::setCursor(const QImage &image, const QPoint &hotspot)
+bool X11WindowedOutput::setCursor(CursorSource *source)
 {
     if (X11WindowedEglBackend *backend = qobject_cast<X11WindowedEglBackend *>(Compositor::self()->backend())) {
-        renderCursorOpengl(backend, image, hotspot);
+        renderCursorOpengl(backend, source);
     } else if (X11WindowedQPainterBackend *backend = qobject_cast<X11WindowedQPainterBackend *>(Compositor::self()->backend())) {
-        renderCursorQPainter(backend, image, hotspot);
+        renderCursorQPainter(backend, source);
     }
 
     return true;
@@ -299,71 +302,60 @@ bool X11WindowedOutput::moveCursor(const QPoint &position)
     return true;
 }
 
-void X11WindowedOutput::renderCursorOpengl(X11WindowedEglBackend *backend, const QImage &image, const QPoint &hotspot)
+void X11WindowedOutput::renderCursorOpengl(X11WindowedEglBackend *backend, CursorSource *source)
 {
     X11WindowedEglCursorLayer *cursorLayer = backend->cursorLayer(this);
-    cursorLayer->setHotspot(hotspot);
-    cursorLayer->setSize(image.size());
+    if (source) {
+        cursorLayer->setSize(source->size());
+        cursorLayer->setHotspot(source->hotspot());
+    } else {
+        cursorLayer->setSize(QSize());
+        cursorLayer->setHotspot(QPoint());
+    }
 
     std::optional<OutputLayerBeginFrameInfo> beginInfo = cursorLayer->beginFrame();
     if (!beginInfo) {
         return;
     }
 
-    const QRect cursorRect(QPoint(0, 0), image.size() / image.devicePixelRatio());
+    RenderTarget *renderTarget = &beginInfo->renderTarget;
+    renderTarget->setDevicePixelRatio(scale());
 
-    QMatrix4x4 mvp;
-    mvp.ortho(QRect(QPoint(), beginInfo->renderTarget.size()));
+    RenderLayer renderLayer(m_renderLoop.get());
+    renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene()));
 
-    GLFramebuffer *fbo = std::get<GLFramebuffer *>(beginInfo->renderTarget.nativeHandle());
-    GLFramebuffer::pushFramebuffer(fbo);
-
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (!image.isNull()) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        GLTexture texture(image);
-        texture.bind();
-        ShaderBinder binder(ShaderTrait::MapTexture);
-        binder.shader()->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
-        texture.render(cursorRect, beginInfo->renderTarget.devicePixelRatio());
-        texture.unbind();
-        glDisable(GL_BLEND);
-    }
-
-    GLFramebuffer::popFramebuffer();
+    renderLayer.delegate()->prePaint();
+    renderLayer.delegate()->paint(renderTarget, infiniteRegion());
+    renderLayer.delegate()->postPaint();
 
     cursorLayer->endFrame(infiniteRegion(), infiniteRegion());
 }
 
-void X11WindowedOutput::renderCursorQPainter(X11WindowedQPainterBackend *backend, const QImage &image, const QPoint &hotspot)
+void X11WindowedOutput::renderCursorQPainter(X11WindowedQPainterBackend *backend, CursorSource *source)
 {
     X11WindowedQPainterCursorLayer *cursorLayer = backend->cursorLayer(this);
-    cursorLayer->setHotspot(hotspot);
-    cursorLayer->setSize(image.size());
+    if (source) {
+        cursorLayer->setSize(source->size());
+        cursorLayer->setHotspot(source->hotspot());
+    } else {
+        cursorLayer->setSize(QSize());
+        cursorLayer->setHotspot(QPoint());
+    }
 
     std::optional<OutputLayerBeginFrameInfo> beginInfo = cursorLayer->beginFrame();
     if (!beginInfo) {
         return;
     }
 
-    const QRect cursorRect(QPoint(0, 0), image.size() / image.devicePixelRatio());
+    RenderTarget *renderTarget = &beginInfo->renderTarget;
+    renderTarget->setDevicePixelRatio(scale());
 
-    QImage *c = std::get<QImage *>(beginInfo->renderTarget.nativeHandle());
-    c->setDevicePixelRatio(scale());
-    c->fill(Qt::transparent);
+    RenderLayer renderLayer(m_renderLoop.get());
+    renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene()));
 
-    if (!image.isNull()) {
-        QPainter p;
-        p.begin(c);
-        p.setWorldTransform(logicalToNativeMatrix(cursorRect, 1, transform()).toTransform());
-        p.setRenderHint(QPainter::SmoothPixmapTransform);
-        p.drawImage(QPoint(0, 0), image);
-        p.end();
-    }
+    renderLayer.delegate()->prePaint();
+    renderLayer.delegate()->paint(renderTarget, infiniteRegion());
+    renderLayer.delegate()->postPaint();
 
     cursorLayer->endFrame(infiniteRegion(), infiniteRegion());
 }

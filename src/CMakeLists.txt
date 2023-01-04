@@ -117,8 +117,11 @@ target_sources(kwin PRIVATE
     rootinfo_filter.cpp
     rulebooksettings.cpp
     rules.cpp
+    scene/cursoritem.cpp
+    scene/cursorscene.cpp
     scene/decorationitem.cpp
     scene/dndiconitem.cpp
+    scene/imageitem.cpp
     scene/item.cpp
     scene/itemrenderer.cpp
     scene/itemrenderer_opengl.cpp

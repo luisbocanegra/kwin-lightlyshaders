@@ -55,10 +55,9 @@ NightColorManager::NightColorManager()
 
     // Display a message when Night Color is (un)inhibited.
     connect(this, &NightColorManager::inhibitedChanged, this, [this] {
-        // TODO: Maybe use different icons?
         const QString iconName = isInhibited()
-            ? QStringLiteral("preferences-desktop-display-nightcolor-off")
-            : QStringLiteral("preferences-desktop-display-nightcolor-on");
+            ? QStringLiteral("redshift-status-off")
+            : QStringLiteral("redshift-status-on");
 
         const QString text = isInhibited()
             ? i18nc("Night Color was disabled", "Night Color Off")
@@ -468,7 +467,7 @@ void NightColorManager::preview(uint previewTemp)
         QStringLiteral("org.kde.osdService"),
         QStringLiteral("showText"));
     message.setArguments(
-        {QStringLiteral("preferences-desktop-display-nightcolor-on"),
+        {QStringLiteral("redshift-status-on"),
          i18n("Color Temperature Preview")});
     QDBusConnection::sessionBus().asyncCall(message);
 }

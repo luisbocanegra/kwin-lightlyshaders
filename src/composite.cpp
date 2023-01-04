@@ -26,6 +26,9 @@
 #include "internalwindow.h"
 #include "openglbackend.h"
 #include "qpainterbackend.h"
+#include "scene/cursorscene.h"
+#include "scene/itemrenderer_opengl.h"
+#include "scene/itemrenderer_qpainter.h"
 #include "scene/surfaceitem_x11.h"
 #include "scene/workspacescene_opengl.h"
 #include "scene/workspacescene_qpainter.h"
@@ -206,6 +209,7 @@ bool Compositor::attemptOpenGLCompositing()
     }
 
     m_scene = std::make_unique<WorkspaceSceneOpenGL>(backend.get());
+    m_cursorScene = std::make_unique<CursorScene>(std::make_unique<ItemRendererOpenGL>());
     m_backend = std::move(backend);
 
     // set strict binding
@@ -225,6 +229,7 @@ bool Compositor::attemptQPainterCompositing()
     }
 
     m_scene = std::make_unique<WorkspaceSceneQPainter>(backend.get());
+    m_cursorScene = std::make_unique<CursorScene>(std::make_unique<ItemRendererQPainter>());
     m_backend = std::move(backend);
 
     qCDebug(KWIN_CORE) << "QPainter compositing has been successfully initialized";
@@ -362,6 +367,7 @@ void Compositor::startupWithWorkspace()
 {
     Q_ASSERT(m_scene);
     m_scene->initialize();
+    m_cursorScene->initialize();
 
     const QList<Output *> outputs = workspace()->outputs();
     if (kwinApp()->operationMode() == Application::OperationModeX11) {
@@ -446,9 +452,9 @@ void Compositor::addOutput(Output *output)
         const QRect layerRect = output->mapFromGlobal(cursor->geometry());
         bool usesHardwareCursor = false;
         if (!Cursors::self()->isCursorHidden()) {
-            usesHardwareCursor = output->setCursor(cursor->image(), cursor->hotspot()) && output->moveCursor(layerRect.topLeft());
+            usesHardwareCursor = output->setCursor(cursor->source()) && output->moveCursor(layerRect.topLeft());
         } else {
-            usesHardwareCursor = output->setCursor(QImage(), QPoint());
+            usesHardwareCursor = output->setCursor(nullptr);
         }
         cursorLayer->setVisible(cursor->isOnOutput(output) && !usesHardwareCursor);
         cursorLayer->setGeometry(layerRect);
@@ -547,6 +553,7 @@ void Compositor::stop()
     }
 
     m_scene.reset();
+    m_cursorScene.reset();
     m_backend.reset();
 
     m_state = State::Off;

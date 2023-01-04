@@ -7,8 +7,9 @@
     SPDX-License-Identifier: GPL-2.0-or-later
 */
 #include "wayland_output.h"
-#include "core/renderloop_p.h"
 #include "composite.h"
+#include "core/renderloop_p.h"
+#include "cursorsource.h"
 #include "wayland_backend.h"
 #include "wayland_display.h"
 #include "wayland_egl_backend.h"
@@ -24,6 +25,9 @@
 #include <KWayland/Client/shm_pool.h>
 #include <KWayland/Client/surface.h>
 #include <KWayland/Client/xdgdecoration.h>
+
+#include "core/renderlayer.h"
+#include "scene/cursorscene.h"
 
 #include <KLocalizedString>
 
@@ -79,7 +83,7 @@ void WaylandCursor::disable()
     }
 }
 
-void WaylandCursor::update(KWayland::Client::Buffer::Ptr buffer, qreal scale, const QPoint &hotspot)
+void WaylandCursor::update(wl_buffer *buffer, qreal scale, const QPoint &hotspot)
 {
     if (m_buffer != buffer || m_scale != scale || m_hotspot != hotspot) {
         m_buffer = buffer;
@@ -177,16 +181,16 @@ RenderLoop *WaylandOutput::renderLoop() const
     return m_renderLoop.get();
 }
 
-bool WaylandOutput::setCursor(const QImage &image, const QPoint &hotspot)
+bool WaylandOutput::setCursor(CursorSource *source)
 {
     if (m_hasPointerLock) {
         return false;
     }
 
     if (WaylandEglBackend *backend = qobject_cast<WaylandEglBackend *>(Compositor::self()->backend())) {
-        renderCursorOpengl(backend, image, hotspot);
+        renderCursorOpengl(backend, source);
     } else if (WaylandQPainterBackend *backend = qobject_cast<WaylandQPainterBackend *>(Compositor::self()->backend())) {
-        renderCursorQPainter(backend, image, hotspot);
+        renderCursorQPainter(backend, source);
     }
 
     return true;
@@ -198,73 +202,62 @@ bool WaylandOutput::moveCursor(const QPoint &position)
     return !m_hasPointerLock;
 }
 
-void WaylandOutput::renderCursorOpengl(WaylandEglBackend *backend, const QImage &image, const QPoint &hotspot)
+void WaylandOutput::renderCursorOpengl(WaylandEglBackend *backend, CursorSource *source)
 {
     WaylandEglCursorLayer *cursorLayer = backend->cursorLayer(this);
-    cursorLayer->setSize(image.size());
-    cursorLayer->setScale(image.devicePixelRatio());
-    cursorLayer->setHotspot(hotspot);
+    if (source) {
+        cursorLayer->setSize(source->size());
+        cursorLayer->setScale(scale());
+        cursorLayer->setHotspot(source->hotspot());
+    } else {
+        cursorLayer->setSize(QSize());
+        cursorLayer->setHotspot(QPoint());
+    }
 
     std::optional<OutputLayerBeginFrameInfo> beginInfo = cursorLayer->beginFrame();
     if (!beginInfo) {
         return;
     }
 
-    const QRect cursorRect(QPoint(0, 0), image.size() / image.devicePixelRatio());
+    RenderTarget *renderTarget = &beginInfo->renderTarget;
+    renderTarget->setDevicePixelRatio(scale());
 
-    QMatrix4x4 mvp;
-    mvp.ortho(QRect(QPoint(), beginInfo->renderTarget.size()));
+    RenderLayer renderLayer(m_renderLoop.get());
+    renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene()));
 
-    GLFramebuffer *fbo = std::get<GLFramebuffer *>(beginInfo->renderTarget.nativeHandle());
-    GLFramebuffer::pushFramebuffer(fbo);
-
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-
-    if (!image.isNull()) {
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-        GLTexture texture(image);
-        texture.bind();
-        ShaderBinder binder(ShaderTrait::MapTexture);
-        binder.shader()->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
-        texture.render(cursorRect, beginInfo->renderTarget.devicePixelRatio());
-        texture.unbind();
-        glDisable(GL_BLEND);
-    }
-
-    GLFramebuffer::popFramebuffer();
+    renderLayer.delegate()->prePaint();
+    renderLayer.delegate()->paint(renderTarget, infiniteRegion());
+    renderLayer.delegate()->postPaint();
 
     cursorLayer->endFrame(infiniteRegion(), infiniteRegion());
 }
 
-void WaylandOutput::renderCursorQPainter(WaylandQPainterBackend *backend, const QImage &image, const QPoint &hotspot)
+void WaylandOutput::renderCursorQPainter(WaylandQPainterBackend *backend, CursorSource *source)
 {
     WaylandQPainterCursorLayer *cursorLayer = backend->cursorLayer(this);
-    cursorLayer->setSize(image.size());
-    cursorLayer->setScale(image.devicePixelRatio());
-    cursorLayer->setHotspot(hotspot);
+    if (source) {
+        cursorLayer->setSize(source->size());
+        cursorLayer->setScale(scale());
+        cursorLayer->setHotspot(source->hotspot());
+    } else {
+        cursorLayer->setSize(QSize());
+        cursorLayer->setHotspot(QPoint());
+    }
 
     std::optional<OutputLayerBeginFrameInfo> beginInfo = cursorLayer->beginFrame();
     if (!beginInfo) {
         return;
     }
 
-    const QRect cursorRect(QPoint(0, 0), image.size() / image.devicePixelRatio());
+    RenderTarget *renderTarget = &beginInfo->renderTarget;
+    renderTarget->setDevicePixelRatio(scale());
 
-    QImage *c = std::get<QImage *>(beginInfo->renderTarget.nativeHandle());
-    c->setDevicePixelRatio(scale());
-    c->fill(Qt::transparent);
+    RenderLayer renderLayer(m_renderLoop.get());
+    renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene()));
 
-    if (!image.isNull()) {
-        QPainter p;
-        p.begin(c);
-        p.setWorldTransform(logicalToNativeMatrix(cursorRect, 1, transform()).toTransform());
-        p.setRenderHint(QPainter::SmoothPixmapTransform);
-        p.drawImage(QPoint(0, 0), image);
-        p.end();
-    }
+    renderLayer.delegate()->prePaint();
+    renderLayer.delegate()->paint(renderTarget, infiniteRegion());
+    renderLayer.delegate()->postPaint();
 
     cursorLayer->endFrame(infiniteRegion(), infiniteRegion());
 }
