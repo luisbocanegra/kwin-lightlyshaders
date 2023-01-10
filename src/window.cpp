@@ -74,7 +74,6 @@ Window::Window()
     , m_internalId(QUuid::createUuid())
     , m_client()
     , is_shape(false)
-    , m_effectWindow(nullptr)
     , m_clientMachine(new ClientMachine(this))
     , m_wmClientLeader(XCB_WINDOW_NONE)
     , m_skipCloseAnimation(false)
@@ -186,12 +185,12 @@ void Window::copyToDeleted(Window *c)
     m_client.reset(c->m_client, false);
     ready_for_painting = c->ready_for_painting;
     is_shape = c->is_shape;
-    m_effectWindow = std::exchange(c->m_effectWindow, nullptr);
+    m_effectWindow = std::move(c->m_effectWindow);
     if (m_effectWindow != nullptr) {
         m_effectWindow->setWindow(this);
     }
-    m_windowItem = std::exchange(c->m_windowItem, nullptr);
-    m_shadow = std::exchange(c->m_shadow, nullptr);
+    m_windowItem = std::move(c->m_windowItem);
+    m_shadow = std::move(c->m_shadow);
     if (m_shadow) {
         m_shadow->setWindow(this);
     }
@@ -346,11 +345,11 @@ bool Window::setupCompositing()
         return false;
     }
 
-    m_effectWindow = new EffectWindowImpl(this);
+    m_effectWindow = std::make_unique<EffectWindowImpl>(this);
     updateShadow();
 
     m_windowItem = createItem(scene);
-    m_effectWindow->setWindowItem(m_windowItem);
+    m_effectWindow->setWindowItem(m_windowItem.get());
 
     connect(windowItem(), &WindowItem::positionChanged, this, &Window::visibleGeometryChanged);
     connect(windowItem(), &WindowItem::boundingRectChanged, this, &Window::visibleGeometryChanged);
@@ -366,9 +365,9 @@ void Window::finishCompositing(ReleaseReason releaseReason)
             item->destroyDamage();
         }
     }
-    deleteShadow();
-    deleteEffectWindow();
-    deleteItem();
+    m_shadow.reset();
+    m_effectWindow.reset();
+    m_windowItem.reset();
 }
 
 void Window::addWorkspaceRepaint(int x, int y, int w, int h)
@@ -398,24 +397,6 @@ void Window::setReadyForPainting()
             Q_EMIT windowShown(this);
         }
     }
-}
-
-void Window::deleteShadow()
-{
-    delete m_shadow;
-    m_shadow = nullptr;
-}
-
-void Window::deleteEffectWindow()
-{
-    delete m_effectWindow;
-    m_effectWindow = nullptr;
-}
-
-void Window::deleteItem()
-{
-    delete m_windowItem;
-    m_windowItem = nullptr;
 }
 
 int Window::screen() const
@@ -448,7 +429,7 @@ bool Window::isOnOutput(Output *output) const
 
 Shadow *Window::shadow() const
 {
-    return m_shadow;
+    return m_shadow.get();
 }
 
 void Window::updateShadow()
@@ -458,7 +439,7 @@ void Window::updateShadow()
     }
     if (m_shadow) {
         if (!m_shadow->updateShadow()) {
-            deleteShadow();
+            m_shadow.reset();
         }
         Q_EMIT shadowChanged();
     } else {

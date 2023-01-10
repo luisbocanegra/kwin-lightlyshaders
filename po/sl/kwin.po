@@ -1,7 +1,7 @@
 # translation of kwin.po to
 # Translation of kwin.po to Slovenian
 # Copyright (C) 2001, 2003, 2004, 2005, 2007 Free Software Foundation, Inc.
-# $Id: kwin.po 1641394 2023-01-04 01:44:18Z scripty $
+# $Id: kwin.po 1641836 2023-01-10 01:45:39Z scripty $
 # $Source$
 #
 #
@@ -10,14 +10,14 @@
 # Jure Repinc <jlp@holodeck1.com>, 2005, 2007, 2008, 2009, 2010, 2011, 2012.
 # Andrej Vernekar <andrej.vernekar@moj.net>, 2007, 2012.
 # Andrej Mernik <andrejm@ubuntu.si>, 2013, 2014, 2015, 2016, 2017, 2018.
-# Matjaž Jeran <matjaz.jeran@amis.net>, 2020, 2021, 2022.
+# Matjaž Jeran <matjaz.jeran@amis.net>, 2020, 2021, 2022, 2023.
 # Martin Srebotnjak <miles@filmsi.net>, 2022.
 msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
-"PO-Revision-Date: 2022-12-25 08:55+0100\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"PO-Revision-Date: 2023-01-05 08:58+0100\n"
 "Last-Translator: Matjaž Jeran <matjaz.jeran@amis.net>\n"
 "Language-Team: Slovenian <lugos-slo@lugos.si>\n"
 "Language: sl\n"
@@ -27,7 +27,7 @@ msgstr ""
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
 "Translator: Andrej Mernik <andrejm@ubuntu.si>\n"
-"X-Generator: Lokalize 22.08.3\n"
+"X-Generator: Lokalize 22.12.0\n"
 
 #, kde-format
 msgctxt "NAME OF TRANSLATORS"
@@ -2274,9 +2274,10 @@ msgid "&Shade"
 msgstr "Zvi&j"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "&Brez obrobe"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "Brez naslovne letvice in okvirja"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2393,10 +2394,9 @@ msgid "&All Activities"
 msgstr "Vse dejavnosti"
 
 #: useractions.cpp:776
-#, fuzzy, kde-format
-#| msgid "Move to %1 %2"
+#, kde-format
 msgid "Move to %1"
-msgstr "Prenesi v %1 %2"
+msgstr "Prenesi v %1"
 
 #: useractions.cpp:901
 #, kde-format
@@ -2476,9 +2476,10 @@ msgid "Make Window Fullscreen"
 msgstr "Okno v celozaslonski način"
 
 #: useractions.cpp:1009
-#, kde-format
-msgid "Toggle Window Border"
-msgstr "Preklopi obrobo okna"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "Brez naslovne letvice in okvirja"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2796,7 +2797,7 @@ msgstr "Preklopi na eno namizje navzdol"
 msgid "Switch to Desktop %1"
 msgstr "Preklopi na namizje %1"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2822,6 +2823,12 @@ msgstr ""
 "možnostih, gonilniku za grafično kartico in dejavnih namiznih učinkih. \n"
 "Podatke pod tem uvodnim besedilom objavite na storitev paste bin service\n"
 " kothttps://paste.kde.org namesto neposredno v teme na forumu.\n"
+
+#~ msgid "&No Border"
+#~ msgstr "&Brez obrobe"
+
+#~ msgid "Toggle Window Border"
+#~ msgstr "Preklopi obrobo okna"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"

@@ -1580,8 +1580,7 @@ protected:
     void getWmOpaqueRegion();
     void discardShapeRegion();
 
-    virtual WindowItem *createItem(Scene *scene) = 0;
-    void deleteItem();
+    virtual std::unique_ptr<WindowItem> createItem(Scene *scene) = 0;
 
     void getResourceClass();
     void setResourceClass(const QString &name, const QString &className = QString());
@@ -1590,8 +1589,6 @@ protected:
     void getSkipCloseAnimation();
     void copyToDeleted(Window *c);
     void disownDataPassedToDeleted();
-    void deleteShadow();
-    void deleteEffectWindow();
     void setDepth(int depth);
 
     Output *m_output = nullptr;
@@ -1920,9 +1917,9 @@ private:
     QUuid m_internalId;
     Xcb::Window m_client;
     bool is_shape;
-    EffectWindowImpl *m_effectWindow;
-    WindowItem *m_windowItem = nullptr;
-    Shadow *m_shadow = nullptr;
+    std::unique_ptr<EffectWindowImpl> m_effectWindow;
+    std::unique_ptr<WindowItem> m_windowItem;
+    std::unique_ptr<Shadow> m_shadow;
     QString resource_name;
     QString resource_class;
     ClientMachine *m_clientMachine;
@@ -2257,17 +2254,17 @@ inline const QRegion &Window::opaqueRegion() const
 
 inline EffectWindowImpl *Window::effectWindow()
 {
-    return m_effectWindow;
+    return m_effectWindow.get();
 }
 
 inline const EffectWindowImpl *Window::effectWindow() const
 {
-    return m_effectWindow;
+    return m_effectWindow.get();
 }
 
 inline WindowItem *Window::windowItem() const
 {
-    return m_windowItem;
+    return m_windowItem.get();
 }
 
 inline bool Window::isOnAllDesktops() const

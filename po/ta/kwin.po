@@ -5,13 +5,13 @@
 #
 # Vasee Vaseeharan <vasee@ieee.org>, 2004.
 # root <root@localhost.localdomain>, 2004.
-# Kishore G <kishore96@gmail.com>, 2021, 2022.
+# Kishore G <kishore96@gmail.com>, 2021, 2022, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
-"PO-Revision-Date: 2022-12-27 21:52+0530\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"PO-Revision-Date: 2023-01-05 21:34+0530\n"
 "Last-Translator: Kishore G <kishore96@gmail.com>\n"
 "Language-Team: Tamil <kde-i18n-doc@kde.org>\n"
 "Language: ta\n"
@@ -2260,9 +2260,10 @@ msgid "&Shade"
 msgstr "&நிழலிடு"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "&விளிம்பு வேண்டாம்"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "விளிம்பும் தலைப்புப்பட்டையும் வேண்டாம்"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2379,10 +2380,9 @@ msgid "&All Activities"
 msgstr "&அனைத்து செயல்பாடுகளிலும்"
 
 #: useractions.cpp:776
-#, fuzzy, kde-format
-#| msgid "Move to %1 %2"
+#, kde-format
 msgid "Move to %1"
-msgstr "%1 %2 -க்கு நகர்த்து"
+msgstr "%1-க்கு நகர்த்து"
 
 #: useractions.cpp:901
 #, kde-format
@@ -2462,9 +2462,10 @@ msgid "Make Window Fullscreen"
 msgstr "சாளரத்தை முழுத் திரையாக்கு"
 
 #: useractions.cpp:1009
-#, kde-format
-msgid "Toggle Window Border"
-msgstr "சாளரத்தின் விளிம்பை மறை/காட்டு"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "விளிம்பும் தலைப்புப்பட்டையும் வேண்டாம்"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2781,7 +2782,7 @@ msgstr "கீழுள்ள பணிமேடைக்கு தாவு"
 msgid "Switch to Desktop %1"
 msgstr "பணிமேடை %1-க்கு தாவு"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2810,6 +2811,12 @@ msgstr ""
 "உதவுவோருக்கு கீழுள்ள விவரங்களை அப்படியே வழங்குவதற்கு பதிலாக, https://paste.kde.org "
 "போன்ற\n"
 "ஒட்டுபலகை (pastebin) சேவையை பயன்படுத்தி ஒட்டியதற்கான இணைப்பை வழங்கலாம்.\n"
+
+#~ msgid "&No Border"
+#~ msgstr "&விளிம்பு வேண்டாம்"
+
+#~ msgid "Toggle Window Border"
+#~ msgstr "சாளரத்தின் விளிம்பை மறை/காட்டு"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"

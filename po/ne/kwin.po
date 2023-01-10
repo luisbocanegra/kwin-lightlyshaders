@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
 "PO-Revision-Date: 2007-11-01 14:27+0545\n"
 "Last-Translator: Shyam Krishna Bal <shyamkrishna_bal@yahoo.com>\n"
 "Language-Team: Nepali <info@mpp.org.np>\n"
@@ -2308,8 +2308,8 @@ msgstr "छायाँ लगाउनुहोस्"
 
 #: useractions.cpp:272
 #, kde-format
-msgid "&No Border"
-msgstr "किनारा छैन"
+msgid "&No Titlebar and Frame"
+msgstr ""
 
 #: useractions.cpp:280
 #, fuzzy, kde-format
@@ -2523,7 +2523,7 @@ msgstr "सञ्झ्याललाई पूरा पर्दा गर्
 #: useractions.cpp:1009
 #, fuzzy, kde-format
 #| msgid "Hide Window Border"
-msgid "Toggle Window Border"
+msgid "Toggle Window Titlebar and Frame"
 msgstr "सञ्झ्याल किनारा लुकाउनुहोस्"
 
 #: useractions.cpp:1011
@@ -2875,7 +2875,7 @@ msgstr "एक डेस्कटप तल स्विच गर्नुह�
 msgid "Switch to Desktop %1"
 msgstr "डेस्कटप १ मा स्विच गर्नुहोस्"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2895,6 +2895,9 @@ msgid ""
 "paste bin service\n"
 "like https://paste.kde.org instead of pasting into support threads.\n"
 msgstr ""
+
+#~ msgid "&No Border"
+#~ msgstr "किनारा छैन"
 
 #, fuzzy
 #~| msgid "Show Desktop Grid"

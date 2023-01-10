@@ -19,13 +19,13 @@
 # Simon Depiets <sdepiets@gmail.com>, 2018, 2019, 2020.
 # Xavier Besnard <xavier.besnard@neuf.fr>, 2020, 2021, 2022.
 #
-# Xavier BESNARD <xavier.besnard]neuf.fr>, 2022.
+# Xavier BESNARD <xavier.besnard]neuf.fr>, 2022, 2023.
 msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
-"PO-Revision-Date: 2022-12-28 10:48+0100\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"PO-Revision-Date: 2023-01-05 16:11+0100\n"
 "Last-Translator: Xavier BESNARD <xavier.besnard]neuf.fr>\n"
 "Language-Team: fr\n"
 "Language: fr\n"
@@ -2306,9 +2306,10 @@ msgid "&Shade"
 msgstr "Enro&uler"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "Aucu&ne bordure"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "Aucune barre de titre et de cadre"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2425,10 +2426,9 @@ msgid "&All Activities"
 msgstr "Toutes les &activités"
 
 #: useractions.cpp:776
-#, fuzzy, kde-format
-#| msgid "Move to %1 %2"
+#, kde-format
 msgid "Move to %1"
-msgstr "Déplacer vers %1 %2"
+msgstr "Déplacer vers %1"
 
 #: useractions.cpp:901
 #, kde-format
@@ -2508,9 +2508,10 @@ msgid "Make Window Fullscreen"
 msgstr "Mettre une fenêtre en plein écran"
 
 #: useractions.cpp:1009
-#, kde-format
-msgid "Toggle Window Border"
-msgstr "Afficher / Masquer une bordure de fenêtre"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "Aucune barre de titre et de cadre"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2828,7 +2829,7 @@ msgstr "Passer au bureau du dessous"
 msgid "Switch to Desktop %1"
 msgstr "Passer au bureau %1"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2858,6 +2859,12 @@ msgstr ""
 "« copier / coller »\n"
 "tel que « https://paste.kde.org » au lieu de coller cela directement dans le "
 "fil de discussion de la demande d'aide.\n"
+
+#~ msgid "&No Border"
+#~ msgstr "Aucu&ne bordure"
+
+#~ msgid "Toggle Window Border"
+#~ msgstr "Afficher / Masquer une bordure de fenêtre"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"

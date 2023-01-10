@@ -13,7 +13,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
 "PO-Revision-Date: 2021-10-03 17:31-0700\n"
 "Last-Translator: Fumiaki Okushi <fumiaki.okushi@gmail.com>\n"
 "Language-Team: Japanese <kde-jp@kde.org>\n"
@@ -2318,8 +2318,8 @@ msgstr "シェード(&S)"
 
 #: useractions.cpp:272
 #, kde-format
-msgid "&No Border"
-msgstr "枠なし(&N)"
+msgid "&No Titlebar and Frame"
+msgstr ""
 
 #: useractions.cpp:280
 #, kde-format
@@ -2532,7 +2532,7 @@ msgstr "ウィンドウをフルスクリーンに"
 #: useractions.cpp:1009
 #, fuzzy, kde-format
 #| msgid "Hide Window Border"
-msgid "Toggle Window Border"
+msgid "Toggle Window Titlebar and Frame"
 msgstr "ウィンドウの枠を隠す"
 
 #: useractions.cpp:1011
@@ -2872,7 +2872,7 @@ msgstr "一つ下のデスクトップに切り替え"
 msgid "Switch to Desktop %1"
 msgstr "デスクトップ %1 に切り替え"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2892,3 +2892,6 @@ msgid ""
 "paste bin service\n"
 "like https://paste.kde.org instead of pasting into support threads.\n"
 msgstr ""
+
+#~ msgid "&No Border"
+#~ msgstr "枠なし(&N)"

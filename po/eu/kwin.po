@@ -1,5 +1,5 @@
 # Translation for kwin.po to Euskara/Basque (eu).
-# Copyright (C) 2002-2022 This file is copyright:
+# Copyright (C) 2002-2023 This file is copyright:
 # This file is distributed under the same license as the kwin package.
 # KDE euskaratzeko proiektuko arduraduna <xalba@ni.eus>.
 #
@@ -8,14 +8,14 @@
 # Marcos  <marcos@euskalgnu.org>, 2002, 2003, 2005, 2006, 2007.
 # Juan Irigoien <juanirigoien@yahoo.es>, 2004.
 # Ion Gaztañaga <igaztanaga@gmail.com>, 2005.
-# Iñigo Salvador Azurmendi <xalba@ni.eus>, 2008, 2009, 2010, 2011, 2014, 2017, 2018, 2019, 2020, 2021, 2022.
+# Iñigo Salvador Azurmendi <xalba@ni.eus>, 2008, 2009, 2010, 2011, 2014, 2017, 2018, 2019, 2020, 2021, 2022, 2023.
 # Hizkuntza Politikarako Sailburuordetza <hizpol@ej-gv.es>, 2013.
 msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
-"PO-Revision-Date: 2022-12-28 22:37+0100\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"PO-Revision-Date: 2023-01-04 08:46+0100\n"
 "Last-Translator: Iñigo Salvador Azurmendi <xalba@ni.eus>\n"
 "Language-Team: Basque <kde-i18n-eu@kde.org>\n"
 "Language: eu\n"
@@ -2276,9 +2276,10 @@ msgid "&Shade"
 msgstr "&Bildu"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "Ertzik &ez"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "Titulu-barrarik eta markorik ez"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2395,10 +2396,9 @@ msgid "&All Activities"
 msgstr "&Jarduera guztiak"
 
 #: useractions.cpp:776
-#, fuzzy, kde-format
-#| msgid "Move to %1 %2"
+#, kde-format
 msgid "Move to %1"
-msgstr "Eraman %1(e)ra %2"
+msgstr "Eraman %1(e)ra"
 
 #: useractions.cpp:901
 #, kde-format
@@ -2478,9 +2478,10 @@ msgid "Make Window Fullscreen"
 msgstr "Erakutsi leihoa pantaila osoan"
 
 #: useractions.cpp:1009
-#, kde-format
-msgid "Toggle Window Border"
-msgstr "Txandakatu leihoaren ertza"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "Titulu-barrarik eta markorik ez"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2798,7 +2799,7 @@ msgstr "Aldatu beheko mahaigainera"
 msgid "Switch to Desktop %1"
 msgstr "Aldatu %1 mahaigainera"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2827,6 +2828,12 @@ msgstr ""
 "Mesedez, bidali sarrera-testu honen azpian dagoen informazioa kopiatu/"
 "itsatsi zerbitzu batera,\n"
 "https://paste.kde.org gisakoa, laguntza-harietan itsatsi ordez.\n"
+
+#~ msgid "&No Border"
+#~ msgstr "Ertzik &ez"
+
+#~ msgid "Toggle Window Border"
+#~ msgstr "Txandakatu leihoaren ertza"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"

@@ -22,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
 "PO-Revision-Date: 2022-10-01 15:09+0300\n"
 "Last-Translator: Alexander Yavorsky <kekcuha@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
@@ -2306,9 +2306,10 @@ msgid "&Shade"
 msgstr "&Свернуть в заголовок"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "Без &рамки"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "Скрыть заголовок и границы окна"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2511,9 +2512,9 @@ msgstr "Распахнуть окно на весь экран"
 
 #: useractions.cpp:1009
 #, fuzzy, kde-format
-#| msgid "Hide Window Border"
-msgid "Toggle Window Border"
-msgstr "Скрыть границы окна"
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "Скрыть заголовок и границы окна"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2841,7 +2842,7 @@ msgstr "Переключиться на один рабочий стол вни�
 msgid "Switch to Desktop %1"
 msgstr "Переключиться на рабочий стол %1"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2870,6 +2871,14 @@ msgstr ""
 "какой OpenGL драйвер и эффекты запущены.\n"
 "Пожалуйста, размещайте информацию, приведённую ниже, в сервис Pastebin,\n"
 "например, на https://paste.kde.org вместо вставки напрямую в темы форума.\n"
+
+#~ msgid "&No Border"
+#~ msgstr "Без &рамки"
+
+#, fuzzy
+#~| msgid "Hide Window Border"
+#~ msgid "Toggle Window Border"
+#~ msgstr "Скрыть границы окна"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"

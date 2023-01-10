@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-04 00:50+0000\n"
-"PO-Revision-Date: 2022-12-25 06:59+0100\n"
+"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"PO-Revision-Date: 2023-01-04 07:36+0100\n"
 "Last-Translator: Temuri Doghonadze <temuri.doghonadze@gmail.com>\n"
 "Language-Team: Georgian <kde-i18n-doc@kde.org>\n"
 "Language: ka\n"
@@ -2227,9 +2227,10 @@ msgid "&Shade"
 msgstr "&დაჩრდილვა"
 
 #: useractions.cpp:272
-#, kde-format
-msgid "&No Border"
-msgstr "&საზღვრის გარეშე"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "&No Titlebar and Frame"
+msgstr "სათაურისა და ჩარჩოს გარეშე"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2346,10 +2347,9 @@ msgid "&All Activities"
 msgstr "&ყველა აქტივობა"
 
 #: useractions.cpp:776
-#, fuzzy, kde-format
-#| msgid "Move to %1 %2"
+#, kde-format
 msgid "Move to %1"
-msgstr "%1-ის %2-ზე გადატანა"
+msgstr "%1-ზე გადატანა"
 
 #: useractions.cpp:901
 #, kde-format
@@ -2429,9 +2429,10 @@ msgid "Make Window Fullscreen"
 msgstr "ფანჯრის მთელ ეკრანზე გატანა"
 
 #: useractions.cpp:1009
-#, kde-format
-msgid "Toggle Window Border"
-msgstr "ფანჯრის საზღვრის გადართვა"
+#, fuzzy, kde-format
+#| msgid "No titlebar and frame"
+msgid "Toggle Window Titlebar and Frame"
+msgstr "სათაურისა და ჩარჩოს გარეშე"
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2691,7 +2692,7 @@ msgstr "ფანჯრის ნაძალადევი დაღუპვ�
 #: useractions.cpp:1134
 #, kde-format
 msgid "Suspend Compositing"
-msgstr ""
+msgstr "კომპოზიტური გაფართოების შეჩერება"
 
 #: useractions.cpp:1195
 #, kde-format
@@ -2746,7 +2747,7 @@ msgstr "ერთი სამუშაო მაგიდის დაბლა
 msgid "Switch to Desktop %1"
 msgstr "%1-ე სამუშაო მაგიდაზე გადართვა"
 
-#: window.cpp:3459
+#: window.cpp:3440
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2766,6 +2767,12 @@ msgid ""
 "paste bin service\n"
 "like https://paste.kde.org instead of pasting into support threads.\n"
 msgstr ""
+
+#~ msgid "&No Border"
+#~ msgstr "&საზღვრის გარეშე"
+
+#~ msgid "Toggle Window Border"
+#~ msgstr "ფანჯრის საზღვრის გადართვა"
 
 #~ msgctxt "Error message"
 #~ msgid "Plugin does not provide configuration file in expected location"
