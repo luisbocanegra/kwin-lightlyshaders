@@ -56,6 +56,7 @@ std::optional<OutputLayerBeginFrameInfo> VirtualEglLayer::beginFrame()
 
 bool VirtualEglLayer::endFrame(const QRegion &renderedRegion, const QRegion &damagedRegion)
 {
+    glFlush(); // flush pending rendering commands.
     return true;
 }
 
@@ -198,14 +199,7 @@ OutputLayer *VirtualEglBackend::primaryLayer(Output *output)
 
 void VirtualEglBackend::present(Output *output)
 {
-    glFlush();
-
     static_cast<VirtualOutput *>(output)->vsyncMonitor()->arm();
-
-    if (m_backend->saveFrames()) {
-        const std::unique_ptr<VirtualEglLayer> &layer = m_outputs[output];
-        layer->texture()->toImage().save(QStringLiteral("%1/%2-%3.png").arg(m_backend->screenshotDirPath(), output->name(), QString::number(m_frameCounter++)));
-    }
 }
 
 } // namespace

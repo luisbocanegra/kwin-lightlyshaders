@@ -17,6 +17,7 @@ public:
     virtual ~OffscreenData();
     void setDirty();
     void setShader(GLShader *newShader);
+    void setVertexSnappingMode(RenderGeometry::VertexSnappingMode mode);
 
     void paint(EffectWindow *window, const QRegion &region,
                const WindowPaintData &data, const WindowQuadList &quads);
@@ -28,6 +29,7 @@ private:
     std::unique_ptr<GLFramebuffer> m_fbo;
     bool m_isDirty = true;
     GLShader *m_shader = nullptr;
+    RenderGeometry::VertexSnappingMode m_vertexSnappingMode = RenderGeometry::VertexSnappingMode::Round;
 };
 
 class OffscreenEffectPrivate
@@ -36,6 +38,7 @@ public:
     std::map<EffectWindow *, std::unique_ptr<OffscreenData>> windows;
     QMetaObject::Connection windowDamagedConnection;
     QMetaObject::Connection windowDeletedConnection;
+    RenderGeometry::VertexSnappingMode vertexSnappingMode = RenderGeometry::VertexSnappingMode::Round;
 };
 
 OffscreenEffect::OffscreenEffect(QObject *parent)
@@ -58,6 +61,7 @@ void OffscreenEffect::redirect(EffectWindow *window)
         return;
     }
     offscreenData = std::make_unique<OffscreenData>();
+    offscreenData->setVertexSnappingMode(d->vertexSnappingMode);
 
     if (d->windows.size() == 1) {
         setupConnections();
@@ -134,38 +138,40 @@ void OffscreenData::setShader(GLShader *newShader)
     m_shader = newShader;
 }
 
+void OffscreenData::setVertexSnappingMode(RenderGeometry::VertexSnappingMode mode)
+{
+    m_vertexSnappingMode = mode;
+}
+
 void OffscreenData::paint(EffectWindow *window, const QRegion &region,
                           const WindowPaintData &data, const WindowQuadList &quads)
 {
     GLShader *shader = m_shader ? m_shader : ShaderManager::instance()->shader(ShaderTrait::MapTexture | ShaderTrait::Modulate | ShaderTrait::AdjustSaturation);
     ShaderBinder binder(shader);
 
-    const bool indexedQuads = GLVertexBuffer::supportsIndexedQuads();
-    const GLenum primitiveType = indexedQuads ? GL_QUADS : GL_TRIANGLES;
-    const int verticesPerQuad = indexedQuads ? 4 : 6;
-
     const qreal scale = effects->renderTargetScale();
-
-    const GLVertexAttrib attribs[] = {
-        {VA_Position, 2, GL_FLOAT, offsetof(GLVertex2D, position)},
-        {VA_TexCoord, 2, GL_FLOAT, offsetof(GLVertex2D, texcoord)},
-    };
 
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
     vbo->reset();
-    vbo->setAttribLayout(attribs, 2, sizeof(GLVertex2D));
-    const size_t size = verticesPerQuad * quads.count() * sizeof(GLVertex2D);
-    GLVertex2D *map = static_cast<GLVertex2D *>(vbo->map(size));
+    vbo->setAttribLayout(GLVertexBuffer::GLVertex2DLayout, 2, sizeof(GLVertex2D));
 
-    quads.makeInterleavedArrays(primitiveType, map, m_texture->matrix(NormalizedCoordinates), scale);
+    RenderGeometry geometry;
+    geometry.setVertexSnappingMode(m_vertexSnappingMode);
+    for (auto &quad : quads) {
+        geometry.appendWindowQuad(quad, scale);
+    }
+    geometry.postProcessTextureCoordinates(m_texture->matrix(NormalizedCoordinates));
 
+    GLVertex2D *map = static_cast<GLVertex2D *>(vbo->map(geometry.count() * sizeof(GLVertex2D)));
+    geometry.copy(std::span(map, geometry.count()));
     vbo->unmap();
+
     vbo->bindArrays();
 
     const qreal rgb = data.brightness() * data.opacity();
     const qreal a = data.opacity();
 
-    QMatrix4x4 mvp = data.screenProjectionMatrix();
+    QMatrix4x4 mvp = data.projectionMatrix();
     mvp.translate(window->x() * scale, window->y() * scale);
 
     shader->setUniform(GLShader::ModelViewProjectionMatrix, mvp * data.toMatrix(effects->renderTargetScale()));
@@ -185,7 +191,7 @@ void OffscreenData::paint(EffectWindow *window, const QRegion &region,
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     m_texture->bind();
-    vbo->draw(clipRegion, primitiveType, 0, verticesPerQuad * quads.count(), clipping);
+    vbo->draw(clipRegion, GL_TRIANGLES, 0, geometry.count(), clipping);
     m_texture->unbind();
 
     glDisable(GL_BLEND);
@@ -251,6 +257,14 @@ void OffscreenEffect::destroyConnections()
 
     d->windowDamagedConnection = {};
     d->windowDeletedConnection = {};
+}
+
+void OffscreenEffect::setVertexSnappingMode(RenderGeometry::VertexSnappingMode mode)
+{
+    d->vertexSnappingMode = mode;
+    for (auto &window : std::as_const(d->windows)) {
+        window.second->setVertexSnappingMode(mode);
+    }
 }
 
 class CrossFadeWindowData : public OffscreenData
@@ -336,9 +350,20 @@ void CrossFadeEffect::redirect(EffectWindow *window)
     }
     offscreenData = std::make_unique<CrossFadeWindowData>();
 
+    // Avoid including blur and contrast effects. During a normal painting cycle they
+    // won't be included, but since we call effects->drawWindow() outside usual compositing
+    // cycle, we have to prevent backdrop effects kicking in.
+    const QVariant blurRole = window->data(WindowForceBlurRole);
+    window->setData(WindowForceBlurRole, QVariant());
+    const QVariant contrastRole = window->data(WindowForceBackgroundContrastRole);
+    window->setData(WindowForceBackgroundContrastRole, QVariant());
+
     effects->makeOpenGLContextCurrent();
     offscreenData->maybeRender(window);
     offscreenData->frameGeometryAtCapture = window->frameGeometry();
+
+    window->setData(WindowForceBlurRole, blurRole);
+    window->setData(WindowForceBackgroundContrastRole, contrastRole);
 }
 
 void CrossFadeEffect::unredirect(EffectWindow *window)

@@ -228,8 +228,7 @@ public:
     qreal brightness;
     int screen;
     qreal crossFadeProgress;
-    QMatrix4x4 pMatrix;
-    QMatrix4x4 screenProjectionMatrix;
+    QMatrix4x4 projectionMatrix;
     std::optional<qreal> renderTargetScale = std::nullopt;
 };
 
@@ -238,12 +237,12 @@ WindowPaintData::WindowPaintData()
 {
 }
 
-WindowPaintData::WindowPaintData(const QMatrix4x4 &screenProjectionMatrix)
+WindowPaintData::WindowPaintData(const QMatrix4x4 &projectionMatrix)
     : PaintData()
     , shader(nullptr)
     , d(std::make_unique<WindowPaintDataPrivate>())
 {
-    d->screenProjectionMatrix = screenProjectionMatrix;
+    setProjectionMatrix(projectionMatrix);
     setOpacity(1.0);
     setSaturation(1.0);
     setBrightness(1.0);
@@ -269,7 +268,6 @@ WindowPaintData::WindowPaintData(const WindowPaintData &other)
     setScreen(other.screen());
     setCrossFadeProgress(other.crossFadeProgress());
     setProjectionMatrix(other.projectionMatrix());
-    d->screenProjectionMatrix = other.d->screenProjectionMatrix;
 }
 
 WindowPaintData::~WindowPaintData() = default;
@@ -344,17 +342,17 @@ qreal WindowPaintData::multiplyBrightness(qreal factor)
 
 void WindowPaintData::setProjectionMatrix(const QMatrix4x4 &matrix)
 {
-    d->pMatrix = matrix;
+    d->projectionMatrix = matrix;
 }
 
 QMatrix4x4 WindowPaintData::projectionMatrix() const
 {
-    return d->pMatrix;
+    return d->projectionMatrix;
 }
 
 QMatrix4x4 &WindowPaintData::rprojectionMatrix()
 {
-    return d->pMatrix;
+    return d->projectionMatrix;
 }
 
 WindowPaintData &WindowPaintData::operator*=(qreal scale)
@@ -399,11 +397,6 @@ WindowPaintData &WindowPaintData::operator+=(const QVector3D &translation)
 {
     translate(translation);
     return *this;
-}
-
-QMatrix4x4 WindowPaintData::screenProjectionMatrix() const
-{
-    return d->screenProjectionMatrix;
 }
 
 std::optional<qreal> WindowPaintData::renderTargetScale() const
@@ -1029,94 +1022,6 @@ WindowQuadList WindowQuadList::makeRegularGrid(int xSubdivisions, int ySubdivisi
     return ret;
 }
 
-#ifndef GL_TRIANGLES
-#define GL_TRIANGLES 0x0004
-#endif
-
-#ifndef GL_QUADS
-#define GL_QUADS 0x0007
-#endif
-
-void WindowQuadList::makeInterleavedArrays(unsigned int type, GLVertex2D *vertices, const QMatrix4x4 &textureMatrix, qreal scale) const
-{
-    // Since we know that the texture matrix just scales and translates
-    // we can use this information to optimize the transformation
-    const QVector2D coeff(textureMatrix(0, 0), textureMatrix(1, 1));
-    const QVector2D offset(textureMatrix(0, 3), textureMatrix(1, 3));
-
-    GLVertex2D *vertex = vertices;
-
-    Q_ASSERT(type == GL_QUADS || type == GL_TRIANGLES);
-
-    switch (type) {
-    case GL_QUADS: {
-        for (const WindowQuad &quad : *this) {
-#pragma GCC unroll 4
-            for (int j = 0; j < 4; j++) {
-                const WindowVertex &wv = quad[j];
-
-                auto vertexPos = roundVector(QVector2D(wv.x(), wv.y()) * scale);
-                GLVertex2D v;
-                v.position = vertexPos;
-                v.texcoord = QVector2D(wv.u(), wv.v()) * coeff + offset;
-
-                *(vertex++) = v;
-            }
-        }
-    } break;
-    case GL_TRIANGLES: {
-        for (const WindowQuad &quad : *this) {
-            GLVertex2D v[4]; // Four unique vertices / quad
-
-#pragma GCC unroll 4
-            for (int j = 0; j < 4; j++) {
-                const WindowVertex &wv = quad[j];
-
-                auto vertexPos = roundVector(QVector2D(wv.x(), wv.y()) * scale);
-                v[j].position = vertexPos;
-                v[j].texcoord = QVector2D(wv.u(), wv.v()) * coeff + offset;
-            }
-
-            // First triangle
-            *(vertex++) = v[1]; // Top-right
-            *(vertex++) = v[0]; // Top-left
-            *(vertex++) = v[3]; // Bottom-left
-
-            // Second triangle
-            *(vertex++) = v[3]; // Bottom-left
-            *(vertex++) = v[2]; // Bottom-right
-            *(vertex++) = v[1]; // Top-right
-        }
-    } break;
-    default:
-        break;
-    }
-}
-
-void WindowQuadList::makeArrays(float **vertices, float **texcoords, const QSizeF &size, bool yInverted) const
-{
-    *vertices = new float[count() * 6 * 2];
-    *texcoords = new float[count() * 6 * 2];
-
-    float *vpos = *vertices;
-    float *tpos = *texcoords;
-
-    // Note: The positions in a WindowQuad are stored in clockwise order
-    const int index[] = {1, 0, 3, 3, 2, 1};
-
-    for (const WindowQuad &quad : *this) {
-        for (int j = 0; j < 6; j++) {
-            const WindowVertex &wv = quad[index[j]];
-
-            *vpos++ = wv.x();
-            *vpos++ = wv.y();
-
-            *tpos++ = wv.u() / size.width();
-            *tpos++ = yInverted ? (wv.v() / size.height()) : (1.0 - wv.v() / size.height());
-        }
-    }
-}
-
 void RenderGeometry::copy(std::span<GLVertex2D> destination)
 {
     Q_ASSERT(int(destination.size()) >= size());
@@ -1128,7 +1033,14 @@ void RenderGeometry::copy(std::span<GLVertex2D> destination)
 void RenderGeometry::appendWindowVertex(const WindowVertex &windowVertex, qreal deviceScale)
 {
     GLVertex2D glVertex;
-    glVertex.position = roundVector(QVector2D(windowVertex.x(), windowVertex.y()) * deviceScale);
+    switch (m_vertexSnappingMode) {
+    case VertexSnappingMode::None:
+        glVertex.position = QVector2D(windowVertex.x(), windowVertex.y()) * deviceScale;
+        break;
+    case VertexSnappingMode::Round:
+        glVertex.position = roundVector(QVector2D(windowVertex.x(), windowVertex.y()) * deviceScale);
+        break;
+    }
     glVertex.texcoord = QVector2D(windowVertex.u(), windowVertex.v());
     append(glVertex);
 }
@@ -1182,6 +1094,18 @@ void RenderGeometry::appendSubQuad(const WindowQuad &quad, const QRectF &subquad
     append(vertices[1]);
     append(vertices[3]);
     append(vertices[2]);
+}
+
+void RenderGeometry::postProcessTextureCoordinates(const QMatrix4x4 &textureMatrix)
+{
+    if (!textureMatrix.isIdentity()) {
+        const QVector2D coeff(textureMatrix(0, 0), textureMatrix(1, 1));
+        const QVector2D offset(textureMatrix(0, 3), textureMatrix(1, 3));
+
+        for (auto &vertex : (*this)) {
+            vertex.texcoord = vertex.texcoord * coeff + offset;
+        }
+    }
 }
 
 /***************************************************************

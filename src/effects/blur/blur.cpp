@@ -481,6 +481,7 @@ QRegion BlurEffect::blurRegion(const EffectWindow *w) const
 
 void BlurEffect::uploadRegion(QVector2D *&map, const QRegion &region, const int downSampleIterations)
 {
+    Q_ASSERT(map);
     for (int i = 0; i <= downSampleIterations; i++) {
         const int divisionRatio = (1 << i);
 
@@ -503,15 +504,17 @@ void BlurEffect::uploadRegion(QVector2D *&map, const QRegion &region, const int 
     }
 }
 
-void BlurEffect::uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, const QRegion &windowRegion)
+bool BlurEffect::uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, const QRegion &windowRegion)
 {
     const int vertexCount = ((blurRegion.rectCount() * (m_downSampleIterations + 1)) + windowRegion.rectCount()) * 6;
-
     if (!vertexCount) {
-        return;
+        return false;
     }
 
     QVector2D *map = (QVector2D *)vbo->map(vertexCount * sizeof(QVector2D));
+    if (!map) {
+        return false;
+    }
 
     uploadRegion(map, blurRegion, m_downSampleIterations);
     uploadRegion(map, windowRegion, 0);
@@ -523,6 +526,7 @@ void BlurEffect::uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, 
         {VA_TexCoord, 2, GL_FLOAT, 0}};
 
     vbo->setAttribLayout(layout, 2, sizeof(QVector2D));
+    return true;
 }
 
 void BlurEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime)
@@ -697,7 +701,9 @@ void BlurEffect::doBlur(const QRegion &shape, const QRect &screen, const float o
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
     vbo->reset();
 
-    uploadGeometry(vbo, expandedBlurRegion.translated(xTranslate, yTranslate), shape);
+    if (!uploadGeometry(vbo, expandedBlurRegion.translated(xTranslate, yTranslate), shape)) {
+        return;
+    }
     vbo->bindArrays();
 
     const QRect logicalSourceRect = (expandedBlurRegion.boundingRect() & screen).translated(xTranslate, -screen.y());

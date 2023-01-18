@@ -63,6 +63,13 @@ protected:
      **/
     void setShader(EffectWindow *window, GLShader *shader);
 
+    /**
+     * Set what mode to use to snap the vertices of this effect.
+     *
+     * @see RenderGeometry::VertexSnappingMode
+     */
+    void setVertexSnappingMode(RenderGeometry::VertexSnappingMode mode);
+
 private Q_SLOTS:
     void handleWindowDamaged(EffectWindow *window);
     void handleWindowDeleted(EffectWindow *window);

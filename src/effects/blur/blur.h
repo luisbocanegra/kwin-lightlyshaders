@@ -48,7 +48,7 @@ public:
 
     int requestedEffectChainPosition() const override
     {
-        return 75;
+        return 20;
     }
 
     bool eventFilter(QObject *watched, QEvent *event) override;
@@ -76,7 +76,7 @@ private:
     void updateBlurRegion(EffectWindow *w) const;
     void doBlur(const QRegion &shape, const QRect &screen, const float opacity, const QMatrix4x4 &screenProjection, bool isDock, QRect windowRect);
     void uploadRegion(QVector2D *&map, const QRegion &region, const int downSampleIterations);
-    void uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, const QRegion &windowRegion);
+    Q_REQUIRED_RESULT bool uploadGeometry(GLVertexBuffer *vbo, const QRegion &blurRegion, const QRegion &windowRegion);
     void generateNoiseTexture();
 
     void upscaleRenderToScreen(GLVertexBuffer *vbo, int vboStart, int blurRectCount, const QMatrix4x4 &screenProjection, QPoint windowPosition);

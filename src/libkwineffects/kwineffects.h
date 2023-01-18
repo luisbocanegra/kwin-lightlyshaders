@@ -2950,8 +2950,6 @@ public:
     WindowQuadList splitAtY(double y) const;
     WindowQuadList makeGrid(int maxquadsize) const;
     WindowQuadList makeRegularGrid(int xSubdivisions, int ySubdivisions) const;
-    void makeInterleavedArrays(unsigned int type, GLVertex2D *vertices, const QMatrix4x4 &matrix, qreal scale) const;
-    void makeArrays(float **vertices, float **texcoords, const QSizeF &size, bool yInverted) const;
 };
 
 /**
@@ -2964,6 +2962,45 @@ public:
 class KWINEFFECTS_EXPORT RenderGeometry : public QVector<GLVertex2D>
 {
 public:
+    /**
+     * In what way should vertices snap to integer device coordinates?
+     *
+     * Vertices are converted to device coordinates before being sent to the
+     * rendering system. Depending on scaling factors, this may lead to device
+     * coordinates with fractional parts. For some cases, this may not be ideal
+     * as fractional coordinates need to be interpolated and can lead to
+     * "blurry" rendering. To avoid that, we can snap the vertices to integer
+     * device coordinates when they are added.
+     */
+    enum class VertexSnappingMode {
+        None, //< No rounding, device coordinates containing fractional parts
+              //  are passed directly to the rendering system.
+        Round, //< Perform a simple rounding, device coordinates will not have
+               //  any fractional parts.
+    };
+
+    /**
+     * The vertex snapping mode to use for this geometry.
+     *
+     * By default, this is VertexSnappingMode::Round.
+     */
+    inline VertexSnappingMode vertexSnappingMode() const
+    {
+        return m_vertexSnappingMode;
+    }
+    /**
+     * Set the vertex snapping mode to use for this geometry.
+     *
+     * Note that this doesn't change vertices retroactively, so you should set
+     * this before adding any vertices, or clear and rebuild the geometry after
+     * setting it.
+     *
+     * @param mode The new rounding mode.
+     */
+    void setVertexSnappingMode(VertexSnappingMode mode)
+    {
+        m_vertexSnappingMode = mode;
+    }
     /**
      * Copy geometry data into another buffer.
      *
@@ -3014,6 +3051,20 @@ public:
      *                    device coordinates.
      */
     void appendSubQuad(const WindowQuad &quad, const QRectF &subquad, qreal deviceScale);
+    /**
+     * Modify this geometry's texture coordinates based on a matrix.
+     *
+     * This is primarily intended to convert from non-normalised to normalised
+     * texture coordinates.
+     *
+     * @param textureMatrix The texture matrix to use for modifying the
+     *                      texture coordinates. Note that only the 2D scale and
+     *                      translation are used.
+     */
+    void postProcessTextureCoordinates(const QMatrix4x4 &textureMatrix);
+
+private:
+    VertexSnappingMode m_vertexSnappingMode = VertexSnappingMode::Round;
 };
 
 class KWINEFFECTS_EXPORT WindowPrePaintData
@@ -3213,7 +3264,7 @@ class KWINEFFECTS_EXPORT WindowPaintData : public PaintData
 {
 public:
     WindowPaintData();
-    explicit WindowPaintData(const QMatrix4x4 &screenProjectionMatrix);
+    explicit WindowPaintData(const QMatrix4x4 &projectionMatrix);
     WindowPaintData(const WindowPaintData &other);
     ~WindowPaintData() override;
     /**
@@ -3369,14 +3420,6 @@ public:
      * Returns a reference to the projection matrix.
      */
     QMatrix4x4 &rprojectionMatrix();
-
-    /**
-     * Returns The projection matrix as used by the current screen painting pass
-     * including screen transformations.
-     *
-     * @since 5.6
-     */
-    QMatrix4x4 screenProjectionMatrix() const;
 
     /**
      * An override for the scale the window should be rendered at.

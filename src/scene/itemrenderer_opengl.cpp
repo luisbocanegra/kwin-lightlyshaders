@@ -225,21 +225,6 @@ void ItemRendererOpenGL::createRenderNode(Item *item, RenderContext *context)
     context->opacityStack.pop();
 }
 
-QMatrix4x4 ItemRendererOpenGL::modelViewProjectionMatrix(const WindowPaintData &data) const
-{
-    // An effect may want to override the default projection matrix in some cases,
-    // such as when it is rendering a window on a render target that doesn't have
-    // the same dimensions as the default framebuffer.
-    //
-    // Note that the screen transformation is not applied here.
-    const QMatrix4x4 pMatrix = data.projectionMatrix();
-    if (!pMatrix.isIdentity()) {
-        return pMatrix;
-    } else {
-        return renderTargetProjectionMatrix();
-    }
-}
-
 void ItemRendererOpenGL::renderBackground(const QRegion &region)
 {
     if (region == infiniteRegion() || (region.rectCount() == 1 && (*region.begin()) == renderTargetRect())) {
@@ -300,14 +285,9 @@ void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region,
         shaderTraits |= ShaderTrait::AdjustSaturation;
     }
 
-    const GLVertexAttrib attribs[] = {
-        {VA_Position, 2, GL_FLOAT, offsetof(GLVertex2D, position)},
-        {VA_TexCoord, 2, GL_FLOAT, offsetof(GLVertex2D, texcoord)},
-    };
-
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
     vbo->reset();
-    vbo->setAttribLayout(attribs, 2, sizeof(GLVertex2D));
+    vbo->setAttribLayout(GLVertexBuffer::GLVertex2DLayout, 2, sizeof(GLVertex2D));
 
     GLVertex2D *map = (GLVertex2D *)vbo->map(size);
 
@@ -324,16 +304,7 @@ void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region,
         renderNode.firstVertex = v;
         renderNode.vertexCount = renderNode.geometry.count();
 
-        const QMatrix4x4 textureMatrix = renderNode.texture->matrix(renderNode.coordinateType);
-        if (!textureMatrix.isIdentity()) {
-            // Adjust the vertex' texture coordinates with the specified matrix.
-            const QVector2D coeff(textureMatrix(0, 0), textureMatrix(1, 1));
-            const QVector2D offset(textureMatrix(0, 3), textureMatrix(1, 3));
-
-            for (auto &vertex : renderNode.geometry) {
-                vertex.texcoord = vertex.texcoord * coeff + offset;
-            }
-        }
+        renderNode.geometry.postProcessTextureCoordinates(renderNode.texture->matrix(renderNode.coordinateType));
 
         renderNode.geometry.copy(std::span(&map[v], renderNode.geometry.count()));
         v += renderNode.geometry.count();
@@ -363,7 +334,7 @@ void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region,
         scissorRegion = mapToRenderTarget(region);
     }
 
-    const QMatrix4x4 projectionMatrix = modelViewProjectionMatrix(data);
+    const QMatrix4x4 projectionMatrix = data.projectionMatrix();
     for (int i = 0; i < renderContext.renderNodes.count(); i++) {
         const RenderNode &renderNode = renderContext.renderNodes[i];
         if (renderNode.vertexCount == 0) {

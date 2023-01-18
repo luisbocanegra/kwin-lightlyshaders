@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-10 00:57+0000\n"
+"POT-Creation-Date: 2023-01-12 00:56+0000\n"
 "PO-Revision-Date: 2022-06-27 14:39+0200\n"
 "Last-Translator: Vit Pelcak <vit@pelcak.org>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
@@ -2241,10 +2241,9 @@ msgid "&Shade"
 msgstr "Z&asunout"
 
 #: useractions.cpp:272
-#, fuzzy, kde-format
-#| msgid "No titlebar and frame"
+#, kde-format
 msgid "&No Titlebar and Frame"
-msgstr "Bez titulku a rámu"
+msgstr ""
 
 #: useractions.cpp:280
 #, kde-format
@@ -2443,10 +2442,9 @@ msgid "Make Window Fullscreen"
 msgstr "Okno na celou obrazovku"
 
 #: useractions.cpp:1009
-#, fuzzy, kde-format
-#| msgid "No titlebar and frame"
+#, kde-format
 msgid "Toggle Window Titlebar and Frame"
-msgstr "Bez titulku a rámu"
+msgstr ""
 
 #: useractions.cpp:1011
 #, kde-format
@@ -2761,7 +2759,7 @@ msgstr "Přepnout se na plochu dolů"
 msgid "Switch to Desktop %1"
 msgstr "Přepnout se na plochu %1"
 
-#: window.cpp:3440
+#: window.cpp:3448
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
@@ -2781,6 +2779,3 @@ msgid ""
 "paste bin service\n"
 "like https://paste.kde.org instead of pasting into support threads.\n"
 msgstr ""
-
-#~ msgid "&No Border"
-#~ msgstr "Bez o&krajů"
