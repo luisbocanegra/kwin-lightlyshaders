@@ -1789,10 +1789,6 @@ protected:
     {
         return m_interactiveMoveResize.initialGeometry;
     }
-    /**
-     * Sets the initial move resize geometry to the current geometry.
-     */
-    void updateInitialMoveResizeGeometry();
     void setMoveResizeGeometry(const QRectF &geo);
     Gravity interactiveMoveResizeGravity() const
     {
@@ -1845,6 +1841,7 @@ protected:
      * activates quick tiling or maximization
      */
     void checkQuickTilingMaximizationZones(int xroot, int yroot);
+    void resetQuickTilingMaximizationZones();
     /**
      * Whether a sync request is still pending.
      * Default implementation returns @c false.
@@ -2007,12 +2004,15 @@ private:
         QPointF offset;
         QPointF invertedOffset;
         QRectF initialGeometry;
+        QRectF initialGeometryRestore;
         Gravity gravity = Gravity::None;
         bool buttonDown = false;
         CursorShape cursor = Qt::ArrowCursor;
         Output *startOutput = nullptr;
         QTimer *delayedTimer = nullptr;
         uint32_t counter = 0;
+        MaximizeMode initialMaximizeMode;
+        QuickTileMode initialQuickTileMode;
     } m_interactiveMoveResize;
 
     struct

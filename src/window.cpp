@@ -1607,6 +1607,12 @@ bool Window::startInteractiveMoveResize()
     setInteractiveMoveResize(true);
     workspace()->setMoveResizeWindow(this);
 
+    m_interactiveMoveResize.initialGeometry = moveResizeGeometry();
+    m_interactiveMoveResize.startOutput = moveResizeOutput();
+    m_interactiveMoveResize.initialMaximizeMode = requestedMaximizeMode();
+    m_interactiveMoveResize.initialQuickTileMode = quickTileMode();
+    m_interactiveMoveResize.initialGeometryRestore = geometryRestore();
+
     if (requestedMaximizeMode() != MaximizeRestore) {
         switch (interactiveMoveResizeGravity()) {
         case Gravity::Left:
@@ -1648,7 +1654,6 @@ bool Window::startInteractiveMoveResize()
         setQuickTileMode(QuickTileFlag::None);
     }
 
-    updateInitialMoveResizeGeometry();
     updateElectricGeometryRestore();
     checkUnrestrictedInteractiveMoveResize();
     Q_EMIT clientStartUserMovedResized(this);
@@ -1668,8 +1673,14 @@ void Window::finishInteractiveMoveResize(bool cancel)
 
     if (cancel) {
         moveResize(initialInteractiveMoveResizeGeometry());
-    }
-    if (moveResizeOutput() != interactiveMoveResizeStartOutput()) {
+        if (m_interactiveMoveResize.initialMaximizeMode != MaximizeMode::MaximizeRestore) {
+            setMaximize(m_interactiveMoveResize.initialMaximizeMode & MaximizeMode::MaximizeVertical, m_interactiveMoveResize.initialMaximizeMode & MaximizeMode::MaximizeHorizontal);
+            setGeometryRestore(m_interactiveMoveResize.initialGeometryRestore);
+        } else if (m_interactiveMoveResize.initialQuickTileMode) {
+            setQuickTileMode(m_interactiveMoveResize.initialQuickTileMode, true);
+            setGeometryRestore(m_interactiveMoveResize.initialGeometryRestore);
+        }
+    } else if (moveResizeOutput() != interactiveMoveResizeStartOutput()) {
         workspace()->sendWindowToOutput(this, moveResizeOutput()); // checks rule validity
         if (isRequestedFullScreen() || requestedMaximizeMode() != MaximizeRestore) {
             checkWorkspacePosition();
@@ -1788,12 +1799,11 @@ void Window::handleInteractiveMoveResize(const QPointF &local, const QPointF &gl
                 setMoveResizeGeometry(geom_restore);
             }
             handleInteractiveMoveResize(local.x(), local.y(), global.x(), global.y()); // fix position
-        } else if (quickTileMode() == QuickTileMode(QuickTileFlag::None) && isResizable()) {
-            checkQuickTilingMaximizationZones(global.x(), global.y());
         }
 
-        if ((input()->modifiersRelevantForGlobalShortcuts() & Qt::ShiftModifier) && workspace()->tileManager(output())->rootTile()->childCount() > 1) {
-            const auto &r = quickTileGeometry(QuickTileFlag::Custom, Cursors::self()->mouse()->pos());
+        if (input()->modifiersRelevantForGlobalShortcuts() & Qt::ShiftModifier) {
+            resetQuickTilingMaximizationZones();
+            const auto &r = quickTileGeometry(QuickTileFlag::Custom, global);
             if (r.isEmpty()) {
                 workspace()->outline()->hide();
             } else {
@@ -1801,10 +1811,15 @@ void Window::handleInteractiveMoveResize(const QPointF &local, const QPointF &gl
                     workspace()->outline()->show(r.toRect(), moveResizeGeometry().toRect());
                 }
             }
-        } else if (!m_electricMaximizing) {
-            // Only if we are in an electric maximizing gesture we should keep the outline,
-            // otherwise we must make sure it's hidden
-            workspace()->outline()->hide();
+        } else {
+            if (quickTileMode() == QuickTileMode(QuickTileFlag::None) && isResizable()) {
+                checkQuickTilingMaximizationZones(global.x(), global.y());
+            }
+            if (!m_electricMaximizing) {
+                // Only if we are in an electric maximizing gesture we should keep the outline,
+                // otherwise we must make sure it's hidden
+                workspace()->outline()->hide();
+            }
         }
     }
 }
@@ -2750,12 +2765,6 @@ int Window::borderTop() const
     return isDecorated() ? decoration()->borderTop() : 0;
 }
 
-void Window::updateInitialMoveResizeGeometry()
-{
-    m_interactiveMoveResize.initialGeometry = frameGeometry();
-    m_interactiveMoveResize.startOutput = output();
-}
-
 void Window::updateCursor()
 {
     Gravity gravity = interactiveMoveResizeGravity();
@@ -2897,6 +2906,17 @@ void Window::checkQuickTilingMaximizationZones(int xroot, int yroot)
         } else {
             setElectricBorderMaximizing(mode != QuickTileMode(QuickTileFlag::None));
         }
+    }
+}
+
+void Window::resetQuickTilingMaximizationZones()
+{
+    if (electricBorderMode() != QuickTileMode(QuickTileFlag::None)) {
+        if (m_electricMaximizingDelay) {
+            m_electricMaximizingDelay->stop();
+        }
+        setElectricBorderMaximizing(false);
+        setElectricBorderMode(QuickTileFlag::None);
     }
 }
 
@@ -3749,14 +3769,11 @@ QRectF Window::quickTileGeometry(QuickTileMode mode, const QPointF &pos) const
         }
     }
 
-    QRectF ret = workspace()->clientArea(MaximizeArea, this, pos);
-
     Tile *tile = workspace()->tileManager(output)->quickTile(mode);
     if (tile) {
         return tile->windowGeometry();
     }
-
-    return ret;
+    return workspace()->clientArea(MaximizeArea, this, pos);
 }
 
 void Window::updateElectricGeometryRestore()
@@ -4460,7 +4477,7 @@ void Window::applyWindowRules()
     // Geometry : setGeometry() doesn't check rules
     auto client_rules = rules();
     const QRectF oldGeometry = moveResizeGeometry();
-    const QRectF geometry = client_rules->checkGeometry(oldGeometry);
+    const QRectF geometry = client_rules->checkGeometrySafe(oldGeometry);
     if (geometry != oldGeometry) {
         moveResize(geometry);
     }
