@@ -3,14 +3,14 @@
 # Lukáš Tinkl <lukas@kde.org>, 2010, 2011, 2012.
 # Vít Pelčák <vit@pelcak.org>, 2010, 2011, 2012, 2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020.
 # Tomáš Chvátal <tomas.chvatal@gmail.com>, 2012.
-# Vit Pelcak <vit@pelcak.org>, 2021, 2022.
+# Vit Pelcak <vit@pelcak.org>, 2021, 2022, 2023.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-29 00:59+0000\n"
-"PO-Revision-Date: 2022-06-27 14:39+0200\n"
+"POT-Creation-Date: 2023-02-07 01:01+0000\n"
+"PO-Revision-Date: 2023-01-30 15:44+0100\n"
 "Last-Translator: Vit Pelcak <vit@pelcak.org>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Lokalize 22.04.2\n"
+"X-Generator: Lokalize 22.12.1\n"
 "X-Language: cs_CZ\n"
 "X-Source-Language: en_US\n"
 
@@ -54,6 +54,10 @@ msgid ""
 "meanwhile upgraded to a stable driver,<br>you can reset this protection but "
 "<b>be aware that this might result in an immediate crash!</b></p>"
 msgstr ""
+"<b>Kompozice OpenGL (výchozí) vedla v minulosti k pádu KWinu.</b><br>K tomu "
+"nejspíš došlo kvůli chybě v ovladači.<p>Pokud si myslíte, že jste mezitím "
+"aktualizovali na stabilní verzi ovladače,<br>můžete resetovat ochranu, ale "
+"mějte na paměti, že to může vést k okamžitému pádu.</b></p>"
 
 #: composite.cpp:1071
 #, kde-format
@@ -63,7 +67,7 @@ msgstr "Požadovaná X rozšíření (XComposite a XDamage) nejsou dostupná."
 #: composite.cpp:1074
 #, kde-format
 msgid "GLX/OpenGL is not available."
-msgstr ""
+msgstr "GLX/OpenGL není dostupné."
 
 #: debug_console.cpp:79 debug_console.cpp:84
 #, kde-format
@@ -859,7 +863,7 @@ msgstr "úloha"
 #: debug_console.cpp:1222
 #, kde-format
 msgid "X11 Windows"
-msgstr ""
+msgstr "Okna X11"
 
 #: debug_console.cpp:1224
 #, kde-format
@@ -1159,17 +1163,17 @@ msgstr "Čekat delší dobu"
 #: input.cpp:2009
 #, kde-format
 msgid "Move the tablet to the next output"
-msgstr ""
+msgstr "Přesunout tablet na následující výstup"
 
 #: input.cpp:2088
 #, kde-format
 msgid "Tablet moved to %1"
-msgstr ""
+msgstr "Tablet přesunut na %1"
 
 #: input.cpp:2088
 #, kde-format
 msgid "Tablets switched outputs"
-msgstr ""
+msgstr "Tablety si prohodily výstupy"
 
 #: input.cpp:3065
 #, kde-format
@@ -1253,124 +1257,124 @@ msgstr "Zakázat možnosti nastavení"
 msgid "Indicate that KWin has recently crashed n times"
 msgstr "Naznačuje, že KWin nedávno n-krát zhavaroval"
 
-#: main_wayland.cpp:315
+#: main_wayland.cpp:302
 #, kde-format
 msgid "Start a rootless Xwayland server."
 msgstr "Spustit rootless Xwayland server."
 
-#: main_wayland.cpp:317
+#: main_wayland.cpp:304
 #, kde-format
 msgid ""
 "Name of the Wayland socket to listen on. If not set \"wayland-0\" is used."
 msgstr ""
 
-#: main_wayland.cpp:320
+#: main_wayland.cpp:307
 #, kde-format
 msgid "The X11 Display to use in windowed mode on platform X11."
 msgstr ""
 
-#: main_wayland.cpp:323
+#: main_wayland.cpp:310
 #, kde-format
 msgid "The Wayland Display to use in windowed mode on platform Wayland."
 msgstr ""
 
-#: main_wayland.cpp:325
+#: main_wayland.cpp:312
 #, kde-format
 msgid "Render to a virtual framebuffer."
 msgstr "Vykreslovat do virtuálního framebufferu."
 
-#: main_wayland.cpp:327
+#: main_wayland.cpp:314
 #, kde-format
 msgid "The width for windowed mode. Default width is 1024."
 msgstr ""
 
-#: main_wayland.cpp:331
+#: main_wayland.cpp:318
 #, kde-format
 msgid "The height for windowed mode. Default height is 768."
 msgstr ""
 
-#: main_wayland.cpp:336
+#: main_wayland.cpp:323
 #, kde-format
 msgid "The scale for windowed mode. Default value is 1."
 msgstr ""
 
-#: main_wayland.cpp:341
+#: main_wayland.cpp:328
 #, kde-format
 msgid ""
 "The number of windows to open as outputs in windowed mode. Default value is 1"
 msgstr ""
 
-#: main_wayland.cpp:346
+#: main_wayland.cpp:333
 #, kde-format
 msgid ""
 "Wayland socket to use for incoming connections. This can be combined with --"
 "socket to name the socket"
 msgstr ""
 
-#: main_wayland.cpp:350
+#: main_wayland.cpp:337
 #, kde-format
 msgid ""
 "XWayland socket to use for Xwayland's incoming connections. This can be set "
 "multiple times"
 msgstr ""
 
-#: main_wayland.cpp:354
+#: main_wayland.cpp:341
 #, kde-format
 msgid "Name of the xwayland display that has been pre-set up"
 msgstr ""
 
-#: main_wayland.cpp:358
+#: main_wayland.cpp:345
 #, kde-format
 msgid "Name of the xauthority file "
 msgstr "Název souboru xauthority"
 
-#: main_wayland.cpp:362
+#: main_wayland.cpp:349
 #, kde-format
 msgid "Exits this instance so it can be restarted by kwin_wayland_wrapper."
 msgstr ""
 
-#: main_wayland.cpp:364
+#: main_wayland.cpp:351
 #, kde-format
 msgid "Render through drm node."
 msgstr "Vykreslovat režimem drm."
 
-#: main_wayland.cpp:365
+#: main_wayland.cpp:352
 #, kde-format
 msgid ""
 "Extract locale information from locale1 rather than the user's configuration"
 msgstr ""
 
-#: main_wayland.cpp:387
+#: main_wayland.cpp:374
 #, kde-format
 msgid "Input method that KWin starts."
 msgstr ""
 
-#: main_wayland.cpp:393
+#: main_wayland.cpp:380
 #, kde-format
 msgid "Starts the session in locked mode."
 msgstr "Spustí sezení v uzamčeném režimu."
 
-#: main_wayland.cpp:397
+#: main_wayland.cpp:384
 #, kde-format
 msgid "Starts the session without lock screen support."
 msgstr ""
 
-#: main_wayland.cpp:402
+#: main_wayland.cpp:389
 #, kde-format
 msgid "Starts the session without global shortcuts support."
 msgstr ""
 
-#: main_wayland.cpp:407 main_x11.cpp:418
+#: main_wayland.cpp:394 main_x11.cpp:418
 #, kde-format
 msgid "Disable KActivities integration."
 msgstr ""
 
-#: main_wayland.cpp:412
+#: main_wayland.cpp:399
 #, kde-format
 msgid "Exit after the session application, which is started by KWin, closed."
 msgstr ""
 
-#: main_wayland.cpp:417
+#: main_wayland.cpp:404
 #, kde-format
 msgid "Applications to start once Wayland and Xwayland server are started"
 msgstr ""
@@ -1557,17 +1561,15 @@ msgctxt "Night Color was enabled"
 msgid "Night Color On"
 msgstr "Noční barvu zapnout"
 
-#: plugins/nightcolor/nightcolormanager.cpp:84
-#: plugins/nightcolor/nightcolormanager.cpp:87
-#: plugins/nightcolor/nightcolormanager.cpp:94
+#: plugins/nightcolor/nightcolormanager.cpp:85
 #, kde-format
 msgid "Toggle Night Color"
 msgstr "Přepnout noční barvu"
 
-#: plugins/nightcolor/nightcolormanager.cpp:471
+#: plugins/nightcolor/nightcolormanager.cpp:462
 #, kde-format
 msgid "Color Temperature Preview"
-msgstr ""
+msgstr "Náhled teploty barvy"
 
 #. i18n: ectx: label, entry (count), group (General)
 #: rulebooksettingsbase.kcfg:9
@@ -1789,7 +1791,7 @@ msgstr "Aktivita"
 #: rulesettings.kcfg:176
 #, kde-format
 msgid "Activity rule type"
-msgstr ""
+msgstr "Typ pravidla aktivity"
 
 #. i18n: ectx: label, entry (type), group ($(ruleDescriptionOrNumber))
 #: rulesettings.kcfg:183
@@ -2095,20 +2097,20 @@ msgstr "Typ pravidla pro název souboru plochy"
 #, kde-format
 msgctxt "Error message"
 msgid "Could not locate package metadata"
-msgstr ""
+msgstr "Nelze najít metadata balíčku"
 
 #: scripting/genericscriptedconfig.cpp:84
 #, kde-format
 msgctxt "Required file does not exist"
 msgid "%1 does not contain a valid metadata.json file"
-msgstr ""
+msgstr "%1 neobsahuje platný soubor metadata.json"
 
 #: scripting/genericscriptedconfig.cpp:90
 #: scripting/genericscriptedconfig.cpp:96
 #, kde-format
 msgctxt "Required file does not exist"
 msgid "%1 does not exist"
-msgstr ""
+msgstr "%1 neexistuje"
 
 #. i18n: ectx: property (windowTitle), widget (QDialog, ShortcutDialog)
 #: shortcutdialog.ui:14
@@ -2243,7 +2245,7 @@ msgstr "Z&asunout"
 #: useractions.cpp:272
 #, kde-format
 msgid "&No Titlebar and Frame"
-msgstr ""
+msgstr "&Bez titulku a rámu"
 
 #: useractions.cpp:280
 #, kde-format
@@ -2574,12 +2576,12 @@ msgstr "Přepnout se na okno doleva"
 #: useractions.cpp:1061
 #, kde-format
 msgid "Increase Opacity of Active Window by 5%"
-msgstr ""
+msgstr "Zvýšit krytí aktivního okna o 5 %"
 
 #: useractions.cpp:1063
 #, kde-format
 msgid "Decrease Opacity of Active Window by 5%"
-msgstr ""
+msgstr "Snížit krytí aktivního okna o 5 %"
 
 #: useractions.cpp:1066
 #, kde-format
@@ -2639,22 +2641,22 @@ msgstr "Okno na předchozí obrazovku"
 #: useractions.cpp:1102
 #, kde-format
 msgid "Window One Screen to the Right"
-msgstr ""
+msgstr "Okno o obrazovku doprava"
 
 #: useractions.cpp:1104
 #, kde-format
 msgid "Window One Screen to the Left"
-msgstr ""
+msgstr "Okno o obrazovku doleva"
 
 #: useractions.cpp:1106
 #, kde-format
 msgid "Window One Screen Up"
-msgstr ""
+msgstr "Okno o obrazovku výš"
 
 #: useractions.cpp:1108
 #, kde-format
 msgid "Window One Screen Down"
-msgstr ""
+msgstr "Okno o obrazovku níž"
 
 #: useractions.cpp:1112
 #, kde-format
@@ -2674,27 +2676,27 @@ msgstr "Přepnout se na předchozí obrazovku"
 #: useractions.cpp:1121
 #, kde-format
 msgid "Switch to Screen to the Right"
-msgstr ""
+msgstr "Přepnout se na obrazovku vpravo"
 
 #: useractions.cpp:1123
 #, kde-format
 msgid "Switch to Screen to the Left"
-msgstr ""
+msgstr "Přepnout se na obrazovku vlevo"
 
 #: useractions.cpp:1125
 #, kde-format
 msgid "Switch to Screen Above"
-msgstr ""
+msgstr "Přepnout na obrazovku výše"
 
 #: useractions.cpp:1127
 #, kde-format
 msgid "Switch to Screen Below"
-msgstr ""
+msgstr "Přepnout na obrazovku níže"
 
 #: useractions.cpp:1130
 #, kde-format
 msgid "Peek at Desktop"
-msgstr ""
+msgstr "Nakouknout na pracovní plochu"
 
 #: useractions.cpp:1133
 #, kde-format
@@ -2759,7 +2761,7 @@ msgstr "Přepnout se na plochu dolů"
 msgid "Switch to Desktop %1"
 msgstr "Přepnout se na plochu %1"
 
-#: window.cpp:3469
+#: window.cpp:3470
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"

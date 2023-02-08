@@ -150,8 +150,6 @@ EffectsHandlerImpl::EffectsHandlerImpl(Compositor *compositor, WorkspaceScene *s
         const int newDesktop = VirtualDesktopManager::self()->current();
         if (old != 0 && newDesktop != old) {
             Q_EMIT desktopChanged(old, newDesktop, window ? window->effectWindow() : nullptr);
-            // TODO: remove in 4.10
-            Q_EMIT desktopChanged(old, newDesktop);
         }
     });
     connect(ws, &Workspace::currentDesktopChanging, this, [this](uint currentDesktop, QPointF offset, KWin::Window *window) {
@@ -806,40 +804,19 @@ void EffectsHandlerImpl::registerAxisShortcut(Qt::KeyboardModifiers modifiers, P
     input()->registerAxisShortcut(modifiers, axis, action);
 }
 
-void EffectsHandlerImpl::registerRealtimeTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback)
+void EffectsHandlerImpl::registerTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback)
 {
-    input()->registerRealtimeTouchpadSwipeShortcut(dir, fingerCount, onUp, progressCallback);
+    input()->registerTouchpadSwipeShortcut(dir, fingerCount, onUp, progressCallback);
 }
 
-void EffectsHandlerImpl::registerTouchpadSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action)
+void EffectsHandlerImpl::registerTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback)
 {
-    input()->registerTouchpadSwipeShortcut(direction, fingerCount, action);
-}
-
-void EffectsHandlerImpl::registerRealtimeTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback)
-{
-    input()->registerRealtimeTouchpadPinchShortcut(dir, fingerCount, onUp, progressCallback);
-}
-
-void EffectsHandlerImpl::registerTouchpadPinchShortcut(PinchDirection direction, uint fingerCount, QAction *action)
-{
-    input()->registerTouchpadPinchShortcut(direction, fingerCount, action);
+    input()->registerTouchpadPinchShortcut(dir, fingerCount, onUp, progressCallback);
 }
 
 void EffectsHandlerImpl::registerTouchscreenSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action, std::function<void(qreal)> progressCallback)
 {
     input()->registerTouchscreenSwipeShortcut(direction, fingerCount, action, progressCallback);
-}
-
-void *EffectsHandlerImpl::getProxy(QString name)
-{
-    for (QVector<EffectPair>::const_iterator it = loaded_effects.constBegin(); it != loaded_effects.constEnd(); ++it) {
-        if ((*it).first == name) {
-            return (*it).second->proxy();
-        }
-    }
-
-    return nullptr;
 }
 
 void EffectsHandlerImpl::startMousePolling()
@@ -2077,13 +2054,11 @@ WINDOW_HELPER(qreal, width, width)
 WINDOW_HELPER(qreal, height, height)
 WINDOW_HELPER(QPointF, pos, pos)
 WINDOW_HELPER(QSizeF, size, size)
-WINDOW_HELPER(QRectF, geometry, frameGeometry)
 WINDOW_HELPER(QRectF, frameGeometry, frameGeometry)
 WINDOW_HELPER(QRectF, bufferGeometry, bufferGeometry)
 WINDOW_HELPER(QRectF, clientGeometry, clientGeometry)
 WINDOW_HELPER(QRectF, expandedGeometry, visibleGeometry)
 WINDOW_HELPER(QRectF, rect, rect)
-WINDOW_HELPER(int, desktop, desktop)
 WINDOW_HELPER(bool, isDesktop, isDesktop)
 WINDOW_HELPER(bool, isDock, isDock)
 WINDOW_HELPER(bool, isToolbar, isToolbar)
@@ -2150,12 +2125,6 @@ MANAGED_HELPER(bool, decorationHasAlpha, decorationHasAlpha, false)
 MANAGED_HELPER(bool, isUnresponsive, unresponsive, false)
 
 #undef MANAGED_HELPER
-
-// legacy from tab groups, can be removed when no effects use this any more.
-bool EffectWindowImpl::isCurrentTab() const
-{
-    return true;
-}
 
 QString EffectWindowImpl::windowClass() const
 {
@@ -2310,16 +2279,6 @@ void EffectWindowImpl::closeWindow()
     if (m_window->isClient()) {
         m_window->closeWindow();
     }
-}
-
-void EffectWindowImpl::referencePreviousWindowPixmap()
-{
-    // TODO: Implement.
-}
-
-void EffectWindowImpl::unreferencePreviousWindowPixmap()
-{
-    // TODO: Implement.
 }
 
 bool EffectWindowImpl::isManaged() const

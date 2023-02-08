@@ -1826,15 +1826,11 @@ void Window::handleInteractiveMoveResize(const QPointF &local, const QPointF &gl
 
 void Window::handleInteractiveMoveResize(int x, int y, int x_root, int y_root)
 {
-    const Gravity gravity = interactiveMoveResizeGravity();
-    if (m_tile && m_tile->supportsResizeGravity(gravity)) {
-        m_tile->resizeFromGravity(gravity, x_root, y_root);
-        return;
-    }
     if (isWaitingForInteractiveMoveResizeSync()) {
         return; // we're still waiting for the client or the timeout
     }
 
+    const Gravity gravity = interactiveMoveResizeGravity();
     if ((gravity == Gravity::None && !isMovableAcrossScreens())
         || (gravity != Gravity::None && (isShade() || !isResizable()))) {
         return;
@@ -1897,6 +1893,11 @@ void Window::handleInteractiveMoveResize(int x, int y, int x_root, int y_root)
     };
 
     if (isInteractiveResize()) {
+        if (m_tile && m_tile->supportsResizeGravity(gravity)) {
+            m_tile->resizeFromGravity(gravity, x_root, y_root);
+            return;
+        }
+
         QRectF orig = initialInteractiveMoveResizeGeometry();
         SizeMode sizeMode = SizeModeAny;
         auto calculateMoveResizeGeom = [&topleft, &bottomright, &orig, &nextMoveResizeGeom, &sizeMode, &gravity]() {
@@ -3476,14 +3477,9 @@ void Window::removeRule(Rules *rule)
     m_rules.remove(rule);
 }
 
-void Window::discardTemporaryRules()
-{
-    m_rules.discardTemporary();
-}
-
 void Window::evaluateWindowRules()
 {
-    setupWindowRules(true);
+    setupWindowRules();
     applyWindowRules();
 }
 
@@ -4447,10 +4443,10 @@ void Window::cleanTabBox()
 #endif
 }
 
-void Window::setupWindowRules(bool ignore_temporary)
+void Window::setupWindowRules()
 {
     disconnect(this, &Window::captionChanged, this, &Window::evaluateWindowRules);
-    m_rules = workspace()->rulebook()->find(this, ignore_temporary);
+    m_rules = workspace()->rulebook()->find(this);
     // check only after getting the rules, because there may be a rule forcing window type
 }
 

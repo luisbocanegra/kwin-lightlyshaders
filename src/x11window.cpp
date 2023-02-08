@@ -493,7 +493,7 @@ bool X11Window::manage(xcb_window_t w, bool isMapped)
     // and only then really set the caption using setCaption(), which checks for duplicates etc.
     // and also relies on rules already existing
     cap_normal = readName();
-    setupWindowRules(false);
+    setupWindowRules();
     setCaption(cap_normal, true);
 
     connect(this, &X11Window::windowClassChanged, this, &X11Window::evaluateWindowRules);
@@ -1006,7 +1006,6 @@ bool X11Window::manage(xcb_window_t w, bool isMapped)
 
     delete session;
 
-    discardTemporaryRules();
     applyWindowRules(); // Just in case
     workspace()->rulebook()->discardUsed(this, false); // Remove ApplyNow rules
     updateWindowRules(Rules::All); // Was blocked while !isManaged()
@@ -1028,10 +1027,6 @@ bool X11Window::manage(xcb_window_t w, bool isMapped)
         info.setOpacityF(opacity());
     });
 
-    // TODO: there's a small problem here - isManaged() depends on the mapping state,
-    // but this client is not yet in Workspace's client list at this point, will
-    // be only done in addClient()
-    Q_EMIT clientManaging(this);
     return true;
 }
 
@@ -4188,7 +4183,7 @@ void X11Window::moveResizeInternal(const QRectF &rect, MoveResizeMode mode)
     // Such code is wrong and should be changed to handle the case when the window is shaded,
     // for example using X11Window::clientSize()
 
-    QRectF frameGeometry = rect;
+    QRectF frameGeometry = Xcb::fromXNative(Xcb::toXNative(rect));
 
     if (shade_geometry_change) {
         ; // nothing
@@ -4337,7 +4332,7 @@ void X11Window::maximize(MaximizeMode mode)
         return;
     }
 
-    GeometryUpdatesBlocker blocker(this);
+    blockGeometryUpdates(true);
 
     // maximing one way and unmaximizing the other way shouldn't happen,
     // so restore first and then maximize the other way
@@ -4550,6 +4545,7 @@ void X11Window::maximize(MaximizeMode mode)
         break;
     }
 
+    blockGeometryUpdates(false);
     updateAllowedActions();
     updateWindowRules(Rules::MaximizeVert | Rules::MaximizeHoriz | Rules::Position | Rules::Size);
     Q_EMIT quickTileModeChanged();
@@ -4612,16 +4608,11 @@ void X11Window::setFullScreen(bool set, bool user)
         }
     } else {
         Q_ASSERT(!fullscreenGeometryRestore().isNull());
-        Output *currentOutput = moveResizeOutput();
         moveResize(QRectF(fullscreenGeometryRestore().topLeft(), constrainFrameSize(fullscreenGeometryRestore().size())));
-        if (currentOutput != moveResizeOutput()) {
-            workspace()->sendWindowToOutput(this, currentOutput);
-        }
     }
 
     updateWindowRules(Rules::Fullscreen | Rules::Position | Rules::Size);
     updateAllowedActions(false);
-    Q_EMIT clientFullScreenSet(this, set, user);
     Q_EMIT fullScreenChanged();
 }
 

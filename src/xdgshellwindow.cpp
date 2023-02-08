@@ -1360,7 +1360,7 @@ bool XdgToplevelWindow::initialFullScreenMode() const
 void XdgToplevelWindow::initialize()
 {
     bool needsPlacement = isPlaceable();
-    setupWindowRules(false);
+    setupWindowRules();
 
     // Move or resize the window only if enforced by a window rule.
     const QPointF forcedPosition = rules()->checkPositionSafe(invalidPoint, true);
@@ -1398,7 +1398,6 @@ void XdgToplevelWindow::initialize()
         needsPlacement = false;
     }
 
-    discardTemporaryRules();
     workspace()->rulebook()->discardUsed(this, false); // Remove Apply Now rules.
     updateWindowRules(Rules::All);
 
@@ -1619,12 +1618,8 @@ void XdgToplevelWindow::setFullScreen(bool set, bool user)
     } else {
         m_fullScreenRequestedOutput.clear();
         if (fullscreenGeometryRestore().isValid()) {
-            Output *currentOutput = moveResizeOutput();
             moveResize(QRectF(fullscreenGeometryRestore().topLeft(),
                               constrainFrameSize(fullscreenGeometryRestore().size())));
-            if (currentOutput != moveResizeOutput()) {
-                workspace()->sendWindowToOutput(this, currentOutput);
-            }
         } else {
             // this can happen when the window was first shown already fullscreen,
             // so let the client set the size by itself

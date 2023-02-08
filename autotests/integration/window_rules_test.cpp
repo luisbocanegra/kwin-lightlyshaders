@@ -89,12 +89,11 @@ void WindowRuleTest::testApplyInitialMaximizeVert()
     // this test creates the situation of BUG 367554: creates a window and initial apply maximize vertical
     // the window is matched by class and role
     // load the rule
-    QFile ruleFile(QFINDTESTDATA("./data/rules/maximize-vert-apply-initial"));
-    QVERIFY(ruleFile.open(QIODevice::ReadOnly | QIODevice::Text));
-    QMetaObject::invokeMethod(workspace()->rulebook(), "temporaryRulesMessage", Q_ARG(QString, QString::fromUtf8(ruleFile.readAll())));
+    workspace()->rulebook()->setConfig(KSharedConfig::openConfig(QFINDTESTDATA("./data/rules/maximize-vert-apply-initial"), KConfig::SimpleConfig));
+    workspace()->slotReconfigure();
 
     // create the test window
-    std::unique_ptr<xcb_connection_t, XcbConnectionDeleter> c(xcb_connect(nullptr, nullptr));
+    Test::XcbConnectionPtr c = Test::createX11Connection();
     QVERIFY(!xcb_connection_has_error(c.get()));
 
     xcb_window_t windowId = xcb_generate_id(c.get());
@@ -160,7 +159,7 @@ void WindowRuleTest::testWindowClassChange()
     workspace()->slotReconfigure();
 
     // create the test window
-    std::unique_ptr<xcb_connection_t, XcbConnectionDeleter> c(xcb_connect(nullptr, nullptr));
+    Test::XcbConnectionPtr c = Test::createX11Connection();
     QVERIFY(!xcb_connection_has_error(c.get()));
 
     xcb_window_t windowId = xcb_generate_id(c.get());

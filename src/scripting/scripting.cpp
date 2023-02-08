@@ -11,26 +11,24 @@
 
 #include "scripting.h"
 // own
+#include "clientmodel.h"
 #include "dbuscall.h"
 #include "desktopbackgrounditem.h"
 #include "kwinquickeffect.h"
 #include "screenedgeitem.h"
 #include "scripting_logging.h"
 #include "scriptingutils.h"
+#include "virtualdesktopmodel.h"
 #include "windowthumbnailitem.h"
 #include "workspace_wrapper.h"
-
-#include "v2/clientmodel.h"
-#include "v3/clientmodel.h"
-#include "v3/virtualdesktopmodel.h"
 
 #include "input.h"
 #include "options.h"
 #include "screenedge.h"
 #include "tiles/tilemanager.h"
 #include "virtualdesktops.h"
+#include "window.h"
 #include "workspace.h"
-#include "x11window.h"
 // KDE
 #include <KConfigGroup>
 #include <KGlobalAccel>
@@ -153,6 +151,7 @@ KWin::Script::Script(int id, QString scriptName, QString pluginName, QObject *pa
     }
 
     qRegisterMetaType<QList<KWin::Window *>>();
+    qRegisterMetaType<QVector<KWin::VirtualDesktop *>>();
 }
 
 KWin::Script::~Script()
@@ -672,23 +671,13 @@ KWin::Scripting::Scripting(QObject *parent)
 
 void KWin::Scripting::init()
 {
-    qmlRegisterType<WindowThumbnailItem>("org.kde.kwin", 2, 0, "ThumbnailItem");
-    qmlRegisterType<DBusCall>("org.kde.kwin", 2, 0, "DBusCall");
-    qmlRegisterType<ScreenEdgeItem>("org.kde.kwin", 2, 0, "ScreenEdgeItem");
-    qmlRegisterAnonymousType<ScriptingModels::V2::ClientModel>("org.kde.kwin", 2);
-    qmlRegisterType<ScriptingModels::V2::SimpleClientModel>("org.kde.kwin", 2, 0, "ClientModel");
-    qmlRegisterType<ScriptingModels::V2::ClientModelByScreen>("org.kde.kwin", 2, 0, "ClientModelByScreen");
-    qmlRegisterType<ScriptingModels::V2::ClientModelByScreenAndDesktop>("org.kde.kwin", 2, 0, "ClientModelByScreenAndDesktop");
-    qmlRegisterType<ScriptingModels::V2::ClientModelByScreenAndActivity>("org.kde.kwin", 2, 1, "ClientModelByScreenAndActivity");
-    qmlRegisterType<ScriptingModels::V2::ClientFilterModel>("org.kde.kwin", 2, 0, "ClientFilterModel");
-
     qmlRegisterType<DesktopBackgroundItem>("org.kde.kwin", 3, 0, "DesktopBackgroundItem");
     qmlRegisterType<WindowThumbnailItem>("org.kde.kwin", 3, 0, "WindowThumbnailItem");
     qmlRegisterType<DBusCall>("org.kde.kwin", 3, 0, "DBusCall");
     qmlRegisterType<ScreenEdgeItem>("org.kde.kwin", 3, 0, "ScreenEdgeItem");
-    qmlRegisterType<ScriptingModels::V3::ClientModel>("org.kde.kwin", 3, 0, "ClientModel");
-    qmlRegisterType<ScriptingModels::V3::ClientFilterModel>("org.kde.kwin", 3, 0, "ClientFilterModel");
-    qmlRegisterType<ScriptingModels::V3::VirtualDesktopModel>("org.kde.kwin", 3, 0, "VirtualDesktopModel");
+    qmlRegisterType<ClientModel>("org.kde.kwin", 3, 0, "ClientModel");
+    qmlRegisterType<ClientFilterModel>("org.kde.kwin", 3, 0, "ClientFilterModel");
+    qmlRegisterType<VirtualDesktopModel>("org.kde.kwin", 3, 0, "VirtualDesktopModel");
     qmlRegisterUncreatableType<KWin::QuickSceneView>("org.kde.kwin", 3, 0, "SceneView", QStringLiteral("Can't instantiate an object of type SceneView"));
 
     qmlRegisterSingletonType<DeclarativeScriptWorkspaceWrapper>("org.kde.kwin", 3, 0, "Workspace", [](QQmlEngine *qmlEngine, QJSEngine *jsEngine) {
@@ -696,27 +685,13 @@ void KWin::Scripting::init()
     });
     qmlRegisterSingletonInstance("org.kde.kwin", 3, 0, "Options", options);
 
-    qmlRegisterAnonymousType<KWin::Window>("org.kde.kwin", 2);
-    qmlRegisterAnonymousType<KWin::VirtualDesktop>("org.kde.kwin", 2);
-    qmlRegisterAnonymousType<KWin::X11Window>("org.kde.kwin", 2);
-    qmlRegisterAnonymousType<QAbstractItemModel>("org.kde.kwin", 2);
     qmlRegisterAnonymousType<KWin::Window>("org.kde.kwin", 3);
     qmlRegisterAnonymousType<KWin::VirtualDesktop>("org.kde.kwin", 3);
-    qmlRegisterAnonymousType<KWin::X11Window>("org.kde.kwin", 3);
     qmlRegisterAnonymousType<QAbstractItemModel>("org.kde.kwin", 3);
     qmlRegisterAnonymousType<KWin::TileManager>("org.kde.kwin", 3);
     // TODO: call the qml types as the C++ types?
     qmlRegisterUncreatableType<KWin::CustomTile>("org.kde.kwin", 3, 0, "CustomTile", QStringLiteral("Cannot create objects of type Tile"));
     qmlRegisterUncreatableType<KWin::Tile>("org.kde.kwin", 3, 0, "Tile", QStringLiteral("Cannot create objects of type AbstractTile"));
-
-    // TODO Plasma 6: Drop context properties.
-    m_qmlEngine->rootContext()->setContextProperty(QStringLiteral("workspace"), m_workspaceWrapper);
-    m_qmlEngine->rootContext()->setContextProperty(QStringLiteral("options"), options);
-    m_declarativeScriptSharedContext->setContextProperty(QStringLiteral("workspace"), new DeclarativeScriptWorkspaceWrapper(this));
-
-    // QQmlListProperty interfaces only work via properties, rebind them as functions here
-    QQmlExpression expr(m_declarativeScriptSharedContext, nullptr, "workspace.clientList = function() { return workspace.clients }");
-    expr.evaluate();
 }
 
 void KWin::Scripting::start()

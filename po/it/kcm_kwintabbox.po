@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kcm_kwintabbox\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-01-13 00:58+0000\n"
+"POT-Creation-Date: 2023-02-08 01:01+0000\n"
 "PO-Revision-Date: 2022-06-16 15:40+0200\n"
 "Last-Translator: Paolo Zamponi <zapaolo@email.it>\n"
 "Language-Team: Italian <kde-i18n-it@kde.org>\n"
@@ -19,38 +19,33 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Lokalize 22.04.2\n"
 
-#: kwintabboxconfigform.cpp:80
-#, kde-format
-msgid "KWin"
-msgstr "KWin"
-
-#: layoutpreview.cpp:133
+#: layoutpreview.cpp:131
 #, kde-format
 msgid "Show Desktop"
 msgstr "Mostra desktop"
 
-#: layoutpreview.cpp:163
+#: layoutpreview.cpp:161
 #, kde-format
 msgctxt "An example Desktop Name"
 msgid "Desktop 1"
 msgstr "Desktop 1"
 
-#: main.cpp:58
+#: main.cpp:66
 #, kde-format
 msgid "Main"
 msgstr "Principale"
 
-#: main.cpp:59
+#: main.cpp:67
 #, kde-format
 msgid "Alternative"
 msgstr "Alternativo"
 
-#: main.cpp:61
+#: main.cpp:69
 #, kde-format
 msgid "Get New Task Switchers..."
 msgstr "Recupera nuovi selettori delle attività..."
 
-#: main.cpp:75
+#: main.cpp:83
 #, kde-format
 msgid ""
 "Focus policy settings limit the functionality of navigating through windows."
@@ -241,6 +236,57 @@ msgstr ""
 msgid "Show selected window"
 msgstr "Mostra la finestra selezionata"
 
+#: shortcutsettings.cpp:132
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows"
+msgid "Walk Through Windows"
+msgstr "Percorri le finestre"
+
+#: shortcutsettings.cpp:133
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows (Reverse)"
+msgid "Walk Through Windows (Reverse)"
+msgstr "Percorri le finestre (all'indietro)"
+
+#: shortcutsettings.cpp:134
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative"
+msgid "Walk Through Windows of Current Application"
+msgstr "Percorri le finestre alternativo"
+
+#: shortcutsettings.cpp:135
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative (Reverse)"
+msgid "Walk Through Windows of Current Application (Reverse)"
+msgstr "Percorri le finestre alternativo (all'indietro)"
+
+#: shortcutsettings.cpp:137
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative"
+msgid "Walk Through Windows Alternative"
+msgstr "Percorri le finestre alternativo"
+
+#: shortcutsettings.cpp:138
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative (Reverse)"
+msgid "Walk Through Windows Alternative (Reverse)"
+msgstr "Percorri le finestre alternativo (all'indietro)"
+
+#: shortcutsettings.cpp:139
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative"
+msgid "Walk Through Windows of Current Application Alternative"
+msgstr "Percorri le finestre alternativo"
+
+#: shortcutsettings.cpp:140
+#, fuzzy, kde-format
+#| msgid "Walk Through Windows Alternative (Reverse)"
+msgid "Walk Through Windows of Current Application Alternative (Reverse)"
+msgstr "Percorri le finestre alternativo (all'indietro)"
+
+#~ msgid "KWin"
+#~ msgstr "KWin"
+
 #~ msgid "Tabbox layout preview"
 #~ msgstr "Anteprima della disposizione dello scambiafinestre"
 
@@ -277,18 +323,6 @@ msgstr "Mostra la finestra selezionata"
 #~ msgstr ""
 #~ "Queste impostazioni sono usate dalle azioni «Percorri le finestre "
 #~ "alternativo»."
-
-#~ msgid "Walk Through Windows"
-#~ msgstr "Percorri le finestre"
-
-#~ msgid "Walk Through Windows (Reverse)"
-#~ msgstr "Percorri le finestre (all'indietro)"
-
-#~ msgid "Walk Through Windows Alternative"
-#~ msgstr "Percorri le finestre alternativo"
-
-#~ msgid "Walk Through Windows Alternative (Reverse)"
-#~ msgstr "Percorri le finestre alternativo (all'indietro)"
 
 #~ msgctxt ""
 #~ "ComboBox item for window switcher based on layouts instead of a desktop "

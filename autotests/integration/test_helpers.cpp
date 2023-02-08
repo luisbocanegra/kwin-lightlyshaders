@@ -41,7 +41,9 @@
 #include <KScreenLocker/KsldApp>
 #endif
 
+#include <QFutureWatcher>
 #include <QThread>
+#include <QtConcurrent>
 
 // system
 #include <sys/socket.h>
@@ -984,6 +986,24 @@ bool unlockScreen()
     return true;
 }
 #endif // KWIN_BUILD_LOCKSCREEN
+
+void XcbConnectionDeleter::operator()(xcb_connection_t *pointer)
+{
+    xcb_disconnect(pointer);
+};
+
+Test::XcbConnectionPtr createX11Connection()
+{
+    QFutureWatcher<xcb_connection_t *> watcher;
+    QEventLoop e;
+    e.connect(&watcher, &QFutureWatcher<xcb_connection_t *>::finished, &e, &QEventLoop::quit);
+    QFuture<xcb_connection_t *> future = QtConcurrent::run([]() {
+        return xcb_connect(nullptr, nullptr);
+    });
+    watcher.setFuture(future);
+    e.exec();
+    return Test::XcbConnectionPtr(future.result());
+}
 
 WaylandOutputManagementV2::WaylandOutputManagementV2(struct ::wl_registry *registry, int id, int version)
     : QObject()

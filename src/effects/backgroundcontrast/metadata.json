@@ -47,6 +47,7 @@
         "Name[bg]": "Контраст на фона",
         "Name[ca@valencia]": "Contrast del fons",
         "Name[ca]": "Contrast del fons",
+        "Name[cs]": "Kontrast pozadí",
         "Name[es]": "Contraste del fondo",
         "Name[eu]": "Atzeko planoaren kontrastea",
         "Name[fr]": "Contraste de l'arrière-plan",
@@ -62,6 +63,7 @@
         "Name[tr]": "Arka Plan Karşıtlığı",
         "Name[uk]": "Контрастність тла",
         "Name[x-test]": "xxBackground Contrastxx",
+        "Name[zh_CN]": "背景对比度",
         "Name[zh_TW]": "背景對比"
     },
     "org.kde.kwin.effect": {

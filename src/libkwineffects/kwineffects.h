@@ -324,9 +324,6 @@ public:
 
     enum Feature {
         Nothing = 0,
-        Resize, /**< @deprecated */
-        GeometryTip, /**< @deprecated */
-        Outline, /**< @deprecated */
         ScreenInversion,
         Blur,
         Contrast,
@@ -364,11 +361,6 @@ public:
      * required to ensure that the context is current if the implementation does OpenGL calls.
      */
     virtual void reconfigure(ReconfigureFlags flags);
-
-    /**
-     * Called when another effect requests the proxy for this effect.
-     */
-    virtual void *proxy();
 
     /**
      * Called before starting to paint the screen.
@@ -914,13 +906,9 @@ public:
      * @param action The action which gets triggered when the gesture triggers
      * @since 5.10
      */
-    virtual void registerTouchpadSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action) = 0;
+    virtual void registerTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback = {}) = 0;
 
-    virtual void registerRealtimeTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) = 0;
-
-    virtual void registerRealtimeTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) = 0;
-
-    virtual void registerTouchpadPinchShortcut(PinchDirection direction, uint fingerCount, QAction *action) = 0;
+    virtual void registerTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback = {}) = 0;
 
     /**
      * @brief Registers a global touchscreen swipe gesture shortcut with the provided @p action.
@@ -930,12 +918,6 @@ public:
      * @since 5.25
      */
     virtual void registerTouchscreenSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action, std::function<void(qreal)> progressCallback) = 0;
-
-    /**
-     * Retrieve the proxy class for an effect if it has one. Will return NULL if
-     * the effect isn't loaded or doesn't have a proxy class.
-     */
-    virtual void *getProxy(QString name) = 0;
 
     // Mouse polling
     virtual void startMousePolling() = 0;
@@ -1479,15 +1461,6 @@ Q_SIGNALS:
     void desktopChanging(uint currentDesktop, QPointF offset, KWin::EffectWindow *with);
     void desktopChangingCancelled();
 
-    /**
-     * @since 4.7
-     * @deprecated
-     */
-    void KWIN_DEPRECATED desktopChanged(int oldDesktop, int newDesktop);
-    /**
-     * @internal
-     */
-    void desktopChangedLegacy(int oldDesktop, int newDesktop);
     /**
      * Signal emitted when a window moved to another desktop
      * NOTICE that this does NOT imply that the desktop has changed
@@ -2073,7 +2046,7 @@ class EffectWindowVisibleRef;
 class KWINEFFECTS_EXPORT EffectWindow : public QObject
 {
     Q_OBJECT
-    Q_PROPERTY(QRectF geometry READ geometry)
+    Q_PROPERTY(QRectF geometry READ frameGeometry)
     Q_PROPERTY(QRectF expandedGeometry READ expandedGeometry)
     Q_PROPERTY(qreal height READ height)
     Q_PROPERTY(qreal opacity READ opacity)
@@ -2083,7 +2056,7 @@ class KWINEFFECTS_EXPORT EffectWindow : public QObject
     Q_PROPERTY(qreal width READ width)
     Q_PROPERTY(qreal x READ x)
     Q_PROPERTY(qreal y READ y)
-    Q_PROPERTY(int desktop READ desktop)
+    Q_PROPERTY(QVector<uint> desktops READ desktops)
     Q_PROPERTY(bool onAllDesktops READ isOnAllDesktops)
     Q_PROPERTY(bool onCurrentDesktop READ isOnCurrentDesktop)
     Q_PROPERTY(QRectF rect READ rect)
@@ -2362,10 +2335,8 @@ public:
         PAINT_DISABLED_BY_DESKTOP = 1 << 2,
         /**  Window will not be painted because it is minimized  */
         PAINT_DISABLED_BY_MINIMIZE = 1 << 3,
-        /**  Deprecated, tab groups have been removed: Window will not be painted because it is not the active window in a client group */
-        PAINT_DISABLED_BY_TAB_GROUP = 1 << 4,
         /**  Window will not be painted because it's not on the current activity  */
-        PAINT_DISABLED_BY_ACTIVITY = 1 << 5
+        PAINT_DISABLED_BY_ACTIVITY = 1 << 4
     };
 
     explicit EffectWindow();
@@ -2394,17 +2365,6 @@ public:
     bool isOnCurrentDesktop() const;
     bool isOnAllDesktops() const;
     /**
-     * The desktop this window is in. This makes sense only on X11
-     * where desktops are mutually exclusive, on Wayland it's the last
-     * desktop the window has been added to.
-     * use desktops() instead.
-     * @see desktops()
-     * @deprecated
-     */
-#ifndef KWIN_NO_DEPRECATED
-    virtual int KWIN_DEPRECATED desktop() const = 0; // prefer isOnXXX()
-#endif
-    /**
      * All the desktops by number that the window is in. On X11 this list will always have
      * a length of 1, on Wayland can be any subset.
      * If the list is empty it means the window is on all desktops
@@ -2420,10 +2380,6 @@ public:
      * MAY BE DISOBEYED BY THE WM! It's only for information, do NOT rely on it at all.
      */
     virtual QSizeF basicUnit() const = 0;
-    /**
-     * @deprecated Use frameGeometry() instead.
-     */
-    virtual QRectF KWIN_DEPRECATED geometry() const = 0;
     /**
      * Returns the geometry of the window excluding server-side and client-side
      * drop-shadows.
@@ -2617,9 +2573,6 @@ public:
     virtual void unminimize() = 0;
     Q_SCRIPTABLE virtual void closeWindow() = 0;
 
-    /// deprecated
-    virtual bool isCurrentTab() const = 0;
-
     /**
      * @since 4.11
      */
@@ -2702,35 +2655,6 @@ public:
      */
     Q_SCRIPTABLE virtual void setData(int role, const QVariant &data) = 0;
     Q_SCRIPTABLE virtual QVariant data(int role) const = 0;
-
-    /**
-     * @brief References the previous window pixmap to prevent discarding.
-     *
-     * This method allows to reference the previous window pixmap in case that a window changed
-     * its size, which requires a new window pixmap. By referencing the previous (and then outdated)
-     * window pixmap an effect can for example cross fade the current window pixmap with the previous
-     * one. This allows for smoother transitions for window geometry changes.
-     *
-     * If an effect calls this method on a window it also needs to call unreferencePreviousWindowPixmap
-     * once it does no longer need the previous window pixmap.
-     *
-     * Note: the window pixmap is not kept forever even when referenced. If the geometry changes again, so that
-     * a new window pixmap is created, the previous window pixmap will be exchanged with the current one. This
-     * means it's still possible to have rendering glitches. An effect is supposed to track for itself the changes
-     * to the window's geometry and decide how the transition should continue in such a situation.
-     *
-     * @see unreferencePreviousWindowPixmap
-     * @since 4.11
-     */
-    virtual void referencePreviousWindowPixmap() = 0;
-    /**
-     * @brief Unreferences the previous window pixmap. Only relevant after referencePreviousWindowPixmap had
-     * been called.
-     *
-     * @see referencePreviousWindowPixmap
-     * @since 4.11
-     */
-    virtual void unreferencePreviousWindowPixmap() = 0;
 
 protected:
     friend EffectWindowVisibleRef;

@@ -102,12 +102,9 @@ public:
     bool isMouseInterception() const;
     void registerPointerShortcut(Qt::KeyboardModifiers modifiers, Qt::MouseButton pointerButtons, QAction *action) override;
     void registerAxisShortcut(Qt::KeyboardModifiers modifiers, PointerAxisDirection axis, QAction *action) override;
-    void registerRealtimeTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) override;
-    void registerTouchpadSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action) override;
-    void registerRealtimeTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) override;
-    void registerTouchpadPinchShortcut(PinchDirection direction, uint fingerCount, QAction *action) override;
+    void registerTouchpadSwipeShortcut(SwipeDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) override;
+    void registerTouchpadPinchShortcut(PinchDirection dir, uint fingerCount, QAction *onUp, std::function<void(qreal)> progressCallback) override;
     void registerTouchscreenSwipeShortcut(SwipeDirection direction, uint fingerCount, QAction *action, std::function<void(qreal)> progressCallback) override;
-    void *getProxy(QString name) override;
     void startMousePolling() override;
     void stopMousePolling() override;
     EffectWindow *findWindow(WId id) const override;
@@ -396,7 +393,6 @@ public:
     double opacity() const override;
 
     QStringList activities() const override;
-    int desktop() const override;
     QVector<uint> desktops() const override;
     qreal x() const override;
     qreal y() const override;
@@ -404,7 +400,6 @@ public:
     qreal height() const override;
 
     QSizeF basicUnit() const override;
-    QRectF geometry() const override;
     QRectF frameGeometry() const override;
     QRectF bufferGeometry() const override;
     QRectF clientGeometry() const override;
@@ -461,7 +456,6 @@ public:
     QString windowClass() const override;
     NET::WindowType windowType() const override;
     bool isSkipSwitcher() const override;
-    bool isCurrentTab() const override;
     QString windowRole() const override;
 
     bool isManaged() const override;
@@ -484,9 +478,6 @@ public:
     void minimize() override;
     void unminimize() override;
     void closeWindow() override;
-
-    void referencePreviousWindowPixmap() override;
-    void unreferencePreviousWindowPixmap() override;
 
     QWindow *internalWindow() const override;
 
