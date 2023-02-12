@@ -1279,7 +1279,6 @@ void X11Window::setClientFrameExtents(const NETStrut &strut)
         return;
     }
 
-    const bool wasClientSideDecorated = isClientSideDecorated();
     m_clientFrameExtents = clientFrameExtents;
 
     // We should resize the client when its custom frame extents are changed so
@@ -1288,10 +1287,6 @@ void X11Window::setClientFrameExtents(const NETStrut &strut)
     // maximized or fullscreen state. Notice that a client-side decorated client
     // cannot be shaded, therefore it's okay not to use the adjusted size here.
     moveResize(moveResizeGeometry());
-
-    if (wasClientSideDecorated != isClientSideDecorated()) {
-        Q_EMIT clientSideDecoratedChanged();
-    }
 
     // This will invalidate the window quads cache.
     Q_EMIT geometryShapeChanged(this, frameGeometry());
@@ -4239,7 +4234,7 @@ void X11Window::moveResizeInternal(const QRectF &rect, MoveResizeMode mode)
         Q_EMIT frameGeometryChanged(this, oldFrameGeometry);
     }
     if (oldOutput != m_output) {
-        Q_EMIT screenChanged();
+        Q_EMIT outputChanged();
     }
     Q_EMIT geometryShapeChanged(this, oldFrameGeometry);
 }
