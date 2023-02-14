@@ -22,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-02-07 01:01+0000\n"
+"POT-Creation-Date: 2023-02-14 01:00+0000\n"
 "PO-Revision-Date: 2022-10-01 15:09+0300\n"
 "Last-Translator: Alexander Yavorsky <kekcuha@gmail.com>\n"
 "Language-Team: Russian <kde-russian@lists.kde.ru>\n"
@@ -2692,42 +2692,45 @@ msgid "Window One Desktop Down"
 msgstr "Окно на один рабочий стол вниз"
 
 #: useractions.cpp:1091
-#, kde-format
-msgid "Window to Screen %1"
+#, fuzzy, kde-format
+#| msgid "Window to Screen %1"
+msgid "Move Window to Screen %1"
 msgstr "Переместить окно на экран %1"
 
 #: useractions.cpp:1098
-#, kde-format
-msgid "Window to Next Screen"
+#, fuzzy, kde-format
+#| msgid "Window to Next Screen"
+msgid "Move Window to Next Screen"
 msgstr "Переместить окно на следующий экран"
 
 #: useractions.cpp:1100
-#, kde-format
-msgid "Window to Previous Screen"
+#, fuzzy, kde-format
+#| msgid "Window to Previous Screen"
+msgid "Move Window to Previous Screen"
 msgstr "Переместить окно на предыдущий экран"
 
 #: useractions.cpp:1102
 #, fuzzy, kde-format
 #| msgid "Window One Desktop to the Right"
-msgid "Window One Screen to the Right"
+msgid "Move Window One Screen to the Right"
 msgstr "Окно на один рабочий стол вправо"
 
 #: useractions.cpp:1104
 #, fuzzy, kde-format
 #| msgid "Window One Desktop to the Left"
-msgid "Window One Screen to the Left"
+msgid "Move Window One Screen to the Left"
 msgstr "Окно на один рабочий стол влево"
 
 #: useractions.cpp:1106
 #, fuzzy, kde-format
 #| msgid "Window to Screen 2"
-msgid "Window One Screen Up"
+msgid "Move Window One Screen Up"
 msgstr "Переместить окно на рабочий стол 2"
 
 #: useractions.cpp:1108
 #, fuzzy, kde-format
 #| msgid "Window One Desktop Down"
-msgid "Window One Screen Down"
+msgid "Move Window One Screen Down"
 msgstr "Окно на один рабочий стол вниз"
 
 #: useractions.cpp:1112
@@ -2840,7 +2843,7 @@ msgstr "Переключиться на один рабочий стол вни�
 msgid "Switch to Desktop %1"
 msgstr "Переключиться на рабочий стол %1"
 
-#: window.cpp:3470
+#: window.cpp:3465
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"

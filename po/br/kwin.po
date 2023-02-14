@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kwin\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-02-07 01:01+0000\n"
+"POT-Creation-Date: 2023-02-14 01:00+0000\n"
 "PO-Revision-Date: 2004-07-08 17:18+0200\n"
 "Last-Translator: Thierry Vignaud <tvignaud.com>\n"
 "Language-Team: Brezhoneg <Suav.Icb.fr>\n"
@@ -2687,43 +2687,43 @@ msgstr "Gwintañ d'ur burev izeloc'h"
 #: useractions.cpp:1091
 #, fuzzy, kde-format
 #| msgid "Window to Desktop 1"
-msgid "Window to Screen %1"
+msgid "Move Window to Screen %1"
 msgstr "Prenestr ouzh ar burev 1"
 
 #: useractions.cpp:1098
 #, fuzzy, kde-format
 #| msgid "Window to Next Desktop"
-msgid "Window to Next Screen"
+msgid "Move Window to Next Screen"
 msgstr "Prenestr da vurev a heul"
 
 #: useractions.cpp:1100
 #, fuzzy, kde-format
 #| msgid "Window to Previous Desktop"
-msgid "Window to Previous Screen"
+msgid "Move Window to Previous Screen"
 msgstr "Prenestr da vurev diaraok"
 
 #: useractions.cpp:1102
 #, fuzzy, kde-format
 #| msgid "Window One Desktop to the Right"
-msgid "Window One Screen to the Right"
+msgid "Move Window One Screen to the Right"
 msgstr "Gwintañ d'ur burev a zehou"
 
 #: useractions.cpp:1104
 #, fuzzy, kde-format
 #| msgid "Window One Desktop to the Left"
-msgid "Window One Screen to the Left"
+msgid "Move Window One Screen to the Left"
 msgstr "Gwintañ d'ur burev a gleiz"
 
 #: useractions.cpp:1106
 #, fuzzy, kde-format
 #| msgid "Window to Desktop 2"
-msgid "Window One Screen Up"
+msgid "Move Window One Screen Up"
 msgstr "Prenestr ouzh ar burev 2"
 
 #: useractions.cpp:1108
 #, fuzzy, kde-format
 #| msgid "Window One Desktop Down"
-msgid "Window One Screen Down"
+msgid "Move Window One Screen Down"
 msgstr "Gwintañ d'ur burev izeloc'h"
 
 #: useractions.cpp:1112
@@ -2838,7 +2838,7 @@ msgstr "Gwintañ d'ur burev izeloc'h"
 msgid "Switch to Desktop %1"
 msgstr "Gwintañ da Burev 1"
 
-#: window.cpp:3470
+#: window.cpp:3465
 #, kde-format
 msgctxt "Application is not responding, appended to window title"
 msgid "(Not Responding)"
