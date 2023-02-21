@@ -391,22 +391,21 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &d
         GLTexture *cursorTexture = ensureCursorTexture();
         if (cursorTexture) {
             const auto cursor = effects->cursorImage();
-            QSize cursorSize = cursor.image().size() / cursor.image().devicePixelRatio();
+            QSizeF cursorSize = QSizeF(cursor.image().size()) / cursor.image().devicePixelRatio();
             if (mousePointer == MousePointerScale) {
                 cursorSize *= zoom;
             }
 
-            const QPoint p = effects->cursorPos() - cursor.hotSpot();
-            QRect rect(p * zoom + QPoint(xTranslation, yTranslation), cursorSize);
+            const QPointF p = (effects->cursorPos() - cursor.hotSpot()) * zoom + QPoint(xTranslation, yTranslation);
 
             cursorTexture->bind();
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             auto s = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture);
             QMatrix4x4 mvp = data.projectionMatrix();
-            mvp.translate(rect.x() * scale, rect.y() * scale);
+            mvp.translate(p.x() * scale, p.y() * scale);
             s->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
-            cursorTexture->render(rect, scale);
+            cursorTexture->render(cursorSize, scale);
             ShaderManager::instance()->popShader();
             cursorTexture->unbind();
             glDisable(GL_BLEND);
@@ -440,7 +439,7 @@ void ZoomEffect::zoomIn(double to)
         polling = true;
         effects->startMousePolling();
     }
-    cursorPoint = effects->cursorPos();
+    cursorPoint = effects->cursorPos().toPoint();
     if (mouseTracking == MouseTrackingDisabled) {
         prevPoint = cursorPoint;
     }
@@ -459,7 +458,7 @@ void ZoomEffect::zoomOut()
         }
     }
     if (mouseTracking == MouseTrackingDisabled) {
-        prevPoint = effects->cursorPos();
+        prevPoint = effects->cursorPos().toPoint();
     }
     effects->addRepaintFull();
 }
@@ -541,13 +540,13 @@ void ZoomEffect::moveMouseToCenter()
     QCursor::setPos(r.x() + r.width() / 2, r.y() + r.height() / 2);
 }
 
-void ZoomEffect::slotMouseChanged(const QPoint &pos, const QPoint &old, Qt::MouseButtons,
+void ZoomEffect::slotMouseChanged(const QPointF &pos, const QPointF &old, Qt::MouseButtons,
                                   Qt::MouseButtons, Qt::KeyboardModifiers, Qt::KeyboardModifiers)
 {
     if (zoom == 1.0) {
         return;
     }
-    cursorPoint = pos;
+    cursorPoint = pos.toPoint();
     if (pos != old) {
         lastMouseEvent = QTime::currentTime();
         effects->addRepaintFull();

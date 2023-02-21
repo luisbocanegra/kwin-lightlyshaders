@@ -14,7 +14,7 @@
 #include "dbuscall.h"
 #include "desktopbackgrounditem.h"
 #include "kwinquickeffect.h"
-#include "screenedgeitem.h"
+#include "screenedgehandler.h"
 #include "scripting_logging.h"
 #include "scriptingutils.h"
 #include "virtualdesktopmodel.h"
@@ -150,10 +150,6 @@ KWin::Script::Script(int id, QString scriptName, QString pluginName, QObject *pa
     if (!QMetaType::hasRegisteredConverterFunction<QJSValue, QSizeF>()) {
         QMetaType::registerConverter<QJSValue, QSizeF>(scriptValueToSizeF);
     }
-
-    qRegisterMetaType<QList<KWin::Output *>>();
-    qRegisterMetaType<QList<KWin::Window *>>();
-    qRegisterMetaType<QVector<KWin::VirtualDesktop *>>();
 }
 
 KWin::Script::~Script()
@@ -618,14 +614,17 @@ QVariant KWin::JSEngineGlobalMethodsWrapper::readConfig(const QString &key, QVar
 
 void KWin::JSEngineGlobalMethodsWrapper::registerWindow(QQuickWindow *window)
 {
-    QPointer<QQuickWindow> guard = window;
-    connect(
-        window, &QWindow::visibilityChanged, this, [guard](QWindow::Visibility visibility) {
-            if (guard && visibility == QWindow::Hidden) {
-                guard->destroy();
-            }
-        },
-        Qt::QueuedConnection);
+    if (kwinApp()->operationMode() == Application::OperationModeX11) {
+        // Windows stop updating if they are remapped. It seems like a bug in QtXCB.
+        QPointer<QQuickWindow> guard = window;
+        connect(
+            window, &QWindow::visibilityChanged, this, [guard](QWindow::Visibility visibility) {
+                if (guard && visibility == QWindow::Hidden) {
+                    guard->destroy();
+                }
+            },
+            Qt::QueuedConnection);
+    }
 }
 
 bool KWin::JSEngineGlobalMethodsWrapper::registerShortcut(const QString &name, const QString &text, const QKeySequence &keys, QJSValue function)
@@ -673,10 +672,14 @@ KWin::Scripting::Scripting(QObject *parent)
 
 void KWin::Scripting::init()
 {
+    qRegisterMetaType<QList<KWin::Output *>>();
+    qRegisterMetaType<QList<KWin::Window *>>();
+    qRegisterMetaType<QVector<KWin::VirtualDesktop *>>();
+
     qmlRegisterType<DesktopBackgroundItem>("org.kde.kwin", 3, 0, "DesktopBackground");
     qmlRegisterType<WindowThumbnailItem>("org.kde.kwin", 3, 0, "WindowThumbnail");
     qmlRegisterType<DBusCall>("org.kde.kwin", 3, 0, "DBusCall");
-    qmlRegisterType<ScreenEdgeItem>("org.kde.kwin", 3, 0, "ScreenEdgeItem");
+    qmlRegisterType<ScreenEdgeHandler>("org.kde.kwin", 3, 0, "ScreenEdgeHandler");
     qmlRegisterType<WindowModel>("org.kde.kwin", 3, 0, "WindowModel");
     qmlRegisterType<WindowFilterModel>("org.kde.kwin", 3, 0, "WindowFilterModel");
     qmlRegisterType<VirtualDesktopModel>("org.kde.kwin", 3, 0, "VirtualDesktopModel");

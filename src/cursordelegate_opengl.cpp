@@ -13,6 +13,8 @@
 #include "kwinglutils.h"
 #include "scene/cursorscene.h"
 
+#include <cmath>
+
 namespace KWin
 {
 
@@ -22,12 +24,12 @@ CursorDelegateOpenGL::~CursorDelegateOpenGL()
 
 void CursorDelegateOpenGL::paint(RenderTarget *renderTarget, const QRegion &region)
 {
-    if (!region.intersects(layer()->mapToGlobal(layer()->rect()))) {
+    if (!region.intersects(layer()->mapToGlobal(layer()->rect()).toAlignedRect())) {
         return;
     }
 
     // Render the cursor scene in an offscreen render target.
-    const QSize bufferSize = Cursors::self()->currentCursor()->rect().size() * renderTarget->devicePixelRatio();
+    const QSize bufferSize = (Cursors::self()->currentCursor()->rect().size() * renderTarget->devicePixelRatio()).toSize();
     if (!m_texture || m_texture->size() != bufferSize) {
         m_texture = std::make_unique<GLTexture>(GL_RGBA8, bufferSize);
         m_framebuffer = std::make_unique<GLFramebuffer>(m_texture.get());
@@ -43,12 +45,12 @@ void CursorDelegateOpenGL::paint(RenderTarget *renderTarget, const QRegion &regi
     renderLayer.delegate()->postPaint();
 
     // Show the rendered cursor scene on the screen.
-    const QRect cursorRect = layer()->mapToGlobal(layer()->rect());
+    const QRectF cursorRect = layer()->mapToGlobal(layer()->rect());
     const qreal scale = renderTarget->devicePixelRatio();
 
     QMatrix4x4 mvp;
     mvp.ortho(QRect(QPoint(0, 0), renderTarget->size()));
-    mvp.translate(cursorRect.x() * scale, cursorRect.y() * scale);
+    mvp.translate(std::round(cursorRect.x() * scale), std::round(cursorRect.y() * scale));
 
     GLFramebuffer *fbo = std::get<GLFramebuffer *>(renderTarget->nativeHandle());
     GLFramebuffer::pushFramebuffer(fbo);
@@ -61,7 +63,7 @@ void CursorDelegateOpenGL::paint(RenderTarget *renderTarget, const QRegion &regi
     m_texture->bind();
     ShaderBinder binder(ShaderTrait::MapTexture);
     binder.shader()->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
-    m_texture->render(region, QRect(0, 0, cursorRect.width(), cursorRect.height()), scale);
+    m_texture->render(region, cursorRect.size(), scale);
     m_texture->unbind();
     glDisable(GL_BLEND);
 

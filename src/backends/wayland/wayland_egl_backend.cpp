@@ -242,7 +242,8 @@ std::optional<OutputLayerBeginFrameInfo> WaylandEglCursorLayer::beginFrame()
         return std::nullopt;
     }
 
-    const QSize bufferSize = size().expandedTo(QSize(64, 64));
+    const auto tmp = size().expandedTo(QSize(64, 64));
+    const QSize bufferSize(std::ceil(tmp.width()), std::ceil(tmp.height()));
     if (!m_swapchain || m_swapchain->size() != bufferSize) {
         const WaylandLinuxDmabufV1 *dmabuf = m_backend->backend()->display()->linuxDmabuf();
         const uint32_t format = DRM_FORMAT_ARGB8888;
@@ -266,7 +267,7 @@ bool WaylandEglCursorLayer::endFrame(const QRegion &renderedRegion, const QRegio
     // Flush rendering commands to the dmabuf.
     glFlush();
 
-    m_output->cursor()->update(m_buffer->buffer(), scale(), hotspot());
+    m_output->cursor()->update(m_buffer->buffer(), scale(), hotspot().toPoint());
 
     m_swapchain->release(m_buffer);
     return true;
@@ -382,41 +383,6 @@ bool WaylandEglBackend::initRenderingContext()
     }
 
     return makeCurrent();
-}
-
-bool WaylandEglBackend::initBufferConfigs()
-{
-    const EGLint config_attribs[] = {
-        EGL_SURFACE_TYPE,
-        EGL_WINDOW_BIT,
-        EGL_RED_SIZE,
-        1,
-        EGL_GREEN_SIZE,
-        1,
-        EGL_BLUE_SIZE,
-        1,
-        EGL_ALPHA_SIZE,
-        0,
-        EGL_RENDERABLE_TYPE,
-        isOpenGLES() ? EGL_OPENGL_ES2_BIT : EGL_OPENGL_BIT,
-        EGL_CONFIG_CAVEAT,
-        EGL_NONE,
-        EGL_NONE,
-    };
-
-    EGLint count;
-    EGLConfig configs[1024];
-    if (eglChooseConfig(eglDisplay(), config_attribs, configs, 1, &count) == EGL_FALSE) {
-        qCCritical(KWIN_WAYLAND_BACKEND) << "choose config failed";
-        return false;
-    }
-    if (count != 1) {
-        qCCritical(KWIN_WAYLAND_BACKEND) << "choose config did not return a config" << count;
-        return false;
-    }
-    setConfig(configs[0]);
-
-    return true;
 }
 
 std::shared_ptr<KWin::GLTexture> WaylandEglBackend::textureForOutput(KWin::Output *output) const

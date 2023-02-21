@@ -49,7 +49,6 @@ public:
 private:
     void sync();
 
-    WaylandBackend *const m_backend;
     KWayland::Client::Pointer *m_pointer = nullptr;
     std::unique_ptr<KWayland::Client::Surface> m_surface;
     wl_buffer *m_buffer = nullptr;
@@ -67,7 +66,7 @@ public:
 
     RenderLoop *renderLoop() const override;
     bool setCursor(CursorSource *source) override;
-    bool moveCursor(const QPoint &position) override;
+    bool moveCursor(const QPointF &position) override;
 
     void init(const QSize &pixelSize, qreal scale);
 

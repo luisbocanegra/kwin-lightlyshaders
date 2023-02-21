@@ -1359,7 +1359,7 @@ void EffectsHandlerImpl::doCheckInputWindowStacking()
 {
 }
 
-QPoint EffectsHandlerImpl::cursorPos() const
+QPointF EffectsHandlerImpl::cursorPos() const
 {
     return Cursors::self()->mouse()->pos();
 }
@@ -1696,7 +1696,7 @@ void EffectsHandlerImpl::startInteractiveWindowSelection(std::function<void(KWin
     });
 }
 
-void EffectsHandlerImpl::startInteractivePositionSelection(std::function<void(const QPoint &)> callback)
+void EffectsHandlerImpl::startInteractivePositionSelection(std::function<void(const QPointF &)> callback)
 {
     kwinApp()->startInteractivePositionSelection(callback);
 }
@@ -1767,7 +1767,7 @@ void EffectsHandlerImpl::renderOffscreenQuickView(OffscreenQuickView *w) const
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         t->bind();
-        t->render(w->geometry(), m_scene->renderer()->renderTargetScale());
+        t->render(w->size(), m_scene->renderer()->renderTargetScale());
         t->unbind();
         glDisable(GL_BLEND);
 

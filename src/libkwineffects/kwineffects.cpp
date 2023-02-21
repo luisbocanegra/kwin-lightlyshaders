@@ -550,7 +550,7 @@ void Effect::setPositionTransformations(WindowPaintData &data, QRect &region, Ef
     data.setYTranslation(y - w->y());
 }
 
-QPoint Effect::cursorPos()
+QPointF Effect::cursorPos()
 {
     return effects->cursorPos();
 }
