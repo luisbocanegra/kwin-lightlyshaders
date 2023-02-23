@@ -87,8 +87,8 @@ Window::Window()
 
     connect(this, &Window::geometryShapeChanged, this, &Window::discardShapeRegion);
 
-    connect(this, &Window::clientStartUserMovedResized, this, &Window::moveResizedChanged);
-    connect(this, &Window::clientFinishUserMovedResized, this, &Window::moveResizedChanged);
+    connect(this, &Window::interactiveMoveResizeStarted, this, &Window::moveResizedChanged);
+    connect(this, &Window::interactiveMoveResizeFinished, this, &Window::moveResizedChanged);
 
     connect(this, &Window::windowShown, this, &Window::hiddenChanged);
     connect(this, &Window::windowHidden, this, &Window::hiddenChanged);
@@ -96,10 +96,10 @@ Window::Window()
     connect(this, &Window::paletteChanged, this, &Window::triggerDecorationRepaint);
 
     // If the user manually moved the window, don't restore it after the keyboard closes
-    connect(this, &Window::clientFinishUserMovedResized, this, [this]() {
+    connect(this, &Window::interactiveMoveResizeFinished, this, [this]() {
         m_keyboardGeometryRestore = QRectF();
     });
-    connect(this, qOverload<Window *, bool, bool>(&Window::clientMaximizedStateChanged), this, [this]() {
+    connect(this, &Window::maximizedChanged, this, [this]() {
         m_keyboardGeometryRestore = QRectF();
     });
     connect(this, &Window::fullScreenChanged, this, [this]() {
@@ -1116,7 +1116,6 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
     if (wasOnCurrentDesktop != isOnCurrentDesktop()) {
         Q_EMIT desktopPresenceChanged(this, was_desk);
     }
-    Q_EMIT x11DesktopIdsChanged();
 }
 
 void Window::doSetDesktop()
@@ -1174,19 +1173,6 @@ int Window::desktop() const
 QVector<VirtualDesktop *> Window::desktops() const
 {
     return m_desktops;
-}
-
-QVector<uint> Window::x11DesktopIds() const
-{
-    const auto desks = desktops();
-    QVector<uint> x11Ids;
-    x11Ids.reserve(desks.count());
-    std::transform(desks.constBegin(), desks.constEnd(),
-                   std::back_inserter(x11Ids),
-                   [](const VirtualDesktop *vd) {
-                       return vd->x11DesktopNumber();
-                   });
-    return x11Ids;
 }
 
 QStringList Window::desktopIds() const
@@ -1629,7 +1615,7 @@ bool Window::startInteractiveMoveResize()
 
     updateElectricGeometryRestore();
     checkUnrestrictedInteractiveMoveResize();
-    Q_EMIT clientStartUserMovedResized(this);
+    Q_EMIT interactiveMoveResizeStarted(this);
     if (workspace()->screenEdges()->isDesktopSwitchingMovingClients()) {
         workspace()->screenEdges()->reserveDesktopSwitching(true, Qt::Vertical | Qt::Horizontal);
     }
@@ -1670,7 +1656,7 @@ void Window::finishInteractiveMoveResize(bool cancel)
     workspace()->outline()->hide();
 
     m_interactiveMoveResize.counter++;
-    Q_EMIT clientFinishUserMovedResized(this);
+    Q_EMIT interactiveMoveResizeFinished(this);
 }
 
 // This function checks if it actually makes sense to perform a restricted move/resize.
@@ -2130,7 +2116,7 @@ void Window::handleInteractiveMoveResize(qreal x, qreal y, qreal x_root, qreal y
             doInteractiveResizeSync(nextMoveResizeGeom);
         }
 
-        Q_EMIT clientStepUserMovedResized(this, nextMoveResizeGeom);
+        Q_EMIT interactiveMoveResizeStepped(this, nextMoveResizeGeom);
     }
 }
 
@@ -2223,7 +2209,7 @@ void Window::setupWindowManagementInterface()
     connect(this, &Window::minimizedChanged, w, [w, this] {
         w->setMinimized(isMinimized());
     });
-    connect(this, static_cast<void (Window::*)(Window *, MaximizeMode)>(&Window::clientMaximizedStateChanged), w, [w](KWin::Window *c, MaximizeMode mode) {
+    connect(this, &Window::maximizedChanged, w, [w](KWin::Window *c, MaximizeMode mode) {
         w->setMaximized(mode == KWin::MaximizeFull);
     });
     connect(this, &Window::demandsAttentionChanged, w, [w, this] {

@@ -290,9 +290,9 @@ void EffectsHandlerImpl::unloadAllEffects()
 void EffectsHandlerImpl::setupWindowConnections(Window *window)
 {
     connect(window, &Window::windowClosed, this, &EffectsHandlerImpl::slotWindowClosed);
-    connect(window, static_cast<void (Window::*)(KWin::Window *, MaximizeMode)>(&Window::clientMaximizedStateChanged),
+    connect(window, &Window::maximizedChanged,
             this, &EffectsHandlerImpl::slotClientMaximized);
-    connect(window, static_cast<void (Window::*)(KWin::Window *, MaximizeMode)>(&Window::clientMaximizedStateAboutToChange),
+    connect(window, static_cast<void (Window::*)(KWin::Window *, MaximizeMode)>(&Window::maximizedAboutToChange),
             this, [this](KWin::Window *window, MaximizeMode m) {
                 if (EffectWindowImpl *w = window->effectWindow()) {
                     Q_EMIT windowMaximizedStateAboutToChange(w, m & MaximizeHorizontal, m & MaximizeVertical);
@@ -304,13 +304,13 @@ void EffectsHandlerImpl::setupWindowConnections(Window *window)
                     Q_EMIT windowFrameGeometryAboutToChange(w);
                 }
             });
-    connect(window, &Window::clientStartUserMovedResized, this, [this](Window *window) {
+    connect(window, &Window::interactiveMoveResizeStarted, this, [this](Window *window) {
         Q_EMIT windowStartUserMovedResized(window->effectWindow());
     });
-    connect(window, &Window::clientStepUserMovedResized, this, [this](Window *window, const QRectF &geometry) {
+    connect(window, &Window::interactiveMoveResizeStepped, this, [this](Window *window, const QRectF &geometry) {
         Q_EMIT windowStepUserMovedResized(window->effectWindow(), geometry);
     });
-    connect(window, &Window::clientFinishUserMovedResized, this, [this](Window *window) {
+    connect(window, &Window::interactiveMoveResizeFinished, this, [this](Window *window) {
         Q_EMIT windowFinishUserMovedResized(window->effectWindow());
     });
     connect(window, &Window::opacityChanged, this, &EffectsHandlerImpl::slotOpacityChanged);
@@ -2112,7 +2112,6 @@ MANAGED_HELPER(bool, isFullScreen, isFullScreen, false)
 MANAGED_HELPER(bool, keepAbove, keepAbove, false)
 MANAGED_HELPER(bool, keepBelow, keepBelow, false)
 MANAGED_HELPER(QString, caption, caption, QString());
-MANAGED_HELPER(QVector<uint>, desktops, x11DesktopIds, QVector<uint>());
 MANAGED_HELPER(bool, isMovable, isMovable, false)
 MANAGED_HELPER(bool, isMovableAcrossScreens, isMovableAcrossScreens, false)
 MANAGED_HELPER(bool, isUserMove, isInteractiveMove, false)
@@ -2126,6 +2125,17 @@ MANAGED_HELPER(bool, decorationHasAlpha, decorationHasAlpha, false)
 MANAGED_HELPER(bool, isUnresponsive, unresponsive, false)
 
 #undef MANAGED_HELPER
+
+QVector<uint> EffectWindowImpl::desktops() const
+{
+    const auto desks = m_window->desktops();
+    QVector<uint> ids;
+    ids.reserve(desks.count());
+    std::transform(desks.constBegin(), desks.constEnd(), std::back_inserter(ids), [](const VirtualDesktop *vd) {
+        return vd->x11DesktopNumber();
+    });
+    return ids;
+}
 
 QString EffectWindowImpl::windowClass() const
 {
