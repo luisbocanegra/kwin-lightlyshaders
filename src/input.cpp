@@ -2822,8 +2822,7 @@ private:
 void InputRedirection::setupInputFilters()
 {
     const bool hasGlobalShortcutSupport = waylandServer()->hasGlobalShortcutSupport();
-    if ((kwinApp()->session()->capabilities() & Session::Capability::SwitchTerminal)
-        && hasGlobalShortcutSupport) {
+    if (kwinApp()->session()->capabilities() & Session::Capability::SwitchTerminal) {
         installInputEventFilter(new VirtualTerminalFilter);
     }
     installInputEventSpy(new HideCursorSpy);
