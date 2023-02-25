@@ -770,7 +770,6 @@ void Workspace::updateOutputConfiguration()
 
 void Workspace::setupWindowConnections(Window *window)
 {
-    connect(window, &Window::desktopPresenceChanged, this, &Workspace::desktopPresenceChanged);
     connect(window, &Window::minimizedChanged, this, std::bind(&Workspace::windowMinimizedChanged, this, window));
     connect(window, &Window::fullScreenChanged, m_screenEdges.get(), &ScreenEdges::checkBlocking);
 }
@@ -1661,7 +1660,8 @@ void Workspace::slotDesktopRemoved(VirtualDesktop *desktop)
         if ((*it)->desktops().count() > 1) {
             (*it)->leaveDesktop(desktop);
         } else {
-            sendWindowToDesktop(*it, std::min(desktop->x11DesktopNumber(), VirtualDesktopManager::self()->count()), true);
+            const uint desktopId = std::min(desktop->x11DesktopNumber(), VirtualDesktopManager::self()->count());
+            sendWindowToDesktops(*it, {VirtualDesktopManager::self()->desktopForX11Id(desktopId)}, true);
         }
     }
 
@@ -1694,18 +1694,14 @@ void Workspace::selectWmInputEventMask()
  *
  * Takes care of transients as well.
  */
-void Workspace::sendWindowToDesktop(Window *window, int desk, bool dont_activate)
+void Workspace::sendWindowToDesktops(Window *window, const QVector<VirtualDesktop *> &desktops, bool dont_activate)
 {
-    if ((desk < 1 && desk != NET::OnAllDesktops) || desk > static_cast<int>(VirtualDesktopManager::self()->count())) {
-        return;
-    }
-    int old_desktop = window->desktop();
+    const QVector<VirtualDesktop *> oldDesktops = window->desktops();
     const bool wasOnCurrent = window->isOnCurrentDesktop();
-    window->setDesktop(desk);
-    if (window->desktop() != desk) { // No change or desktop forced
+    window->setDesktops(desktops);
+    if (window->desktops() != desktops) { // No change or desktop forced
         return;
     }
-    desk = window->desktop(); // Window did range checking
 
     if (window->isOnCurrentDesktop()) {
         if (window->wantsTabFocus() && options->focusPolicyIsReasonable() && !wasOnCurrent && // for stickyness changes
@@ -1718,11 +1714,11 @@ void Workspace::sendWindowToDesktop(Window *window, int desk, bool dont_activate
         raiseWindow(window);
     }
 
-    window->checkWorkspacePosition(QRect(), VirtualDesktopManager::self()->desktopForX11Id(old_desktop));
+    window->checkWorkspacePosition(QRect(), oldDesktops.isEmpty() ? nullptr : oldDesktops.last());
 
     auto transients_stacking_order = ensureStackingOrder(window->transients());
     for (auto it = transients_stacking_order.constBegin(); it != transients_stacking_order.constEnd(); ++it) {
-        sendWindowToDesktop(*it, desk, dont_activate);
+        sendWindowToDesktops(*it, window->desktops(), dont_activate);
     }
     updateClientArea();
 }

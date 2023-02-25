@@ -1060,9 +1060,7 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
         return;
     }
 
-    int was_desk = Window::desktop();
-    const bool wasOnCurrentDesktop = isOnCurrentDesktop() && was_desk >= 0;
-
+    const bool wasOnAllDesktops = isOnAllDesktops();
     m_desktops = desktops;
 
     if (windowManagementInterface()) {
@@ -1087,8 +1085,7 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
         info->setDesktop(desktop());
     }
 
-    if ((was_desk == NET::OnAllDesktops) != (desktop() == NET::OnAllDesktops)) {
-        // onAllDesktops changed
+    if (isOnAllDesktops() != wasOnAllDesktops) {
         workspace()->updateOnAllDesktopsOfTransients(this);
     }
 
@@ -1113,9 +1110,6 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
     updateWindowRules(Rules::Desktops);
 
     Q_EMIT desktopChanged();
-    if (wasOnCurrentDesktop != isOnCurrentDesktop()) {
-        Q_EMIT desktopPresenceChanged(this, was_desk);
-    }
 }
 
 void Window::doSetDesktop()
@@ -1324,7 +1318,7 @@ void Window::setMinimized(bool set)
     set ? minimize() : unminimize();
 }
 
-void Window::minimize(bool avoid_animation)
+void Window::minimize()
 {
     if (!isMinimizable() || isMinimized()) {
         return;
@@ -1339,12 +1333,10 @@ void Window::minimize(bool avoid_animation)
         Workspace::self()->focusChain()->update(this, FocusChain::MakeFirstMinimized);
     }
 
-    // TODO: merge signal with s_minimized
-    Q_EMIT clientMinimized(this, !avoid_animation);
     Q_EMIT minimizedChanged();
 }
 
-void Window::unminimize(bool avoid_animation)
+void Window::unminimize()
 {
     if (!isMinimized()) {
         return;
@@ -1358,7 +1350,6 @@ void Window::unminimize(bool avoid_animation)
     doMinimize();
 
     updateWindowRules(Rules::Minimize);
-    Q_EMIT clientUnminimized(this, !avoid_animation);
     Q_EMIT minimizedChanged();
 }
 

@@ -255,40 +255,18 @@ void ZoomEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseco
 
 ZoomEffect::OffscreenData *ZoomEffect::ensureOffscreenData(EffectScreen *screen)
 {
-    const QRect rect = effects->renderTargetRect();
-    const qreal devicePixelRatio = effects->renderTargetScale();
+    const QRect rect = effects->waylandDisplay() ? screen->geometry() : effects->virtualScreenGeometry();
+    const qreal devicePixelRatio = effects->waylandDisplay() ? screen->devicePixelRatio() : 1;
     const QSize nativeSize = rect.size() * devicePixelRatio;
 
     OffscreenData &data = m_offscreenData[effects->waylandDisplay() ? screen : nullptr];
+    data.viewport = rect;
+
     if (!data.texture || data.texture->size() != nativeSize) {
         data.texture.reset(new GLTexture(GL_RGBA8, nativeSize));
         data.texture->setFilter(GL_LINEAR);
         data.texture->setWrapMode(GL_CLAMP_TO_EDGE);
         data.framebuffer = std::make_unique<GLFramebuffer>(data.texture.get());
-    }
-    if (!data.vbo || data.viewport != rect) {
-        data.vbo.reset(new GLVertexBuffer(GLVertexBuffer::Static));
-        data.viewport = scaledRect(rect, devicePixelRatio).toRect();
-
-        QVector<float> verts;
-        QVector<float> texcoords;
-
-        // The v-coordinate is flipped because projection matrix is "flipped."
-        texcoords << 1.0 << 1.0;
-        verts << (rect.x() + rect.width()) * devicePixelRatio << rect.y() * devicePixelRatio;
-        texcoords << 0.0 << 1.0;
-        verts << rect.x() * devicePixelRatio << rect.y() * devicePixelRatio;
-        texcoords << 0.0 << 0.0;
-        verts << rect.x() * devicePixelRatio << (rect.y() + rect.height()) * devicePixelRatio;
-
-        texcoords << 1.0 << 0.0;
-        verts << (rect.x() + rect.width()) * devicePixelRatio << (rect.y() + rect.height()) * devicePixelRatio;
-        texcoords << 1.0 << 1.0;
-        verts << (rect.x() + rect.width()) * devicePixelRatio << rect.y() * devicePixelRatio;
-        texcoords << 0.0 << 0.0;
-        verts << rect.x() * devicePixelRatio << (rect.y() + rect.height()) * devicePixelRatio;
-
-        data.vbo->setData(6, 2, verts.constData(), texcoords.constData());
     }
 
     return &data;
@@ -370,16 +348,18 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &d
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    QMatrix4x4 matrix;
-    matrix.translate(xTranslation * scale, yTranslation * scale);
-    matrix.scale(zoom, zoom);
-
     auto shader = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture);
-    shader->setUniform(GLShader::ModelViewProjectionMatrix, data.projectionMatrix() * matrix);
-    for (auto &[screen, data] : m_offscreenData) {
-        data.texture->bind();
-        data.vbo->render(GL_TRIANGLES);
-        data.texture->unbind();
+    for (auto &[screen, offscreen] : m_offscreenData) {
+        QMatrix4x4 matrix;
+        matrix.translate(xTranslation * scale, yTranslation * scale);
+        matrix.scale(zoom, zoom);
+        matrix.translate(offscreen.viewport.x() * scale, offscreen.viewport.y() * scale);
+
+        shader->setUniform(GLShader::ModelViewProjectionMatrix, data.projectionMatrix() * matrix);
+
+        offscreen.texture->bind();
+        offscreen.texture->render(offscreen.viewport.size(), scale);
+        offscreen.texture->unbind();
     }
     ShaderManager::instance()->popShader();
 

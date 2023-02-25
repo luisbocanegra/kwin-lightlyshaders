@@ -158,12 +158,6 @@ EffectsHandlerImpl::EffectsHandlerImpl(Compositor *compositor, WorkspaceScene *s
     connect(ws, &Workspace::currentDesktopChangingCancelled, this, [this]() {
         Q_EMIT desktopChangingCancelled();
     });
-    connect(ws, &Workspace::desktopPresenceChanged, this, [this](Window *window, int old) {
-        if (!window->effectWindow()) {
-            return;
-        }
-        Q_EMIT desktopPresenceChanged(window->effectWindow(), old, window->desktop());
-    });
     connect(ws, &Workspace::windowAdded, this, [this](Window *window) {
         if (window->readyForPainting()) {
             slotWindowShown(window);
@@ -314,15 +308,10 @@ void EffectsHandlerImpl::setupWindowConnections(Window *window)
         Q_EMIT windowFinishUserMovedResized(window->effectWindow());
     });
     connect(window, &Window::opacityChanged, this, &EffectsHandlerImpl::slotOpacityChanged);
-    connect(window, &Window::clientMinimized, this, [this](Window *window, bool animate) {
-        // TODO: notify effects even if it should not animate?
-        if (animate) {
+    connect(window, &Window::minimizedChanged, this, [this, window]() {
+        if (window->isMinimized()) {
             Q_EMIT windowMinimized(window->effectWindow());
-        }
-    });
-    connect(window, &Window::clientUnminimized, this, [this](Window *window, bool animate) {
-        // TODO: notify effects even if it should not animate?
-        if (animate) {
+        } else {
             Q_EMIT windowUnminimized(window->effectWindow());
         }
     });
@@ -353,6 +342,9 @@ void EffectsHandlerImpl::setupWindowConnections(Window *window)
     });
     connect(window, &Window::decorationChanged, this, [this, window]() {
         Q_EMIT windowDecorationChanged(window->effectWindow());
+    });
+    connect(window, &Window::desktopChanged, this, [this, window]() {
+        Q_EMIT windowDesktopsChanged(window->effectWindow());
     });
 }
 
@@ -930,10 +922,11 @@ void EffectsHandlerImpl::moveWindow(EffectWindow *w, const QPoint &pos, bool sna
 
 void EffectsHandlerImpl::windowToDesktop(EffectWindow *w, int desktop)
 {
-    auto window = static_cast<EffectWindowImpl *>(w)->window();
-    if (window->isClient() && !window->isDesktop() && !window->isDock()) {
-        Workspace::self()->sendWindowToDesktop(window, desktop, true);
+    QVector<uint> desktopIds;
+    if (desktop != -1) {
+        desktopIds.append(desktop);
     }
+    windowToDesktops(w, desktopIds);
 }
 
 void EffectsHandlerImpl::windowToDesktops(EffectWindow *w, const QVector<uint> &desktopIds)

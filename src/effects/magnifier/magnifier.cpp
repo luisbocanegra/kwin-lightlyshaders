@@ -126,21 +126,21 @@ void MagnifierEffect::paintScreen(int mask, const QRegion &region, ScreenPaintDa
             // paint magnifier
             m_texture->bind();
             auto s = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture);
-            QMatrix4x4 mvp;
-            const QSize size = effects->virtualScreenSize();
-            mvp.ortho(0, size.width() * scale, size.height() * scale, 0, 0, 65535);
+            QMatrix4x4 mvp = data.projectionMatrix();
             mvp.translate(area.x() * scale, area.y() * scale);
             s->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
             m_texture->render(area.size(), scale);
             ShaderManager::instance()->popShader();
             m_texture->unbind();
-            QVector<float> verts;
+
             GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
             vbo->reset();
             vbo->setColor(QColor(0, 0, 0));
 
             QRectF areaF = scaledRect(area, scale);
             const QRectF frame = scaledRect(area.adjusted(-FRAME_WIDTH, -FRAME_WIDTH, FRAME_WIDTH, FRAME_WIDTH), scale);
+            QVector<float> verts;
+            verts.reserve(4 * 6 * 2);
             // top frame
             verts << frame.right() << frame.top();
             verts << frame.left() << frame.top();
