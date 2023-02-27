@@ -1034,20 +1034,6 @@ void Window::doSetDemandsAttention()
 {
 }
 
-void Window::setDesktop(int desktop)
-{
-    const int numberOfDesktops = VirtualDesktopManager::self()->count();
-    if (desktop != NET::OnAllDesktops) { // Do range check
-        desktop = std::max(1, std::min(numberOfDesktops, desktop));
-    }
-
-    QVector<VirtualDesktop *> desktops;
-    if (desktop != NET::OnAllDesktops) {
-        desktops << VirtualDesktopManager::self()->desktopForX11Id(desktop);
-    }
-    setDesktops(desktops);
-}
-
 void Window::setDesktops(QVector<VirtualDesktop *> desktops)
 {
     // on x11 we can have only one desktop at a time
@@ -1081,9 +1067,6 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
             }
         }
     }
-    if (info) {
-        info->setDesktop(desktop());
-    }
 
     if (isOnAllDesktops() != wasOnAllDesktops) {
         workspace()->updateOnAllDesktopsOfTransients(this);
@@ -1109,7 +1092,7 @@ void Window::setDesktops(QVector<VirtualDesktop *> desktops)
     Workspace::self()->focusChain()->update(this, FocusChain::MakeFirst);
     updateWindowRules(Rules::Desktops);
 
-    Q_EMIT desktopChanged();
+    Q_EMIT desktopsChanged();
 }
 
 void Window::doSetDesktop()
@@ -1606,7 +1589,7 @@ bool Window::startInteractiveMoveResize()
 
     updateElectricGeometryRestore();
     checkUnrestrictedInteractiveMoveResize();
-    Q_EMIT interactiveMoveResizeStarted(this);
+    Q_EMIT interactiveMoveResizeStarted();
     if (workspace()->screenEdges()->isDesktopSwitchingMovingClients()) {
         workspace()->screenEdges()->reserveDesktopSwitching(true, Qt::Vertical | Qt::Horizontal);
     }
@@ -1647,7 +1630,7 @@ void Window::finishInteractiveMoveResize(bool cancel)
     workspace()->outline()->hide();
 
     m_interactiveMoveResize.counter++;
-    Q_EMIT interactiveMoveResizeFinished(this);
+    Q_EMIT interactiveMoveResizeFinished();
 }
 
 // This function checks if it actually makes sense to perform a restricted move/resize.
@@ -2107,7 +2090,7 @@ void Window::handleInteractiveMoveResize(qreal x, qreal y, qreal x_root, qreal y
             doInteractiveResizeSync(nextMoveResizeGeom);
         }
 
-        Q_EMIT interactiveMoveResizeStepped(this, nextMoveResizeGeom);
+        Q_EMIT interactiveMoveResizeStepped(nextMoveResizeGeom);
     }
 }
 

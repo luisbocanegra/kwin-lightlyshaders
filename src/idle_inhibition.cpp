@@ -10,6 +10,7 @@
 #include "idle_inhibition.h"
 #include "deleted.h"
 #include "input.h"
+#include "virtualdesktops.h"
 #include "wayland/surface_interface.h"
 #include "window.h"
 #include "workspace.h"
@@ -38,7 +39,7 @@ void IdleInhibition::registerClient(Window *client)
     };
 
     m_connections[client] = connect(client->surface(), &SurfaceInterface::inhibitsIdleChanged, this, updateInhibit);
-    connect(client, &Window::desktopChanged, this, updateInhibit);
+    connect(client, &Window::desktopsChanged, this, updateInhibit);
     connect(client, &Window::minimizedChanged, this, updateInhibit);
     connect(client, &Window::windowHidden, this, updateInhibit);
     connect(client, &Window::windowShown, this, updateInhibit);

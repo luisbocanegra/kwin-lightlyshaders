@@ -146,14 +146,12 @@ EffectsHandlerImpl::EffectsHandlerImpl(Compositor *compositor, WorkspaceScene *s
             Q_EMIT showingDesktopChanged(showing);
         }
     });
-    connect(ws, &Workspace::currentDesktopChanged, this, [this](int old, Window *window) {
-        const int newDesktop = VirtualDesktopManager::self()->current();
-        if (old != 0 && newDesktop != old) {
-            Q_EMIT desktopChanged(old, newDesktop, window ? window->effectWindow() : nullptr);
-        }
+    connect(ws, &Workspace::currentDesktopChanged, this, [this](VirtualDesktop *old, Window *window) {
+        const VirtualDesktop *newDesktop = VirtualDesktopManager::self()->currentDesktop();
+        Q_EMIT desktopChanged(old->x11DesktopNumber(), newDesktop->x11DesktopNumber(), window ? window->effectWindow() : nullptr);
     });
-    connect(ws, &Workspace::currentDesktopChanging, this, [this](uint currentDesktop, QPointF offset, KWin::Window *window) {
-        Q_EMIT desktopChanging(currentDesktop, offset, window ? window->effectWindow() : nullptr);
+    connect(ws, &Workspace::currentDesktopChanging, this, [this](VirtualDesktop *currentDesktop, QPointF offset, KWin::Window *window) {
+        Q_EMIT desktopChanging(currentDesktop->x11DesktopNumber(), offset, window ? window->effectWindow() : nullptr);
     });
     connect(ws, &Workspace::currentDesktopChangingCancelled, this, [this]() {
         Q_EMIT desktopChangingCancelled();
@@ -298,13 +296,13 @@ void EffectsHandlerImpl::setupWindowConnections(Window *window)
                     Q_EMIT windowFrameGeometryAboutToChange(w);
                 }
             });
-    connect(window, &Window::interactiveMoveResizeStarted, this, [this](Window *window) {
+    connect(window, &Window::interactiveMoveResizeStarted, this, [this, window]() {
         Q_EMIT windowStartUserMovedResized(window->effectWindow());
     });
-    connect(window, &Window::interactiveMoveResizeStepped, this, [this](Window *window, const QRectF &geometry) {
+    connect(window, &Window::interactiveMoveResizeStepped, this, [this, window](const QRectF &geometry) {
         Q_EMIT windowStepUserMovedResized(window->effectWindow(), geometry);
     });
-    connect(window, &Window::interactiveMoveResizeFinished, this, [this](Window *window) {
+    connect(window, &Window::interactiveMoveResizeFinished, this, [this, window]() {
         Q_EMIT windowFinishUserMovedResized(window->effectWindow());
     });
     connect(window, &Window::opacityChanged, this, &EffectsHandlerImpl::slotOpacityChanged);
@@ -343,7 +341,7 @@ void EffectsHandlerImpl::setupWindowConnections(Window *window)
     connect(window, &Window::decorationChanged, this, [this, window]() {
         Q_EMIT windowDecorationChanged(window->effectWindow());
     });
-    connect(window, &Window::desktopChanged, this, [this, window]() {
+    connect(window, &Window::desktopsChanged, this, [this, window]() {
         Q_EMIT windowDesktopsChanged(window->effectWindow());
     });
 }

@@ -313,12 +313,12 @@ class KWIN_EXPORT Window : public QObject
     /**
      * The virtual desktops this client is on. If it's on all desktops, the list is empty.
      */
-    Q_PROPERTY(QVector<KWin::VirtualDesktop *> desktops READ desktops WRITE setDesktops NOTIFY desktopChanged)
+    Q_PROPERTY(QVector<KWin::VirtualDesktop *> desktops READ desktops WRITE setDesktops NOTIFY desktopsChanged)
 
     /**
      * Whether the Window is on all desktops. That is desktop is -1.
      */
-    Q_PROPERTY(bool onAllDesktops READ isOnAllDesktops WRITE setOnAllDesktops NOTIFY desktopChanged)
+    Q_PROPERTY(bool onAllDesktops READ isOnAllDesktops WRITE setOnAllDesktops NOTIFY desktopsChanged)
 
     /**
      * The activities this client is on. If it's on all activities the property is empty.
@@ -962,7 +962,6 @@ public:
     void setShortcut(const QString &cut);
     bool performMouseCommand(Options::MouseCommand, const QPointF &globalPos);
     void setOnAllDesktops(bool set);
-    void setDesktop(int);
     void enterDesktop(VirtualDesktop *desktop);
     void leaveDesktop(VirtualDesktop *desktop);
 
@@ -1494,7 +1493,7 @@ Q_SIGNALS:
      * Emitted whenever the demands attention state changes.
      */
     void demandsAttentionChanged();
-    void desktopChanged();
+    void desktopsChanged();
     void activitiesChanged(KWin::Window *window);
     void minimizedChanged();
     void paletteChanged(const QPalette &p);
@@ -1507,9 +1506,9 @@ Q_SIGNALS:
     void quickTileModeChanged();
     void moveResizedChanged();
     void moveResizeCursorChanged(CursorShape);
-    void interactiveMoveResizeStarted(KWin::Window *);
-    void interactiveMoveResizeStepped(KWin::Window *, const QRectF &);
-    void interactiveMoveResizeFinished(KWin::Window *);
+    void interactiveMoveResizeStarted();
+    void interactiveMoveResizeStepped(const QRectF &geometry);
+    void interactiveMoveResizeFinished();
     void closeableChanged(bool);
     void minimizeableChanged(bool);
     void shadeableChanged(bool);

@@ -235,9 +235,7 @@ void Workspace::init()
     //  load is needed to be called again when starting xwayalnd to sync to RootInfo, see BUG 385260
     vds->save();
 
-    if (!VirtualDesktopManager::self()->setCurrent(m_initialDesktop)) {
-        VirtualDesktopManager::self()->setCurrent(1);
-    }
+    vds->setCurrent(m_initialDesktop);
 
     reconfigureTimer.setSingleShot(true);
     updateToolWindowsTimer.setSingleShot(true);
@@ -1247,20 +1245,20 @@ void Workspace::slotReconfigure()
     }
 }
 
-void Workspace::slotCurrentDesktopChanged(uint oldDesktop, uint newDesktop)
+void Workspace::slotCurrentDesktopChanged(VirtualDesktop *oldDesktop, VirtualDesktop *newDesktop)
 {
     closeActivePopup();
     ++block_focus;
     StackingUpdatesBlocker blocker(this);
-    updateWindowVisibilityOnDesktopChange(VirtualDesktopManager::self()->desktopForX11Id(newDesktop));
+    updateWindowVisibilityOnDesktopChange(newDesktop);
     // Restore the focus on this desktop
     --block_focus;
 
-    activateWindowOnNewDesktop(VirtualDesktopManager::self()->desktopForX11Id(newDesktop));
+    activateWindowOnNewDesktop(newDesktop);
     Q_EMIT currentDesktopChanged(oldDesktop, m_moveResizeWindow);
 }
 
-void Workspace::slotCurrentDesktopChanging(uint currentDesktop, QPointF offset)
+void Workspace::slotCurrentDesktopChanging(VirtualDesktop *currentDesktop, QPointF offset)
 {
     closeActivePopup();
     Q_EMIT currentDesktopChanging(currentDesktop, offset, m_moveResizeWindow);

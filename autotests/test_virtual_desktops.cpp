@@ -199,9 +199,9 @@ void TestVirtualDesktops::current()
     VirtualDesktopManager *vds = VirtualDesktopManager::self();
     QCOMPARE(vds->current(), (uint)0);
     QFETCH(uint, count);
-    vds->setCount(count);
     QFETCH(uint, init);
-    QVERIFY(vds->setCurrent(init));
+    vds->setCount(count);
+    vds->setCurrent(init);
     QCOMPARE(vds->current(), init);
 
     QSignalSpy spy(vds, &VirtualDesktopManager::currentChanged);
@@ -215,10 +215,12 @@ void TestVirtualDesktops::current()
     if (!spy.isEmpty()) {
         QList<QVariant> arguments = spy.takeFirst();
         QCOMPARE(arguments.count(), 2);
-        QCOMPARE(arguments.at(0).type(), QVariant::UInt);
-        QCOMPARE(arguments.at(1).type(), QVariant::UInt);
-        QCOMPARE(arguments.at(0).toUInt(), init);
-        QCOMPARE(arguments.at(1).toUInt(), result);
+
+        VirtualDesktop *previous = arguments.at(0).value<VirtualDesktop *>();
+        QCOMPARE(previous->x11DesktopNumber(), init);
+
+        VirtualDesktop *current = arguments.at(1).value<VirtualDesktop *>();
+        QCOMPARE(current->x11DesktopNumber(), result);
     }
 }
 
