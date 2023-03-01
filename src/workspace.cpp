@@ -132,11 +132,7 @@ Workspace::Workspace()
     , m_placementTracker(std::make_unique<PlacementTracker>(this))
 {
     // If KWin was already running it saved its configuration after loosing the selection -> Reread
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    QFuture<void> reparseConfigFuture = QtConcurrent::run(options, &Options::reparseConfiguration);
-#else
     QFuture<void> reparseConfigFuture = QtConcurrent::run(&Options::reparseConfiguration, options);
-#endif
 
     _self = this;
 
@@ -1837,7 +1833,7 @@ QString Workspace::supportInformation() const
 
     support.append(ki18nc("Introductory text shown in the support information.",
                           "KWin Support Information:\n"
-                          "The following information should be used when requesting support on e.g. https://forum.kde.org.\n"
+                          "The following information should be used when requesting support on e.g. https://discuss.kde.org.\n"
                           "It provides information about the currently running instance, which options are used,\n"
                           "what OpenGL driver and which effects are running.\n"
                           "Please post the information provided underneath this introductory text to a paste bin service\n"

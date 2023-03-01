@@ -24,16 +24,13 @@ target_link_libraries(testTabBoxClientModel
     Qt::Widgets
     Qt::GuiPrivate
 
-    KF5::ConfigCore
-    KF5::I18n
-    KF5::Package
-    KF5::WindowSystem
+    KF6::ConfigCore
+    KF6::I18n
+    KF6::Package
+    KF6::WindowSystem
 
     XCB::XCB
 )
-if (QT_MAJOR_VERSION EQUAL "5")
-    target_link_libraries(testTabBoxClientModel Qt::X11Extras)
-endif()
 add_test(NAME kwin-testTabBoxClientModel COMMAND testTabBoxClientModel)
 ecm_mark_as_test(testTabBoxClientModel)
 
@@ -61,16 +58,13 @@ target_link_libraries(testTabBoxHandler
     Qt::Widgets
     Qt::GuiPrivate
 
-    KF5::ConfigCore
-    KF5::I18n
-    KF5::Package
-    KF5::WindowSystem
+    KF6::ConfigCore
+    KF6::I18n
+    KF6::Package
+    KF6::WindowSystem
 
     XCB::XCB
 )
-if (QT_MAJOR_VERSION EQUAL "5")
-    target_link_libraries(testTabBoxHandler Qt::X11Extras)
-endif()
 add_test(NAME kwin-testTabBoxHandler COMMAND testTabBoxHandler)
 ecm_mark_as_test(testTabBoxHandler)
 

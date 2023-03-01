@@ -26,7 +26,7 @@
 namespace KWin
 {
 
-QObject *GenericScriptedConfigFactory::create(const char *iface, QWidget *parentWidget, QObject *parent, const QVariantList &args, const QString &keyword)
+QObject *GenericScriptedConfigFactory::create(const char *iface, QWidget *parentWidget, QObject *parent, const QVariantList &args)
 {
     // the plugin id is in the args when created by desktop effects kcm or EffectsModel in general
     QString pluginId = args.isEmpty() ? QString() : args.first().toString();
@@ -71,14 +71,6 @@ void GenericScriptedConfig::createUi()
     }
 
     KPluginMetaData metaData(packageRoot + QLatin1String("/metadata.json"));
-#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
-    if (!metaData.isValid()) {
-        metaData = KPluginMetaData::fromDesktopFile(packageRoot + QLatin1String("/metadata.desktop"));
-        if (metaData.isValid()) {
-            qWarning("metadata.desktop format is obsolete. Please convert %s to JSON metadata", qPrintable(metaData.fileName()));
-        }
-    }
-#endif
     if (!metaData.isValid()) {
         layout->addWidget(new QLabel(i18nc("Required file does not exist", "%1 does not contain a valid metadata.json file", qPrintable(packageRoot))));
         return;
