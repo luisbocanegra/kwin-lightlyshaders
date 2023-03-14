@@ -5,7 +5,6 @@
 */
 
 #include "scene/windowitem.h"
-#include "deleted.h"
 #include "internalwindow.h"
 #include "scene/decorationitem.h"
 #include "scene/shadowitem.h"
@@ -53,7 +52,7 @@ WindowItem::WindowItem(Window *window, Scene *scene, Item *parent)
     connect(window, &Window::stackingOrderChanged, this, &WindowItem::updateStackingOrder);
     updateStackingOrder();
 
-    connect(window, &Window::windowClosed, this, &WindowItem::handleWindowClosed);
+    connect(window, &Window::closed, this, &WindowItem::handleWindowClosed);
 }
 
 WindowItem::~WindowItem()
@@ -125,7 +124,25 @@ void WindowItem::unrefVisible(int reason)
     updateVisibility();
 }
 
-void WindowItem::handleWindowClosed(Window *original, Deleted *deleted)
+void WindowItem::elevate()
+{
+    // Not ideal, but it's also highly unlikely that there are more than 1000 windows. The
+    // elevation constantly increases so it's possible to force specific stacking order. It
+    // can potentially overflow, but it's unlikely to happen because windows are elevated
+    // rarely.
+    static int elevation = 1000;
+
+    m_elevation = elevation++;
+    updateStackingOrder();
+}
+
+void WindowItem::deelevate()
+{
+    m_elevation.reset();
+    updateStackingOrder();
+}
+
+void WindowItem::handleWindowClosed(Window *deleted)
 {
     m_window = deleted;
 }
@@ -176,6 +193,17 @@ void WindowItem::updatePosition()
     setPosition(m_window->pos());
 }
 
+void WindowItem::addSurfaceItemDamageConnects(Item *item)
+{
+    auto surfaceItem = static_cast<SurfaceItem *>(item);
+    connect(surfaceItem, &SurfaceItem::damaged, this, &WindowItem::markDamaged);
+    connect(surfaceItem, &SurfaceItem::childAdded, this, &WindowItem::addSurfaceItemDamageConnects);
+    const auto childItems = item->childItems();
+    for (const auto &child : childItems) {
+        addSurfaceItemDamageConnects(child);
+    }
+}
+
 void WindowItem::updateSurfaceItem(SurfaceItem *surfaceItem)
 {
     m_surfaceItem.reset(surfaceItem);
@@ -184,12 +212,7 @@ void WindowItem::updateSurfaceItem(SurfaceItem *surfaceItem)
         connect(m_window, &Window::shadeChanged, this, &WindowItem::updateSurfaceVisibility);
         connect(m_window, &Window::bufferGeometryChanged, this, &WindowItem::updateSurfacePosition);
         connect(m_window, &Window::frameGeometryChanged, this, &WindowItem::updateSurfacePosition);
-
-        connect(surfaceItem, &SurfaceItem::damaged, this, &WindowItem::markDamaged);
-        connect(surfaceItem, &SurfaceItem::childAdded, this, [this](Item *item) {
-            auto surfaceItem = static_cast<SurfaceItem *>(item);
-            connect(surfaceItem, &SurfaceItem::damaged, this, &WindowItem::markDamaged);
-        });
+        addSurfaceItemDamageConnects(surfaceItem);
 
         updateSurfacePosition();
         updateSurfaceVisibility();
@@ -257,7 +280,11 @@ void WindowItem::updateOpacity()
 
 void WindowItem::updateStackingOrder()
 {
-    setZ(m_window->stackingOrder());
+    if (m_elevation.has_value()) {
+        setZ(m_elevation.value());
+    } else {
+        setZ(m_window->stackingOrder());
+    }
 }
 
 void WindowItem::markDamaged()

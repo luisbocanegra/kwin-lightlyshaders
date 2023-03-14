@@ -10,6 +10,8 @@
 #include "contrastshader.h"
 // KConfigSkeleton
 
+#include "rendertarget.h"
+#include "renderviewport.h"
 #include "utils/xcbutils.h"
 #include "wayland/contrast_interface.h"
 #include "wayland/display.h"
@@ -376,10 +378,10 @@ bool ContrastEffect::shouldContrast(const EffectWindow *w, int mask, const Windo
     return true;
 }
 
-void ContrastEffect::drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
+void ContrastEffect::drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
 {
     if (shouldContrast(w, mask, data)) {
-        const QRect screen = effects->renderTargetRect();
+        const QRect screen = viewport.renderRect().toRect();
         QRegion shape = region & contrastRegion(w).translated(w->pos().toPoint()) & screen;
 
         // let's do the evil parts - someone wants to blur behind a transformed window
@@ -404,19 +406,19 @@ void ContrastEffect::drawWindow(EffectWindow *w, int mask, const QRegion &region
         }
 
         if (!shape.isEmpty()) {
-            doContrast(w, shape, screen, data.opacity(), data.projectionMatrix());
+            doContrast(renderTarget, viewport, w, shape, screen, data.opacity(), data.projectionMatrix());
         }
     }
 
     // Draw the window over the contrast area
-    effects->drawWindow(w, mask, region, data);
+    effects->drawWindow(renderTarget, viewport, w, mask, region, data);
 }
 
-void ContrastEffect::doContrast(EffectWindow *w, const QRegion &shape, const QRect &screen, const float opacity, const QMatrix4x4 &screenProjection)
+void ContrastEffect::doContrast(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, const QRegion &shape, const QRect &screen, const float opacity, const QMatrix4x4 &screenProjection)
 {
-    const qreal scale = effects->renderTargetScale();
+    const qreal scale = viewport.scale();
     const QRegion actualShape = shape & screen;
-    const QRectF r = scaledRect(actualShape.boundingRect(), scale);
+    const QRectF r = viewport.mapToRenderTarget(actualShape.boundingRect());
 
     // Upload geometry for the horizontal and vertical passes
     GLVertexBuffer *vbo = GLVertexBuffer::streamingBuffer();
@@ -433,7 +435,7 @@ void ContrastEffect::doContrast(EffectWindow *w, const QRegion &shape, const QRe
     scratch.setWrapMode(GL_CLAMP_TO_EDGE);
     scratch.bind();
 
-    const QRectF sg = scaledRect(effects->renderTargetRect(), scale);
+    const QRectF sg = viewport.mapToRenderTarget(viewport.renderRect());
     glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, (r.x() - sg.x()), (sg.height() - (r.y() - sg.y() + r.height())),
                         scratch.width(), scratch.height());
 
@@ -445,9 +447,19 @@ void ContrastEffect::doContrast(EffectWindow *w, const QRegion &shape, const QRe
     m_shader->setOpacity(opacity);
     // Set up the texture matrix to transform from screen coordinates
     // to texture coordinates.
+    const QRectF boundingRect = actualShape.boundingRect();
     QMatrix4x4 textureMatrix;
-    textureMatrix.scale(1.0 / r.width(), -1.0 / r.height(), 1);
-    textureMatrix.translate(-r.x(), -r.height() - r.y(), 0);
+    // apply texture->buffer transformation
+    textureMatrix.translate(0.5, 0.5);
+    textureMatrix *= renderTarget.transformation();
+    textureMatrix.translate(-0.5, -0.5);
+    // scaled logical to texture coordinates
+    textureMatrix.scale(1, -1);
+    textureMatrix.translate(0, -1);
+    textureMatrix.scale(1.0 / boundingRect.width(), 1.0 / boundingRect.height(), 1);
+    textureMatrix.translate(-boundingRect.x(), -boundingRect.y(), 0);
+    textureMatrix.scale(1.0 / viewport.scale(), 1.0 / viewport.scale());
+
     m_shader->setTextureMatrix(textureMatrix);
     m_shader->setModelViewProjectionMatrix(screenProjection);
 

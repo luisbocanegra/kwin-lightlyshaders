@@ -52,10 +52,6 @@ XdgSurfaceWindow::XdgSurfaceWindow(XdgSurfaceInterface *shellSurface)
             this, &XdgSurfaceWindow::destroyWindow);
     connect(shellSurface->surface(), &SurfaceInterface::committed,
             this, &XdgSurfaceWindow::handleCommit);
-#if 0 // TODO: Refactor kwin core in order to uncomment this code.
-    connect(shellSurface->surface(), &SurfaceInterface::mapped,
-            this, &XdgSurfaceWindow::setReadyForPainting);
-#endif
     connect(shellSurface, &XdgSurfaceInterface::aboutToBeDestroyed,
             this, &XdgSurfaceWindow::destroyWindow);
     connect(shellSurface->surface(), &SurfaceInterface::aboutToBeDestroyed,
@@ -174,8 +170,7 @@ void XdgSurfaceWindow::handleCommit()
     m_lastAcknowledgedConfigure.reset();
     m_lastAcknowledgedConfigureSerial.reset();
 
-    setReadyForPainting();
-    updateDepth();
+    markAsMapped();
 }
 
 void XdgSurfaceWindow::handleRolePrecommit()
@@ -203,37 +198,6 @@ void XdgSurfaceWindow::maybeUpdateMoveResizeGeometry(const QRectF &rect)
     }
 
     setMoveResizeGeometry(rect);
-}
-
-static QRectF gravitateGeometry(const QRectF &rect, const QRectF &bounds, Gravity gravity)
-{
-    QRectF geometry = rect;
-
-    switch (gravity) {
-    case Gravity::TopLeft:
-        geometry.moveRight(bounds.right());
-        geometry.moveBottom(bounds.bottom());
-        break;
-    case Gravity::Top:
-    case Gravity::TopRight:
-        geometry.moveLeft(bounds.left());
-        geometry.moveBottom(bounds.bottom());
-        break;
-    case Gravity::Right:
-    case Gravity::BottomRight:
-    case Gravity::Bottom:
-    case Gravity::None:
-        geometry.moveLeft(bounds.left());
-        geometry.moveTop(bounds.top());
-        break;
-    case Gravity::BottomLeft:
-    case Gravity::Left:
-        geometry.moveRight(bounds.right());
-        geometry.moveTop(bounds.top());
-        break;
-    }
-
-    return geometry;
 }
 
 void XdgSurfaceWindow::handleNextWindowGeometry()
@@ -295,7 +259,7 @@ void XdgSurfaceWindow::moveResizeInternal(const QRectF &rect, MoveResizeMode mod
         return;
     }
 
-    Q_EMIT frameGeometryAboutToChange(this);
+    Q_EMIT frameGeometryAboutToChange();
 
     if (mode != MoveResizeMode::Move) {
         const QSizeF requestedClientSize = frameSizeToClientSize(rect.size());
@@ -332,14 +296,14 @@ void XdgSurfaceWindow::destroyWindow()
     m_configureTimer->stop();
     cleanTabBox();
     Deleted *deleted = Deleted::create(this);
-    Q_EMIT windowClosed(this, deleted);
+    Q_EMIT closed(deleted);
     StackingUpdatesBlocker blocker(workspace());
     workspace()->rulebook()->discardUsed(this, true);
     setDecoration(nullptr);
     cleanGrouping();
     waylandServer()->removeWindow(this);
-    deleted->unrefWindow();
-    delete this;
+    deleted->unref();
+    unref();
 }
 
 void XdgSurfaceWindow::updateClientArea()
@@ -1255,7 +1219,7 @@ void XdgToplevelWindow::handleUnfullscreenRequested()
 
 void XdgToplevelWindow::handleMinimizeRequested()
 {
-    minimize();
+    setMinimized(true);
 }
 
 void XdgToplevelWindow::handleTransientForChanged()
@@ -1422,7 +1386,7 @@ void XdgToplevelWindow::updateMaximizeMode(MaximizeMode maximizeMode)
     }
     m_maximizeMode = maximizeMode;
     updateWindowRules(Rules::MaximizeVert | Rules::MaximizeHoriz);
-    Q_EMIT maximizedChanged(this, maximizeMode);
+    Q_EMIT maximizedChanged();
 }
 
 void XdgToplevelWindow::updateFullScreenMode(bool set)
@@ -1648,13 +1612,13 @@ void XdgToplevelWindow::maximize(MaximizeMode mode)
         return;
     }
 
-    Q_EMIT maximizedAboutToChange(this, mode);
+    Q_EMIT maximizedAboutToChange(mode);
     m_requestedMaximizeMode = mode;
 
     // call into decoration update borders
     if (m_nextDecoration && !(options->borderlessMaximizedWindows() && m_requestedMaximizeMode == KWin::MaximizeFull)) {
         changeMaximizeRecursion = true;
-        const auto c = m_nextDecoration->client().toStrongRef();
+        const auto c = m_nextDecoration->client();
         if ((m_requestedMaximizeMode & MaximizeVertical) != (oldMode & MaximizeVertical)) {
             Q_EMIT c->maximizedVerticallyChanged(m_requestedMaximizeMode & MaximizeVertical);
         }

@@ -229,7 +229,6 @@ public:
     int screen;
     qreal crossFadeProgress;
     QMatrix4x4 projectionMatrix;
-    std::optional<qreal> renderTargetScale = std::nullopt;
 };
 
 WindowPaintData::WindowPaintData()
@@ -399,61 +398,6 @@ WindowPaintData &WindowPaintData::operator+=(const QVector3D &translation)
     return *this;
 }
 
-std::optional<qreal> WindowPaintData::renderTargetScale() const
-{
-    return d->renderTargetScale;
-}
-
-void WindowPaintData::setRenderTargetScale(qreal scale)
-{
-    d->renderTargetScale = scale;
-}
-
-class ScreenPaintData::Private
-{
-public:
-    QMatrix4x4 projectionMatrix;
-    EffectScreen *screen = nullptr;
-};
-
-ScreenPaintData::ScreenPaintData()
-    : d(new Private())
-{
-}
-
-ScreenPaintData::ScreenPaintData(const QMatrix4x4 &projectionMatrix, EffectScreen *screen)
-    : d(new Private())
-{
-    d->projectionMatrix = projectionMatrix;
-    d->screen = screen;
-}
-
-ScreenPaintData::~ScreenPaintData() = default;
-
-ScreenPaintData::ScreenPaintData(const ScreenPaintData &other)
-    : d(new Private())
-{
-    d->projectionMatrix = other.d->projectionMatrix;
-    d->screen = other.d->screen;
-}
-
-ScreenPaintData &ScreenPaintData::operator=(const ScreenPaintData &rhs)
-{
-    d->projectionMatrix = rhs.d->projectionMatrix;
-    d->screen = rhs.d->screen;
-    return *this;
-}
-
-QMatrix4x4 ScreenPaintData::projectionMatrix() const
-{
-    return d->projectionMatrix;
-}
-
-EffectScreen *ScreenPaintData::screen() const
-{
-    return d->screen;
-}
-
 //****************************************
 // Effect
 //****************************************
@@ -489,9 +433,9 @@ void Effect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds 
     effects->prePaintScreen(data, presentTime);
 }
 
-void Effect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
+void Effect::paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const QRegion &region, EffectScreen *screen)
 {
-    effects->paintScreen(mask, region, data);
+    effects->paintScreen(renderTarget, viewport, mask, region, screen);
 }
 
 void Effect::postPaintScreen()
@@ -504,9 +448,9 @@ void Effect::prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chro
     effects->prePaintWindow(w, data, presentTime);
 }
 
-void Effect::paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
+void Effect::paintWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, QRegion region, WindowPaintData &data)
 {
-    effects->paintWindow(w, mask, region, data);
+    effects->paintWindow(renderTarget, viewport, w, mask, region, data);
 }
 
 void Effect::postPaintWindow(EffectWindow *w)
@@ -529,9 +473,9 @@ QString Effect::debug(const QString &) const
     return QString();
 }
 
-void Effect::drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
+void Effect::drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data)
 {
-    effects->drawWindow(w, mask, region, data);
+    effects->drawWindow(renderTarget, viewport, w, mask, region, data);
 }
 
 void Effect::setPositionTransformations(WindowPaintData &data, QRect &region, EffectWindow *w,
@@ -681,26 +625,6 @@ CompositingType EffectsHandler::compositingType() const
 bool EffectsHandler::isOpenGLCompositing() const
 {
     return compositing_type & OpenGLCompositing;
-}
-
-QRectF EffectsHandler::mapToRenderTarget(const QRectF &rect) const
-{
-    const QRectF targetRect = renderTargetRect();
-    const qreal targetScale = renderTargetScale();
-
-    return QRectF((rect.x() - targetRect.x()) * targetScale,
-                  (rect.y() - targetRect.y()) * targetScale,
-                  rect.width() * targetScale,
-                  rect.height() * targetScale);
-}
-
-QRegion EffectsHandler::mapToRenderTarget(const QRegion &region) const
-{
-    QRegion result;
-    for (const QRect &rect : region) {
-        result += mapToRenderTarget(QRectF(rect)).toRect();
-    }
-    return result;
 }
 
 EffectsHandler *effects = nullptr;

@@ -10,7 +10,6 @@
 
 #include "core/output.h"
 #include "core/outputbackend.h"
-#include "deleted.h"
 #include "pointer_input.h"
 #include "wayland/seat_interface.h"
 #include "wayland_server.h"
@@ -48,7 +47,6 @@ private:
 void InputStackingOrderTest::initTestCase()
 {
     qRegisterMetaType<KWin::Window *>();
-    qRegisterMetaType<KWin::Deleted *>();
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
     QMetaObject::invokeMethod(kwinApp()->outputBackend(), "setVirtualOutputs", Qt::DirectConnection, Q_ARG(QVector<QRect>, QVector<QRect>() << QRect(0, 0, 1280, 1024) << QRect(1280, 0, 1280, 1024)));
@@ -143,7 +141,7 @@ void InputStackingOrderTest::testPointerFocusUpdatesOnStackingOrderChange()
     QCOMPARE(waylandServer()->seat()->focusedPointerSurface(), window1->surface());
 
     // let's destroy window1, that should pass focus to window2 again
-    QSignalSpy windowClosedSpy(window1, &Window::windowClosed);
+    QSignalSpy windowClosedSpy(window1, &Window::closed);
     surface1.reset();
     QVERIFY(windowClosedSpy.wait());
     QVERIFY(enteredSpy.wait());

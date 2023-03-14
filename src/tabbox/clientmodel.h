@@ -81,7 +81,7 @@ public:
      */
     TabBoxClientList clientList() const
     {
-        return m_clientList;
+        return m_mutableClientList;
     }
 
 public Q_SLOTS:
@@ -99,6 +99,7 @@ private:
         TabBoxClientList &stickyClients);
 
     TabBoxClientList m_clientList;
+    TabBoxClientList m_mutableClientList;
 };
 
 } // namespace Tabbox

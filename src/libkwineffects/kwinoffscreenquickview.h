@@ -63,20 +63,6 @@ public:
     OffscreenQuickView(QObject *parent);
 
     /**
-     * Construct a new OffscreenQuickView with the specified @a parent and the
-     * render window @a renderWindow. The render window can be used by QtQuick
-     * to compute the scale factor.
-     */
-    OffscreenQuickView(QObject *parent, QWindow *renderWindow);
-
-    /**
-     * Construct a new OffscreenQuickView with the specified @a parent and the
-     * render window @a renderWindow. The render window can be used by QtQuick
-     * to compute the scale factor.
-     */
-    OffscreenQuickView(QObject *parent, QWindow *renderWindow, ExportMode exportMode);
-
-    /**
      * Construct a new KWinQuickView explicitly stating an export mode
      */
     OffscreenQuickView(QObject *parent, ExportMode exportMode);
@@ -180,11 +166,8 @@ class KWINEFFECTS_EXPORT OffscreenQuickScene : public OffscreenQuickView
 public:
     OffscreenQuickScene(QObject *parent);
     OffscreenQuickScene(QObject *parent, ExportMode exportMode);
-    OffscreenQuickScene(QObject *parent, QWindow *renderWindow);
-    OffscreenQuickScene(QObject *parent, QWindow *renderWindow, ExportMode exportMode);
     ~OffscreenQuickScene();
 
-    QQmlContext *rootContext() const;
     /** top level item in the given source*/
     QQuickItem *rootItem() const;
 

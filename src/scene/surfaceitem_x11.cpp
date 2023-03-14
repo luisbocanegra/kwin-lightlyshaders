@@ -7,8 +7,8 @@
 #include "scene/surfaceitem_x11.h"
 #include "composite.h"
 #include "core/renderbackend.h"
-#include "deleted.h"
 #include "x11syncmanager.h"
+#include "x11window.h"
 
 namespace KWin
 {
@@ -21,7 +21,7 @@ SurfaceItemX11::SurfaceItemX11(Window *window, Scene *scene, Item *parent)
             this, &SurfaceItemX11::handleBufferGeometryChanged);
     connect(window, &Window::geometryShapeChanged,
             this, &SurfaceItemX11::handleGeometryShapeChanged);
-    connect(window, &Window::windowClosed,
+    connect(window, &Window::closed,
             this, &SurfaceItemX11::handleWindowClosed);
 
     m_damageHandle = xcb_generate_id(kwinApp()->x11Connection());
@@ -49,7 +49,7 @@ Window *SurfaceItemX11::window() const
     return m_window;
 }
 
-void SurfaceItemX11::handleWindowClosed(Window *original, Deleted *deleted)
+void SurfaceItemX11::handleWindowClosed(Window *deleted)
 {
     m_window = deleted;
 }
@@ -138,12 +138,12 @@ void SurfaceItemX11::destroyDamage()
     }
 }
 
-void SurfaceItemX11::handleBufferGeometryChanged(Window *window, const QRectF &old)
+void SurfaceItemX11::handleBufferGeometryChanged(const QRectF &old)
 {
-    if (window->bufferGeometry().size() != old.size()) {
+    if (m_window->bufferGeometry().size() != old.size()) {
         discardPixmap();
     }
-    setSize(window->bufferGeometry().size());
+    setSize(m_window->bufferGeometry().size());
 }
 
 void SurfaceItemX11::handleGeometryShapeChanged()

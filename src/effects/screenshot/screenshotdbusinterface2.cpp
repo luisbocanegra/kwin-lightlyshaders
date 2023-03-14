@@ -9,6 +9,7 @@
 #include "screenshotdbusinterface2.h"
 #include "screenshot2adaptor.h"
 #include "screenshotlogging.h"
+#include "utils/filedescriptor.h"
 #include "utils/serviceutils.h"
 
 #include <KLocalizedString>
@@ -18,6 +19,7 @@
 #include <QtConcurrent>
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <string.h>
 #include <unistd.h>
@@ -47,11 +49,22 @@ static ScreenShotFlags screenShotFlagsFromOptions(const QVariantMap &options)
     return flags;
 }
 
-static void writeBufferToPipe(int fileDescriptor, const QByteArray &buffer)
+static void writeBufferToPipe(FileDescriptor fileDescriptor, const QByteArray &buffer)
 {
+    const int flags = fcntl(fileDescriptor.get(), F_GETFL, 0);
+    if (flags == -1) {
+        qCWarning(KWIN_SCREENSHOT) << "failed to get screenshot fd flags:" << strerror(errno);
+        return;
+    }
+    if (!(flags & O_NONBLOCK)) {
+        if (fcntl(fileDescriptor.get(), F_SETFL, flags | O_NONBLOCK) == -1) {
+            qCWarning(KWIN_SCREENSHOT) << "failed to make screenshot fd non blocking:" << strerror(errno);
+            return;
+        }
+    }
+
     QFile file;
-    if (!file.open(fileDescriptor, QIODevice::WriteOnly, QFileDevice::AutoCloseHandle)) {
-        close(fileDescriptor);
+    if (!file.open(fileDescriptor.get(), QIODevice::WriteOnly)) {
         qCWarning(KWIN_SCREENSHOT) << Q_FUNC_INFO << "failed to open pipe:" << file.errorString();
         return;
     }
@@ -59,7 +72,7 @@ static void writeBufferToPipe(int fileDescriptor, const QByteArray &buffer)
     qint64 remainingSize = buffer.size();
 
     pollfd pfds[1];
-    pfds[0].fd = fileDescriptor;
+    pfds[0].fd = fileDescriptor.get();
     pfds[0].events = POLLOUT;
 
     while (true) {
@@ -159,14 +172,13 @@ class ScreenShotSinkPipe2 : public QObject
 
 public:
     ScreenShotSinkPipe2(int fileDescriptor, QDBusMessage replyMessage);
-    ~ScreenShotSinkPipe2();
 
     void cancel();
     void flush(const QImage &image);
 
 private:
     QDBusMessage m_replyMessage;
-    int m_fileDescriptor;
+    FileDescriptor m_fileDescriptor;
 };
 
 ScreenShotSource2::ScreenShotSource2(const QFuture<QImage> &future)
@@ -220,13 +232,6 @@ ScreenShotSinkPipe2::ScreenShotSinkPipe2(int fileDescriptor, QDBusMessage replyM
 {
 }
 
-ScreenShotSinkPipe2::~ScreenShotSinkPipe2()
-{
-    if (m_fileDescriptor != -1) {
-        close(m_fileDescriptor);
-    }
-}
-
 void ScreenShotSinkPipe2::cancel()
 {
     QDBusConnection::sessionBus().send(m_replyMessage.createErrorReply(s_errorCancelled,
@@ -235,7 +240,7 @@ void ScreenShotSinkPipe2::cancel()
 
 void ScreenShotSinkPipe2::flush(const QImage &image)
 {
-    if (m_fileDescriptor == -1) {
+    if (!m_fileDescriptor.isValid()) {
         return;
     }
 
@@ -248,15 +253,11 @@ void ScreenShotSinkPipe2::flush(const QImage &image)
     results.insert(QStringLiteral("stride"), quint32(image.bytesPerLine()));
     QDBusConnection::sessionBus().send(m_replyMessage.createReply(results));
 
-    QtConcurrent::run([](int fileDescriptor, const QImage &image) {
+    QtConcurrent::run([fileDescriptor = std::move(m_fileDescriptor), image]() mutable {
         const QByteArray buffer(reinterpret_cast<const char *>(image.constBits()),
                                 image.sizeInBytes());
-        writeBufferToPipe(fileDescriptor, buffer);
-    },
-                      m_fileDescriptor, image);
-
-    // The ownership of the pipe file descriptor has been moved to the worker thread.
-    m_fileDescriptor = -1;
+        writeBufferToPipe(std::move(fileDescriptor), buffer);
+    });
 }
 
 ScreenShotDBusInterface2::ScreenShotDBusInterface2(ScreenShotEffect *effect)
@@ -277,7 +278,7 @@ ScreenShotDBusInterface2::~ScreenShotDBusInterface2()
 
 int ScreenShotDBusInterface2::version() const
 {
-    return 2;
+    return 3;
 }
 
 bool ScreenShotDBusInterface2::checkPermissions() const
@@ -496,6 +497,25 @@ QVariantMap ScreenShotDBusInterface2::CaptureInteractive(uint kind,
                                           "Escape or right click to cancel."),
                                      QStringLiteral("spectacle"));
     }
+
+    setDelayedReply(true);
+    return QVariantMap();
+}
+
+QVariantMap ScreenShotDBusInterface2::CaptureWorkspace(const QVariantMap &options, QDBusUnixFileDescriptor pipe)
+{
+    if (!checkPermissions()) {
+        return QVariantMap();
+    }
+
+    const int fileDescriptor = dup(pipe.fileDescriptor());
+    if (fileDescriptor == -1) {
+        sendErrorReply(s_errorFileDescriptor, s_errorFileDescriptorMessage);
+        return QVariantMap();
+    }
+
+    takeScreenShot(effects->virtualScreenGeometry(), screenShotFlagsFromOptions(options),
+                   new ScreenShotSinkPipe2(fileDescriptor, message()));
 
     setDelayedReply(true);
     return QVariantMap();

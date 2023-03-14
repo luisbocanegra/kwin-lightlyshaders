@@ -48,6 +48,7 @@ class QKeyEvent;
 class QMatrix4x4;
 class QAction;
 class QTabletEvent;
+class QQmlEngine;
 
 /**
  * Logging category to be used inside the KWin effects.
@@ -85,7 +86,8 @@ class WindowQuadList;
 class WindowPrePaintData;
 class WindowPaintData;
 class ScreenPrePaintData;
-class ScreenPaintData;
+class RenderTarget;
+class RenderViewport;
 
 typedef QPair<QString, Effect *> EffectPair;
 typedef QList<KWin::EffectWindow *> EffectWindowList;
@@ -385,7 +387,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData &data);
+    virtual void paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const QRegion &region, EffectScreen *screen);
     /**
      * Called after all the painting has been finished.
      * In this method you can:
@@ -423,7 +425,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void paintWindow(EffectWindow *w, int mask, QRegion region, WindowPaintData &data);
+    virtual void paintWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, QRegion region, WindowPaintData &data);
     /**
      * Called for every window after all painting has been finished.
      * In this method you can:
@@ -462,7 +464,7 @@ public:
      * In OpenGL based compositing, the frameworks ensures that the context is current
      * when this method is invoked.
      */
-    virtual void drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data);
+    virtual void drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data);
 
     virtual void windowInputMouseEvent(QEvent *e);
     virtual void grabbedKeyboardEvent(QKeyEvent *e);
@@ -843,13 +845,13 @@ public:
     ~EffectsHandler() override;
     // for use by effects
     virtual void prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseconds presentTime) = 0;
-    virtual void paintScreen(int mask, const QRegion &region, ScreenPaintData &data) = 0;
+    virtual void paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const QRegion &region, EffectScreen *screen) = 0;
     virtual void postPaintScreen() = 0;
     virtual void prePaintWindow(EffectWindow *w, WindowPrePaintData &data, std::chrono::milliseconds presentTime) = 0;
-    virtual void paintWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
+    virtual void paintWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
     virtual void postPaintWindow(EffectWindow *w) = 0;
-    virtual void drawWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
-    virtual void renderWindow(EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
+    virtual void drawWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
+    virtual void renderWindow(const RenderTarget &renderTarget, const RenderViewport &viewport, EffectWindow *w, int mask, const QRegion &region, WindowPaintData &data) = 0;
     virtual QVariant kwinOption(KWinOption kwopt) = 0;
     /**
      * Sets the cursor while the mouse is intercepted.
@@ -1389,7 +1391,7 @@ public:
      * It can be called at any point during the scene rendering
      * @since 5.18
      */
-    virtual void renderOffscreenQuickView(OffscreenQuickView *effectQuickView) const = 0;
+    virtual void renderOffscreenQuickView(const RenderTarget &renderTarget, const RenderViewport &viewport, OffscreenQuickView *effectQuickView) const = 0;
 
     /**
      * The status of the session i.e if the user is logging out
@@ -1410,28 +1412,10 @@ public:
      */
     virtual void renderScreen(EffectScreen *screen) = 0;
 
-    /**
-     * Returns the rect that's currently being repainted, in the logical pixels.
-     */
-    virtual QRect renderTargetRect() const = 0;
-    /**
-     * Returns the device pixel ratio of the current render target.
-     */
-    virtual qreal renderTargetScale() const = 0;
-
-    /**
-     * Maps the given @a rect from the global screen cordinates to the render
-     * target local coordinate system.
-     */
-    QRectF mapToRenderTarget(const QRectF &rect) const;
-    /**
-     * Maps the given @a region from the global screen coordinates to the render
-     * target local coordinate system.
-     */
-    QRegion mapToRenderTarget(const QRegion &region) const;
-
     virtual KWin::EffectWindow *inputPanel() const = 0;
     virtual bool isInputPanelOverlay() const = 0;
+
+    virtual QQmlEngine *qmlEngine() const = 0;
 
 Q_SIGNALS:
     /**
@@ -1707,9 +1691,6 @@ Q_SIGNALS:
      * @since 4.7
      */
     void tabBoxKeyEvent(QKeyEvent *event);
-    void currentTabAboutToChange(KWin::EffectWindow *from, KWin::EffectWindow *to);
-    void tabAdded(KWin::EffectWindow *from, KWin::EffectWindow *to); // from merged with to
-    void tabRemoved(KWin::EffectWindow *c, KWin::EffectWindow *group); // c removed from group
     /**
      * Signal emitted when mouse changed.
      * If an effect needs to get updated mouse positions, it needs to first call startMousePolling.
@@ -3325,14 +3306,11 @@ public:
      * Sets the projection matrix that will be used when painting the window.
      *
      * The default projection matrix can be overridden by setting this matrix
-     * to a non-identity matrix.
      */
     void setProjectionMatrix(const QMatrix4x4 &matrix);
 
     /**
      * Returns the current projection matrix.
-     *
-     * The default value for this matrix is the identity matrix.
      */
     QMatrix4x4 projectionMatrix() const;
 
@@ -3357,33 +3335,6 @@ public:
 
 private:
     const std::unique_ptr<WindowPaintDataPrivate> d;
-};
-
-class KWINEFFECTS_EXPORT ScreenPaintData
-{
-public:
-    ScreenPaintData();
-    ScreenPaintData(const QMatrix4x4 &projectionMatrix, EffectScreen *screen = nullptr);
-    ScreenPaintData(const ScreenPaintData &other);
-    ~ScreenPaintData();
-
-    ScreenPaintData &operator=(const ScreenPaintData &rhs);
-
-    /**
-     * The projection matrix used by the scene for the current rendering pass.
-     * On non-OpenGL compositors it's set to Identity matrix.
-     * @since 5.6
-     */
-    QMatrix4x4 projectionMatrix() const;
-
-    /**
-     * Returns the currently rendered screen. It's always the primary screen on X11.
-     */
-    EffectScreen *screen() const;
-
-private:
-    class Private;
-    std::unique_ptr<Private> d;
 };
 
 class KWINEFFECTS_EXPORT ScreenPrePaintData
@@ -3711,7 +3662,7 @@ public:
     /**
      * Render the frame.
      */
-    virtual void render(const QRegion &region = infiniteRegion(), double opacity = 1.0, double frameOpacity = 1.0) = 0;
+    virtual void render(const RenderTarget &renderTarget, const RenderViewport &viewport, const QRegion &region = infiniteRegion(), double opacity = 1.0, double frameOpacity = 1.0) = 0;
 
     virtual void setPosition(const QPoint &point) = 0;
     /**

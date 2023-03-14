@@ -169,13 +169,6 @@ void AbstractEglBackend::initBufferAge()
             setSupportsBufferAge(true);
         }
     }
-
-    if (hasExtension(QByteArrayLiteral("EGL_KHR_partial_update"))) {
-        const QByteArray usePartialUpdate = qgetenv("KWIN_USE_PARTIAL_UPDATE");
-        if (usePartialUpdate != "0") {
-            setSupportsPartialUpdate(true);
-        }
-    }
     setSupportsSwapBuffersWithDamage(hasExtension(QByteArrayLiteral("EGL_EXT_swap_buffers_with_damage")));
 }
 
@@ -374,14 +367,6 @@ void AbstractEglBackend::setSurface(const EGLSurface &surface)
     m_surface = surface;
 }
 
-std::shared_ptr<GLTexture> AbstractEglBackend::textureForOutput(Output *requestedOutput) const
-{
-    std::shared_ptr<GLTexture> texture(new GLTexture(GL_RGBA8, requestedOutput->pixelSize()));
-    GLFramebuffer renderTarget(texture.get());
-    renderTarget.blitFromFramebuffer(QRect(0, texture->height(), texture->width(), -texture->height()));
-    return texture;
-}
-
 dev_t AbstractEglBackend::deviceId() const
 {
     return m_deviceId;
@@ -405,7 +390,8 @@ EGLImageKHR AbstractEglBackend::importDmaBufAsImage(const DmaBufAttributes &dmab
     attribs
         << EGL_WIDTH << dmabuf.width
         << EGL_HEIGHT << dmabuf.height
-        << EGL_LINUX_DRM_FOURCC_EXT << dmabuf.format;
+        << EGL_LINUX_DRM_FOURCC_EXT << dmabuf.format
+        << EGL_IMAGE_PRESERVED_KHR << EGL_TRUE;
 
     attribs
         << EGL_DMA_BUF_PLANE0_FD_EXT << dmabuf.fd[0].get()

@@ -5,6 +5,8 @@
 */
 
 #include "scene/itemrenderer_opengl.h"
+#include "libkwineffects/rendertarget.h"
+#include "libkwineffects/renderviewport.h"
 #include "platformsupport/scenes/opengl/openglsurfacetexture.h"
 #include "scene/decorationitem.h"
 #include "scene/imageitem.h"
@@ -24,9 +26,9 @@ ImageItem *ItemRendererOpenGL::createImageItem(Scene *scene, Item *parent)
     return new ImageItemOpenGL(scene, parent);
 }
 
-void ItemRendererOpenGL::beginFrame(RenderTarget *renderTarget)
+void ItemRendererOpenGL::beginFrame(const RenderTarget &renderTarget, const RenderViewport &viewport)
 {
-    GLFramebuffer *fbo = std::get<GLFramebuffer *>(renderTarget->nativeHandle());
+    GLFramebuffer *fbo = renderTarget.framebuffer();
     GLFramebuffer::pushFramebuffer(fbo);
 
     GLVertexBuffer::streamingBuffer()->beginFrame();
@@ -225,21 +227,20 @@ void ItemRendererOpenGL::createRenderNode(Item *item, RenderContext *context)
     context->opacityStack.pop();
 }
 
-void ItemRendererOpenGL::renderBackground(const QRegion &region)
+void ItemRendererOpenGL::renderBackground(const RenderTarget &renderTarget, const RenderViewport &viewport, const QRegion &region)
 {
-    if (region == infiniteRegion() || (region.rectCount() == 1 && (*region.begin()) == renderTargetRect())) {
+    if (region == infiniteRegion() || (region.rectCount() == 1 && (*region.begin()) == viewport.renderRect())) {
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
     } else if (!region.isEmpty()) {
         glClearColor(0, 0, 0, 0);
         glEnable(GL_SCISSOR_TEST);
 
-        const auto scale = renderTargetScale();
-        const auto targetRect = scaledRect(renderTargetRect(), scale).toRect();
+        const auto targetSize = viewport.mapToRenderTarget(viewport.renderRect());
 
         for (const QRect &r : region) {
-            auto deviceRect = scaledRect(r, scale).toAlignedRect();
-            glScissor(deviceRect.x(), targetRect.height() - (deviceRect.y() + deviceRect.height()), deviceRect.width(), deviceRect.height());
+            const auto deviceRect = viewport.mapToRenderTarget(r);
+            glScissor(deviceRect.x(), targetSize.height() - (deviceRect.y() + deviceRect.height()), deviceRect.width(), deviceRect.height());
             glClear(GL_COLOR_BUFFER_BIT);
         }
 
@@ -247,7 +248,7 @@ void ItemRendererOpenGL::renderBackground(const QRegion &region)
     }
 }
 
-void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region, const WindowPaintData &data)
+void ItemRendererOpenGL::renderItem(const RenderTarget &renderTarget, const RenderViewport &viewport, Item *item, int mask, const QRegion &region, const WindowPaintData &data)
 {
     if (region.isEmpty()) {
         return;
@@ -256,13 +257,13 @@ void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region,
     RenderContext renderContext{
         .clip = region,
         .hardwareClipping = region != infiniteRegion() && ((mask & Scene::PAINT_WINDOW_TRANSFORMED) || (mask & Scene::PAINT_SCREEN_TRANSFORMED)),
-        .renderTargetScale = data.renderTargetScale().value_or(renderTargetScale()),
+        .renderTargetScale = viewport.scale(),
     };
 
     renderContext.transformStack.push(QMatrix4x4());
     renderContext.opacityStack.push(data.opacity());
 
-    item->setTransform(data.toMatrix(renderTargetScale()));
+    item->setTransform(data.toMatrix(renderContext.renderTargetScale));
 
     createRenderNode(item, &renderContext);
 
@@ -331,7 +332,7 @@ void ItemRendererOpenGL::renderItem(Item *item, int mask, const QRegion &region,
     // The scissor region must be in the render target local coordinate system.
     QRegion scissorRegion = infiniteRegion();
     if (renderContext.hardwareClipping) {
-        scissorRegion = mapToRenderTarget(region);
+        scissorRegion = viewport.mapToRenderTarget(region);
     }
 
     const QMatrix4x4 projectionMatrix = data.projectionMatrix();

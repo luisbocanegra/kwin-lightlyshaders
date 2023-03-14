@@ -120,7 +120,10 @@ DrmPipeline::Error DrmPipeline::commitPipelinesAtomic(const QVector<DrmPipeline 
                 failed();
                 return Error::TestBufferFailed;
             }
-            pipeline->prepareAtomicPresentation();
+            if (!pipeline->prepareAtomicPresentation()) {
+                failed();
+                return Error::InvalidArguments;
+            }
             if (mode == CommitMode::TestAllowModeset || mode == CommitMode::CommitModeset) {
                 pipeline->prepareAtomicModeset();
             }
@@ -231,14 +234,24 @@ static QRect centerBuffer(const QSize &bufferSize, const QSize &modeSize)
     }
 }
 
-void DrmPipeline::prepareAtomicPresentation()
+bool DrmPipeline::prepareAtomicPresentation()
 {
     if (const auto contentType = m_connector->getProp(DrmConnector::PropertyIndex::ContentType)) {
         contentType->setEnum(m_pending.contentType);
     }
 
     m_pending.crtc->setPending(DrmCrtc::PropertyIndex::VrrEnabled, m_pending.syncMode == RenderLoopPrivate::SyncMode::Adaptive || m_pending.syncMode == RenderLoopPrivate::SyncMode::AdaptiveAsync);
-    m_pending.crtc->setPending(DrmCrtc::PropertyIndex::Gamma_LUT, m_pending.gamma ? m_pending.gamma->blobId() : 0);
+    if (const auto gamma = m_pending.crtc->getProp(DrmCrtc::PropertyIndex::Gamma_LUT)) {
+        gamma->setPending(m_pending.gamma ? m_pending.gamma->blobId() : 0);
+    } else if (m_pending.gamma) {
+        return false;
+    }
+    if (const auto ctm = m_pending.crtc->getProp(DrmCrtc::PropertyIndex::CTM)) {
+        ctm->setPending(m_pending.ctm ? m_pending.ctm->blobId() : 0);
+    } else if (m_pending.ctm) {
+        return false;
+    }
+
     const auto fb = m_pending.layer->currentBuffer().get();
     m_pending.crtc->primaryPlane()->set(QPoint(0, 0), fb->buffer()->size(), centerBuffer(orientateSize(fb->buffer()->size(), m_pending.bufferOrientation), m_pending.mode->size()));
     m_pending.crtc->primaryPlane()->setBuffer(fb);
@@ -249,6 +262,7 @@ void DrmPipeline::prepareAtomicPresentation()
         m_pending.crtc->cursorPlane()->setBuffer(layer->isVisible() ? layer->currentBuffer().get() : nullptr);
         m_pending.crtc->cursorPlane()->setPending(DrmPlane::PropertyIndex::CrtcId, layer->isVisible() ? m_pending.crtc->id() : 0);
     }
+    return true;
 }
 
 void DrmPipeline::prepareAtomicDisable()
@@ -759,14 +773,57 @@ void DrmPipeline::setRgbRange(Output::RgbRange range)
     m_pending.rgbRange = range;
 }
 
-void DrmPipeline::setColorTransformation(const std::shared_ptr<ColorTransformation> &transformation)
+void DrmPipeline::setGammaRamp(const std::shared_ptr<ColorTransformation> &transformation)
 {
     m_pending.colorTransformation = transformation;
     m_pending.gamma = std::make_shared<DrmGammaRamp>(m_pending.crtc, transformation);
 }
 
+void DrmPipeline::setCTM(const QMatrix3x3 &ctm)
+{
+    if (ctm.isIdentity()) {
+        m_pending.ctm.reset();
+    } else {
+        m_pending.ctm = std::make_shared<DrmCTM>(gpu(), ctm);
+    }
+}
+
 void DrmPipeline::setContentType(DrmConnector::DrmContentType type)
 {
     m_pending.contentType = type;
+}
+
+static uint64_t doubleToFixed(double value)
+{
+    // ctm values are in S31.32 sign-magnitude format
+    uint64_t ret = std::abs(value) * (1ul << 32);
+    if (value < 0) {
+        ret |= 1ul << 63;
+    }
+    return ret;
+}
+
+DrmCTM::DrmCTM(DrmGpu *gpu, const QMatrix3x3 &ctm)
+    : m_gpu(gpu)
+{
+    drm_color_ctm blob = {
+        .matrix = {
+            doubleToFixed(ctm(0, 0)), doubleToFixed(ctm(1, 0)), doubleToFixed(ctm(2, 0)),
+            doubleToFixed(ctm(0, 1)), doubleToFixed(ctm(1, 1)), doubleToFixed(ctm(2, 1)),
+            doubleToFixed(ctm(0, 2)), doubleToFixed(ctm(1, 2)), doubleToFixed(ctm(2, 2))},
+    };
+    drmModeCreatePropertyBlob(m_gpu->fd(), &blob, sizeof(drm_color_ctm), &m_blobId);
+}
+
+DrmCTM::~DrmCTM()
+{
+    if (m_blobId) {
+        drmModeDestroyPropertyBlob(m_gpu->fd(), m_blobId);
+    }
+}
+
+uint32_t DrmCTM::blobId() const
+{
+    return m_blobId;
 }
 }

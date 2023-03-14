@@ -12,7 +12,6 @@
 #include "composite.h"
 #include "core/outputbackend.h"
 #include "cursor.h"
-#include "deleted.h"
 #include "effectloader.h"
 #include "effects.h"
 #include "wayland_server.h"
@@ -62,7 +61,6 @@ void X11WindowTest::initTestCase_data()
 
 void X11WindowTest::initTestCase()
 {
-    qRegisterMetaType<KWin::Deleted *>();
     qRegisterMetaType<KWin::Window *>();
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
@@ -183,7 +181,7 @@ void X11WindowTest::testMinimumSize()
     QVERIFY(!window->isInteractiveResize());
 
     // Destroy the window.
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());
@@ -288,7 +286,7 @@ void X11WindowTest::testMaximumSize()
     QVERIFY(!window->isInteractiveResize());
 
     // Destroy the window.
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());
@@ -373,7 +371,7 @@ void X11WindowTest::testResizeIncrements()
     QVERIFY(!window->isInteractiveResize());
 
     // Destroy the window.
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());
@@ -457,7 +455,7 @@ void X11WindowTest::testResizeIncrementsNoBaseSize()
     QVERIFY(!window->isInteractiveResize());
 
     // Destroy the window.
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());
@@ -524,7 +522,7 @@ void X11WindowTest::testTrimCaption()
     xcb_unmap_window(c.get(), windowId);
     xcb_flush(c.get());
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
     xcb_destroy_window(c.get(), windowId);
     c.reset();
@@ -749,7 +747,7 @@ void X11WindowTest::testX11WindowId()
     QUuid deletedUuid;
     QCOMPARE(deletedUuid.isNull(), true);
 
-    connect(window, &X11Window::windowClosed, this, [&deletedUuid](Window *, Deleted *d) {
+    connect(window, &X11Window::closed, this, [&deletedUuid](Window *d) {
         deletedUuid = d->internalId();
     });
 
@@ -779,7 +777,7 @@ void X11WindowTest::testX11WindowId()
     // and destroy the window again
     xcb_unmap_window(c.get(), windowId);
     xcb_flush(c.get());
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
 
     QCOMPARE(deletedUuid.isNull(), false);
@@ -828,7 +826,7 @@ void X11WindowTest::testCaptionChanges()
     QCOMPARE(window->caption(), QStringLiteral("bar"));
 
     // and destroy the window again
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_flush(c.get());
     QVERIFY(windowClosedSpy.wait());

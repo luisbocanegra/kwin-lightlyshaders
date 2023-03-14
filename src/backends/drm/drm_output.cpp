@@ -23,6 +23,7 @@
 #include "drm_layer.h"
 #include "drm_logging.h"
 #include "kwinglutils.h"
+#include "renderviewport.h"
 // Qt
 #include <QCryptographicHash>
 #include <QMatrix4x4>
@@ -163,11 +164,11 @@ bool DrmOutput::setCursor(CursorSource *source)
     const QRectF nativeCursorRect = monitorMatrix.mapRect(cursorRect);
     if (nativeCursorRect.width() <= m_gpu->cursorSize().width() && nativeCursorRect.height() <= m_gpu->cursorSize().height()) {
         if (auto beginInfo = layer->beginFrame()) {
-            RenderTarget *renderTarget = &beginInfo->renderTarget;
-            renderTarget->setDevicePixelRatio(scale());
+            const RenderTarget &renderTarget = beginInfo->renderTarget;
 
             RenderLayer renderLayer(m_renderLoop.get());
-            renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene()));
+            renderLayer.setDelegate(std::make_unique<SceneDelegate>(Compositor::self()->cursorScene(), this));
+            renderLayer.setOutputLayer(layer);
 
             renderLayer.delegate()->prePaint();
             renderLayer.delegate()->paint(renderTarget, infiniteRegion());
@@ -469,15 +470,30 @@ DrmOutputLayer *DrmOutput::cursorLayer() const
     return m_pipeline->cursorLayer();
 }
 
-void DrmOutput::setColorTransformation(const std::shared_ptr<ColorTransformation> &transformation)
+bool DrmOutput::setGammaRamp(const std::shared_ptr<ColorTransformation> &transformation)
 {
-    m_pipeline->setColorTransformation(transformation);
+    m_pipeline->setGammaRamp(transformation);
+    m_pipeline->setCTM(QMatrix3x3());
     if (DrmPipeline::commitPipelines({m_pipeline}, DrmPipeline::CommitMode::Test) == DrmPipeline::Error::None) {
         m_pipeline->applyPendingChanges();
         m_renderLoop->scheduleRepaint();
+        return true;
     } else {
         m_pipeline->revertPendingChanges();
+        return false;
     }
 }
 
+bool DrmOutput::setCTM(const QMatrix3x3 &ctm)
+{
+    m_pipeline->setCTM(ctm);
+    if (DrmPipeline::commitPipelines({m_pipeline}, DrmPipeline::CommitMode::Test) == DrmPipeline::Error::None) {
+        m_pipeline->applyPendingChanges();
+        m_renderLoop->scheduleRepaint();
+        return true;
+    } else {
+        m_pipeline->revertPendingChanges();
+        return false;
+    }
+}
 }

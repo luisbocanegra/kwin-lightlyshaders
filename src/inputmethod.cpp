@@ -21,7 +21,6 @@
 #if KWIN_BUILD_SCREENLOCKER
 #include "screenlockerwatcher.h"
 #endif
-#include "deleted.h"
 #include "tablet_input.h"
 #include "touch_input.h"
 #include "wayland/display.h"
@@ -157,6 +156,8 @@ void InputMethod::show()
     if (m_panel) {
         m_panel->show();
         updateInputPanelState();
+    } else if (isActive()) {
+        adoptInputMethodContext();
     }
 }
 
@@ -241,10 +242,10 @@ void InputMethod::setPanel(InputPanelV1Window *panel)
     });
     connect(m_panel, &Window::frameGeometryChanged, this, &InputMethod::updateInputPanelState);
     connect(m_panel, &Window::windowHidden, this, &InputMethod::updateInputPanelState);
-    connect(m_panel, &Window::windowClosed, this, &InputMethod::updateInputPanelState);
+    connect(m_panel, &Window::closed, this, &InputMethod::updateInputPanelState);
     connect(m_panel, &Window::windowShown, this, &InputMethod::visibleChanged);
     connect(m_panel, &Window::windowHidden, this, &InputMethod::visibleChanged);
-    connect(m_panel, &Window::windowClosed, this, &InputMethod::visibleChanged);
+    connect(m_panel, &Window::closed, this, &InputMethod::visibleChanged);
     Q_EMIT visibleChanged();
     updateInputPanelState();
     Q_EMIT panelChanged();
@@ -540,11 +541,13 @@ void InputMethod::commitString(qint32 serial, const QString &text)
 {
     if (auto t1 = waylandServer()->seat()->textInputV1(); t1 && t1->isEnabled()) {
         t1->commitString(text.toUtf8());
+        t1->setPreEditCursor(0);
         t1->preEdit({}, {});
         return;
     }
     if (auto t2 = waylandServer()->seat()->textInputV2(); t2 && t2->isEnabled()) {
         t2->commitString(text.toUtf8());
+        t2->setPreEditCursor(0);
         t2->preEdit({}, {});
         return;
     } else if (auto t3 = waylandServer()->seat()->textInputV3(); t3 && t3->isEnabled()) {

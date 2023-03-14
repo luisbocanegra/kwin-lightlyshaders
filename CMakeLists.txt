@@ -46,10 +46,6 @@ find_package(Qt${QT_MAJOR_VERSION} ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS
     UiTools
     Widgets
 )
-find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS WaylandClient ShaderTools)
-if (Qt6WaylandClient_VERSION VERSION_LESS "6.4.1") # TODO Plasma 6: Drop once minimum Qt version is 6.4.1+
-    include(Qt6WaylandClientMacrosKde)
-endif()
 
 find_package(Qt${QT_MAJOR_VERSION}Test ${QT_MIN_VERSION} CONFIG QUIET)
 set_package_properties(Qt${QT_MAJOR_VERSION}Test PROPERTIES
@@ -59,6 +55,13 @@ set_package_properties(Qt${QT_MAJOR_VERSION}Test PROPERTIES
 add_feature_info("Qt${QT_MAJOR_VERSION}Test" Qt${QT_MAJOR_VERSION}Test_FOUND "Required for building tests")
 if (NOT Qt${QT_MAJOR_VERSION}Test_FOUND)
     set(BUILD_TESTING OFF CACHE BOOL "Build the testing tree.")
+endif()
+
+if (BUILD_TESTING)
+    find_package(Qt6 ${QT_MIN_VERSION} CONFIG REQUIRED COMPONENTS WaylandClient)
+    if (Qt6WaylandClient_VERSION VERSION_LESS "6.4.1") # TODO Plasma 6: Drop once minimum Qt version is 6.4.1+
+        include(Qt6WaylandClientMacrosKde)
+    endif()
 endif()
 
 # required frameworks by Core
@@ -271,6 +274,7 @@ find_package(XCB 1.10 REQUIRED COMPONENTS
     COMPOSITE
     CURSOR
     DAMAGE
+    DRI3
     GLX
     ICCCM
     IMAGE
@@ -336,14 +340,14 @@ set_package_properties(hwdata PROPERTIES
     URL "https://github.com/vcrhonek/hwdata"
 )
 
-find_package(QAccessibilityClient CONFIG)
-set_package_properties(QAccessibilityClient PROPERTIES
-    URL "https://www.kde.org"
+find_package(QAccessibilityClient6 CONFIG)
+set_package_properties(QAccessibilityClient6 PROPERTIES
+    URL "https://commits.kde.org/libqaccessibilityclient"
     DESCRIPTION "KDE client-side accessibility library"
     TYPE OPTIONAL
     PURPOSE "Required to enable accessibility features"
 )
-set(HAVE_ACCESSIBILITY ${QAccessibilityClient_FOUND})
+set(HAVE_ACCESSIBILITY ${QAccessibilityClient6_FOUND})
 
 ecm_find_qmlmodule(QtQuick 2.3)
 ecm_find_qmlmodule(QtQuick.Controls 2.15)
@@ -427,12 +431,9 @@ if (KF6DocTools_FOUND)
 endif()
 
 add_subdirectory(data)
-add_subdirectory(kconf_update)
 add_subdirectory(src)
 
 if (BUILD_TESTING)
-    find_package(Wayland REQUIRED COMPONENTS Client)
-
     add_subdirectory(autotests)
     add_subdirectory(tests)
 endif()

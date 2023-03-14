@@ -313,18 +313,7 @@ void Decoration::init()
         m_item->setParentItem(visualParent.value<QQuickItem *>());
         visualParent.value<QQuickItem *>()->setProperty("drawBackground", false);
     } else {
-
-        // This is an ugly hack to make hidpi rendering work as expected on wayland until we switch
-        // to Qt 6.3 or newer. See https://codereview.qt-project.org/c/qt/qtdeclarative/+/361506
-        if (KWin::effects && KWin::effects->waylandDisplay()) {
-            m_dummyWindow.reset(new QWindow());
-            m_dummyWindow->setOpacity(0);
-            m_dummyWindow->resize(1, 1);
-            m_dummyWindow->setFlag(Qt::FramelessWindowHint);
-            m_dummyWindow->setVisible(true);
-        }
-
-        m_view = std::make_unique<KWin::OffscreenQuickView>(this, m_dummyWindow.get(), KWin::OffscreenQuickView::ExportMode::Image);
+        m_view = std::make_unique<KWin::OffscreenQuickView>(this, KWin::OffscreenQuickView::ExportMode::Image);
         m_item->setParentItem(m_view->contentItem());
         auto updateSize = [this]() {
             m_item->setSize(m_view->contentItem()->size());
@@ -359,14 +348,14 @@ void Decoration::init()
         connect(m_extendedBorders, &KWin::Borders::bottomChanged, this, &Decoration::updateExtendedBorders);
     }
 
-    auto decorationClient = clientPointer();
+    auto decorationClient = client();
     connect(decorationClient, &KDecoration2::DecoratedClient::maximizedChanged, this, &Decoration::updateBorders);
     connect(decorationClient, &KDecoration2::DecoratedClient::shadedChanged, this, &Decoration::updateBorders);
     updateBorders();
     if (m_view) {
         auto resizeWindow = [this] {
             QRect rect(QPoint(0, 0), size());
-            if (m_padding && !clientPointer()->isMaximized()) {
+            if (m_padding && !client()->isMaximized()) {
                 rect = rect.adjusted(-m_padding->left(), -m_padding->top(), m_padding->right(), m_padding->bottom());
             }
             m_view->setGeometry(rect);
@@ -407,7 +396,7 @@ void Decoration::setupBorders(QQuickItem *item)
 void Decoration::updateBorders()
 {
     KWin::Borders *b = m_borders;
-    if (clientPointer()->isMaximized() && m_maximizedBorders) {
+    if (client()->isMaximized() && m_maximizedBorders) {
         b = m_maximizedBorders;
     }
     if (!b) {
@@ -440,7 +429,7 @@ void Decoration::updateShadow()
     }
     bool updateShadow = false;
     const auto oldShadow = shadow();
-    if (m_padding && (m_padding->left() > 0 || m_padding->top() > 0 || m_padding->right() > 0 || m_padding->bottom() > 0) && !clientPointer()->isMaximized()) {
+    if (m_padding && (m_padding->left() > 0 || m_padding->top() > 0 || m_padding->right() > 0 || m_padding->bottom() > 0) && !client()->isMaximized()) {
         if (oldShadow.isNull()) {
             updateShadow = true;
         } else {
@@ -566,15 +555,15 @@ void Decoration::updateExtendedBorders()
     int extBottom = m_extendedBorders->bottom();
 
     if (settings()->borderSize() == KDecoration2::BorderSize::None) {
-        if (!clientPointer()->isMaximizedHorizontally()) {
+        if (!client()->isMaximizedHorizontally()) {
             extLeft = std::max(m_extendedBorders->left(), extSize);
             extRight = std::max(m_extendedBorders->right(), extSize);
         }
-        if (!clientPointer()->isMaximizedVertically()) {
+        if (!client()->isMaximizedVertically()) {
             extBottom = std::max(m_extendedBorders->bottom(), extSize);
         }
 
-    } else if (settings()->borderSize() == KDecoration2::BorderSize::NoSides && !clientPointer()->isMaximizedHorizontally()) {
+    } else if (settings()->borderSize() == KDecoration2::BorderSize::NoSides && !client()->isMaximizedHorizontally()) {
         extLeft = std::max(m_extendedBorders->left(), extSize);
         extRight = std::max(m_extendedBorders->right(), extSize);
     }
@@ -590,7 +579,7 @@ void Decoration::updateBlur()
 
     QRegion mask;
 
-    if (clientPointer() && clientPointer()->isMaximized()) {
+    if (client() && client()->isMaximized()) {
         mask = QRect(0, 0, m_item->width(), m_item->height());
     } else {
         const QVariant maskProperty = m_item->property("decorationMask");
@@ -617,17 +606,12 @@ void Decoration::updateBuffer()
         return;
     }
     m_contentRect = QRect(QPoint(0, 0), m_view->contentItem()->size().toSize());
-    if (m_padding && (m_padding->left() > 0 || m_padding->top() > 0 || m_padding->right() > 0 || m_padding->bottom() > 0) && !clientPointer()->isMaximized()) {
+    if (m_padding && (m_padding->left() > 0 || m_padding->top() > 0 || m_padding->right() > 0 || m_padding->bottom() > 0) && !client()->isMaximized()) {
         m_contentRect = m_contentRect.adjusted(m_padding->left(), m_padding->top(), -m_padding->right(), -m_padding->bottom());
     }
     updateShadow();
     updateBlur();
     update();
-}
-
-KDecoration2::DecoratedClient *Decoration::clientPointer() const
-{
-    return client().toStrongRef().data();
 }
 
 QQuickItem *Decoration::item() const

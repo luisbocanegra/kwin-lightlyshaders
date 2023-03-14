@@ -25,6 +25,8 @@
 #include <kstandardaction.h>
 
 #include <kwinglutils.h>
+#include <rendertarget.h>
+#include <renderviewport.h>
 
 namespace KWin
 {
@@ -253,7 +255,7 @@ void ZoomEffect::prePaintScreen(ScreenPrePaintData &data, std::chrono::milliseco
     effects->prePaintScreen(data, presentTime);
 }
 
-ZoomEffect::OffscreenData *ZoomEffect::ensureOffscreenData(EffectScreen *screen)
+ZoomEffect::OffscreenData *ZoomEffect::ensureOffscreenData(const RenderViewport &viewport, EffectScreen *screen)
 {
     const QRect rect = effects->waylandDisplay() ? screen->geometry() : effects->virtualScreenGeometry();
     const qreal devicePixelRatio = effects->waylandDisplay() ? screen->devicePixelRatio() : 1;
@@ -272,17 +274,19 @@ ZoomEffect::OffscreenData *ZoomEffect::ensureOffscreenData(EffectScreen *screen)
     return &data;
 }
 
-void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &data)
+void ZoomEffect::paintScreen(const RenderTarget &renderTarget, const RenderViewport &viewport, int mask, const QRegion &region, EffectScreen *screen)
 {
-    OffscreenData *offscreenData = ensureOffscreenData(data.screen());
+    OffscreenData *offscreenData = ensureOffscreenData(viewport, screen);
 
     // Render the scene in an offscreen texture and then upscale it.
+    RenderTarget offscreenRenderTarget(offscreenData->framebuffer.get());
+    RenderViewport offscreenViewport(screen->geometry(), screen->devicePixelRatio(), offscreenRenderTarget);
     GLFramebuffer::pushFramebuffer(offscreenData->framebuffer.get());
-    effects->paintScreen(mask, region, data);
+    effects->paintScreen(offscreenRenderTarget, offscreenViewport, mask, region, screen);
     GLFramebuffer::popFramebuffer();
 
     const QSize screenSize = effects->virtualScreenSize();
-    const auto scale = effects->renderTargetScale();
+    const auto scale = viewport.scale();
 
     // mouse-tracking allows navigation of the zoom-area using the mouse.
     qreal xTranslation = 0;
@@ -355,7 +359,7 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &d
         matrix.scale(zoom, zoom);
         matrix.translate(offscreen.viewport.x() * scale, offscreen.viewport.y() * scale);
 
-        shader->setUniform(GLShader::ModelViewProjectionMatrix, data.projectionMatrix() * matrix);
+        shader->setUniform(GLShader::ModelViewProjectionMatrix, viewport.projectionMatrix() * matrix);
 
         offscreen.texture->bind();
         offscreen.texture->render(offscreen.viewport.size(), scale);
@@ -382,7 +386,7 @@ void ZoomEffect::paintScreen(int mask, const QRegion &region, ScreenPaintData &d
             glEnable(GL_BLEND);
             glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             auto s = ShaderManager::instance()->pushShader(ShaderTrait::MapTexture);
-            QMatrix4x4 mvp = data.projectionMatrix();
+            QMatrix4x4 mvp = viewport.projectionMatrix();
             mvp.translate(p.x() * scale, p.y() * scale);
             s->setUniform(GLShader::ModelViewProjectionMatrix, mvp);
             cursorTexture->render(cursorSize, scale);

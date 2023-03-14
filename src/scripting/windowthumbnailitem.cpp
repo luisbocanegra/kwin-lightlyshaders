@@ -10,6 +10,8 @@
 #include "composite.h"
 #include "core/renderbackend.h"
 #include "effects.h"
+#include "libkwineffects/rendertarget.h"
+#include "libkwineffects/renderviewport.h"
 #include "scene/itemrenderer.h"
 #include "scene/windowitem.h"
 #include "scene/workspacescene.h"
@@ -237,13 +239,7 @@ QSGNode *WindowThumbnailItem::updatePaintNode(QSGNode *oldNode, QQuickItem::Upda
         node->setFiltering(QSGTexture::Linear);
     }
     node->setTexture(m_provider->texture());
-
-    if (m_offscreenTexture && m_offscreenTexture->isYInverted()) {
-        node->setTextureCoordinatesTransform(QSGImageNode::MirrorVertically);
-    } else {
-        node->setTextureCoordinatesTransform(QSGImageNode::NoTransform);
-    }
-
+    node->setTextureCoordinatesTransform(QSGImageNode::NoTransform);
     node->setRect(paintedRect());
 
     return node;
@@ -261,7 +257,7 @@ void WindowThumbnailItem::setWId(const QUuid &wId)
     }
     m_wId = wId;
     if (!m_wId.isNull()) {
-        setClient(workspace()->findToplevel(wId));
+        setClient(workspace()->findWindow(wId));
     } else if (m_client) {
         m_client = nullptr;
         updateImplicitSize();
@@ -390,15 +386,15 @@ void WindowThumbnailItem::updateOffscreenTexture()
         m_offscreenTarget.reset(new GLFramebuffer(m_offscreenTexture.get()));
     }
 
+    RenderTarget offscreenRenderTarget(m_offscreenTarget.get());
+    RenderViewport offscreenViewport(geometry, m_devicePixelRatio, offscreenRenderTarget);
     GLFramebuffer::pushFramebuffer(m_offscreenTarget.get());
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    auto scale = Compositor::self()->scene()->renderer()->renderTargetScale();
-
     QMatrix4x4 projectionMatrix;
-    projectionMatrix.ortho(geometry.x() * scale, (geometry.x() + geometry.width()) * scale,
-                           geometry.y() * scale, (geometry.y() + geometry.height()) * scale, -1, 1);
+    projectionMatrix.ortho(geometry.x() * m_devicePixelRatio, (geometry.x() + geometry.width()) * m_devicePixelRatio,
+                           geometry.y() * m_devicePixelRatio, (geometry.y() + geometry.height()) * m_devicePixelRatio, -1, 1);
 
     WindowPaintData data;
     data.setProjectionMatrix(projectionMatrix);
@@ -407,7 +403,7 @@ void WindowThumbnailItem::updateOffscreenTexture()
     // shared across contexts. Unfortunately, this also introduces a latency of 1
     // frame, which is not ideal, but it is acceptable for things such as thumbnails.
     const int mask = Scene::PAINT_WINDOW_TRANSFORMED;
-    Compositor::self()->scene()->renderer()->renderItem(m_client->windowItem(), mask, infiniteRegion(), data);
+    Compositor::self()->scene()->renderer()->renderItem(offscreenRenderTarget, offscreenViewport, m_client->windowItem(), mask, infiniteRegion(), data);
     GLFramebuffer::popFramebuffer();
 
     // The fence is needed to avoid the case where qtquick renderer starts using

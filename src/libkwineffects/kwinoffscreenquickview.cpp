@@ -11,7 +11,6 @@
 
 #include "kwinglutils.h"
 #include "logging_p.h"
-#include "sharedqmlengine.h"
 
 #include <QGuiApplication>
 #include <QQmlComponent>
@@ -33,35 +32,6 @@
 
 namespace KWin
 {
-
-class EffectQuickRenderControl : public QQuickRenderControl
-{
-    Q_OBJECT
-
-public:
-    explicit EffectQuickRenderControl(OffscreenQuickView *view, QWindow *renderWindow)
-        : QQuickRenderControl(view)
-        , m_view(view)
-        , m_renderWindow(renderWindow)
-    {
-    }
-
-    QWindow *renderWindow(QPoint *offset) override
-    {
-        if (offset) {
-            if (m_renderWindow) {
-                *offset = m_renderWindow->mapFromGlobal(m_view->geometry().topLeft());
-            } else {
-                *offset = QPoint(0, 0);
-            }
-        }
-        return m_renderWindow;
-    }
-
-private:
-    OffscreenQuickView *m_view;
-    QPointer<QWindow> m_renderWindow;
-};
 
 class Q_DECL_HIDDEN OffscreenQuickView::Private
 {
@@ -96,11 +66,9 @@ class Q_DECL_HIDDEN OffscreenQuickScene::Private
 {
 public:
     Private()
-        : qmlEngine(SharedQmlEngine::engine())
     {
     }
 
-    SharedQmlEngine::Ptr qmlEngine;
     std::unique_ptr<QQmlComponent> qmlComponent;
     std::unique_ptr<QQuickItem> quickItem;
 };
@@ -111,20 +79,10 @@ OffscreenQuickView::OffscreenQuickView(QObject *parent)
 }
 
 OffscreenQuickView::OffscreenQuickView(QObject *parent, ExportMode exportMode)
-    : OffscreenQuickView(parent, nullptr, exportMode)
-{
-}
-
-OffscreenQuickView::OffscreenQuickView(QObject *parent, QWindow *renderWindow)
-    : OffscreenQuickView(parent, renderWindow, effects ? ExportMode::Texture : ExportMode::Image)
-{
-}
-
-OffscreenQuickView::OffscreenQuickView(QObject *parent, QWindow *renderWindow, ExportMode exportMode)
     : QObject(parent)
     , d(new OffscreenQuickView::Private)
 {
-    d->m_renderControl = std::make_unique<EffectQuickRenderControl>(this, renderWindow);
+    d->m_renderControl = std::make_unique<QQuickRenderControl>();
 
     d->m_view = std::make_unique<QQuickWindow>(d->m_renderControl.get());
     d->m_view->setFlags(Qt::FramelessWindowHint);
@@ -263,7 +221,11 @@ void OffscreenQuickView::update()
                 return;
             }
         }
-        d->m_view->setRenderTarget(QQuickRenderTarget::fromOpenGLTexture(d->m_fbo->texture(), d->m_fbo->size()));
+
+        QQuickRenderTarget renderTarget = QQuickRenderTarget::fromOpenGLTexture(d->m_fbo->texture(), d->m_fbo->size());
+        renderTarget.setDevicePixelRatio(d->m_view->devicePixelRatio());
+
+        d->m_view->setRenderTarget(renderTarget);
     }
 
     d->m_renderControl->polishItems();
@@ -492,7 +454,7 @@ void OffscreenQuickView::Private::updateTouchState(Qt::TouchPointState state, qi
     // points to Stationary so we only have one touch point with a different
     // state.
     touchPoints.erase(std::remove_if(touchPoints.begin(), touchPoints.end(), [](QTouchEvent::TouchPoint &point) {
-                          if (point.state() == Qt::TouchPointReleased) {
+                          if (point.state() == QEventPoint::Released) {
                               return true;
                           }
                           QMutableEventPoint::setState(point, QEventPoint::Stationary);
@@ -559,18 +521,6 @@ OffscreenQuickScene::OffscreenQuickScene(QObject *parent)
 {
 }
 
-OffscreenQuickScene::OffscreenQuickScene(QObject *parent, QWindow *renderWindow)
-    : OffscreenQuickView(parent, renderWindow)
-    , d(new OffscreenQuickScene::Private)
-{
-}
-
-OffscreenQuickScene::OffscreenQuickScene(QObject *parent, QWindow *renderWindow, ExportMode exportMode)
-    : OffscreenQuickView(parent, renderWindow, exportMode)
-    , d(new OffscreenQuickScene::Private)
-{
-}
-
 OffscreenQuickScene::OffscreenQuickScene(QObject *parent, OffscreenQuickView::ExportMode exportMode)
     : OffscreenQuickView(parent, exportMode)
     , d(new OffscreenQuickScene::Private)
@@ -587,7 +537,7 @@ void OffscreenQuickScene::setSource(const QUrl &source)
 void OffscreenQuickScene::setSource(const QUrl &source, const QVariantMap &initialProperties)
 {
     if (!d->qmlComponent) {
-        d->qmlComponent.reset(new QQmlComponent(d->qmlEngine.get()));
+        d->qmlComponent.reset(new QQmlComponent(effects->qmlEngine()));
     }
 
     d->qmlComponent->loadUrl(source);
@@ -617,11 +567,6 @@ void OffscreenQuickScene::setSource(const QUrl &source, const QVariantMap &initi
     updateSize();
     connect(contentItem(), &QQuickItem::widthChanged, item, updateSize);
     connect(contentItem(), &QQuickItem::heightChanged, item, updateSize);
-}
-
-QQmlContext *OffscreenQuickScene::rootContext() const
-{
-    return d->qmlEngine->rootContext();
 }
 
 QQuickItem *OffscreenQuickScene::rootItem() const

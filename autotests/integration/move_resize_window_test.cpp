@@ -13,7 +13,6 @@
 #include "core/output.h"
 #include "core/outputbackend.h"
 #include "cursor.h"
-#include "deleted.h"
 #include "effects.h"
 #include "placement.h"
 #include "pointer_input.h"
@@ -82,7 +81,6 @@ private:
 void MoveResizeWindowTest::initTestCase()
 {
     qRegisterMetaType<KWin::Window *>();
-    qRegisterMetaType<KWin::Deleted *>();
     qRegisterMetaType<KWin::MaximizeMode>("MaximizeMode");
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
@@ -655,7 +653,7 @@ void MoveResizeWindowTest::testNetMove()
     xcb_flush(c.get());
     c.reset();
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
 }
 
@@ -734,14 +732,14 @@ void MoveResizeWindowTest::testAdjustClientGeometryOfAutohidingX11Panel()
     xcb_flush(c.get());
     c.reset();
 
-    QSignalSpy panelClosedSpy(panel, &X11Window::windowClosed);
+    QSignalSpy panelClosedSpy(panel, &X11Window::closed);
     QVERIFY(panelClosedSpy.wait());
 
     // snap once more
     QCOMPARE(Workspace::self()->adjustWindowPosition(testWindow, targetPoint, false), targetPoint);
 
     // and close
-    QSignalSpy windowClosedSpy(testWindow, &Window::windowClosed);
+    QSignalSpy windowClosedSpy(testWindow, &Window::closed);
     shellSurface.reset();
     surface.reset();
     QVERIFY(windowClosedSpy.wait());
@@ -804,7 +802,7 @@ void MoveResizeWindowTest::testAdjustClientGeometryOfAutohidingWaylandPanel()
     QCOMPARE(Workspace::self()->adjustWindowPosition(testWindow, targetPoint, false), targetPoint);
 
     // and destroy the panel again
-    QSignalSpy panelClosedSpy(panel, &Window::windowClosed);
+    QSignalSpy panelClosedSpy(panel, &Window::closed);
     plasmaSurface.reset();
     panelShellSurface.reset();
     panelSurface.reset();
@@ -814,7 +812,7 @@ void MoveResizeWindowTest::testAdjustClientGeometryOfAutohidingWaylandPanel()
     QCOMPARE(Workspace::self()->adjustWindowPosition(testWindow, targetPoint, false), targetPoint);
 
     // and close
-    QSignalSpy windowClosedSpy(testWindow, &Window::windowClosed);
+    QSignalSpy windowClosedSpy(testWindow, &Window::closed);
     shellSurface.reset();
     surface.reset();
     QVERIFY(windowClosedSpy.wait());

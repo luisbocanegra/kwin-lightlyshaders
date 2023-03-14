@@ -49,7 +49,6 @@ namespace KWin
 class Group;
 class Output;
 class ClientMachine;
-class Deleted;
 class EffectWindowImpl;
 class Tile;
 class Scene;
@@ -562,6 +561,9 @@ class KWIN_EXPORT Window : public QObject
 public:
     ~Window() override;
 
+    void ref();
+    void unref();
+
     virtual xcb_window_t frameId() const;
     xcb_window_t window() const;
     /**
@@ -974,11 +976,6 @@ public:
     QStringList desktopIds() const;
 
     void setMinimized(bool set);
-    /**
-     * Minimizes this window plus its transients
-     */
-    void minimize();
-    void unminimize();
     bool isMinimized() const
     {
         return m_minimized;
@@ -1236,8 +1233,8 @@ public:
     {
         return m_decoration.decoration != nullptr;
     }
-    QPointer<Decoration::DecoratedClientImpl> decoratedClient() const;
-    void setDecoratedClient(QPointer<Decoration::DecoratedClientImpl> client);
+    Decoration::DecoratedClientImpl *decoratedClient() const;
+    void setDecoratedClient(Decoration::DecoratedClientImpl *client);
     bool decorationHasAlpha() const;
     void triggerDecorationRepaint();
     virtual void layoutDecorationRects(QRectF &left, QRectF &top, QRectF &right, QRectF &bottom) const;
@@ -1410,8 +1407,8 @@ Q_SIGNALS:
     void opacityChanged(KWin::Window *window, qreal oldOpacity);
     void damaged(KWin::Window *window);
     void inputTransformationChanged();
-    void geometryShapeChanged(KWin::Window *window, const QRectF &old);
-    void windowClosed(KWin::Window *window, KWin::Deleted *deleted);
+    void geometryShapeChanged(const QRectF &old);
+    void closed(KWin::Window *deleted);
     void windowShown(KWin::Window *window);
     void windowHidden(KWin::Window *window);
     /**
@@ -1456,20 +1453,20 @@ Q_SIGNALS:
     /**
      * This signal is emitted when the Window's buffer geometry changes.
      */
-    void bufferGeometryChanged(KWin::Window *window, const QRectF &oldGeometry);
+    void bufferGeometryChanged(const QRectF &oldGeometry);
     /**
      * This signal is emitted when the Window's frame geometry changes.
      */
-    void frameGeometryChanged(KWin::Window *window, const QRectF &oldGeometry);
+    void frameGeometryChanged(const QRectF &oldGeometry);
     /**
      * This signal is emitted when the Window's client geometry has changed.
      */
-    void clientGeometryChanged(KWin::Window *window, const QRectF &oldGeometry);
+    void clientGeometryChanged(const QRectF &oldGeometry);
 
     /**
      * This signal is emitted when the frame geometry is about to change. the new geometry is not known yet
      */
-    void frameGeometryAboutToChange(KWin::Window *window);
+    void frameGeometryAboutToChange();
 
     /**
      * This signal is emitted when the visible geometry has changed.
@@ -1494,13 +1491,13 @@ Q_SIGNALS:
      */
     void demandsAttentionChanged();
     void desktopsChanged();
-    void activitiesChanged(KWin::Window *window);
+    void activitiesChanged();
     void minimizedChanged();
     void paletteChanged(const QPalette &p);
     void colorSchemeChanged();
     void captionChanged();
-    void maximizedAboutToChange(KWin::Window *, MaximizeMode);
-    void maximizedChanged(KWin::Window *, MaximizeMode);
+    void maximizedAboutToChange(MaximizeMode mode);
+    void maximizedChanged();
     void transientChanged();
     void modalChanged();
     void quickTileModeChanged();
@@ -1871,6 +1868,7 @@ private:
     void maybeSendFrameCallback();
 
     // when adding new data members, check also copyToDeleted()
+    int m_refCount = 1;
     QUuid m_internalId;
     Xcb::Window m_client;
     bool is_shape;

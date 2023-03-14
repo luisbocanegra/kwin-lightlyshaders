@@ -55,9 +55,6 @@ Q_IMPORT_PLUGIN(KWinIntegrationPlugin)
 Q_IMPORT_PLUGIN(KGlobalAccelImpl)
 Q_IMPORT_PLUGIN(KWindowSystemKWinPlugin)
 Q_IMPORT_PLUGIN(KWinIdleTimePoller)
-#if PipeWire_FOUND
-Q_IMPORT_PLUGIN(ScreencastManagerFactory)
-#endif
 
 namespace KWin
 {
@@ -284,9 +281,8 @@ int main(int argc, char *argv[])
 
     qunsetenv("QT_DEVICE_PIXEL_RATIO");
     qputenv("QSG_RENDER_LOOP", "basic");
-    QCoreApplication::setAttribute(Qt::AA_UseHighDpiPixmaps);
     KWin::ApplicationWayland a(argc, argv);
-    a.setupTranslator();
+
     // reset QT_QPA_PLATFORM so we don't propagate it to our children (e.g. apps launched from the overview effect)
     qunsetenv("QT_QPA_PLATFORM");
 
@@ -509,7 +505,7 @@ int main(int argc, char *argv[])
         int fd = parser.value(waylandSocketFdOption).toInt(&ok);
         if (ok) {
             // make sure we don't leak this FD to children
-            fcntl(fd, F_SETFD, O_CLOEXEC);
+            fcntl(fd, F_SETFD, FD_CLOEXEC);
             server->display()->addSocketFileDescriptor(fd, socketName);
         } else {
             std::cerr << "FATAL ERROR: could not parse socket FD" << std::endl;
@@ -593,7 +589,7 @@ int main(int argc, char *argv[])
                 int fd = fdString.toInt(&ok);
                 if (ok) {
                     // make sure we don't leak this FD to children
-                    fcntl(fd, F_SETFD, O_CLOEXEC);
+                    fcntl(fd, F_SETFD, FD_CLOEXEC);
                     a.addXwaylandSocketFileDescriptor(fd);
                 }
             }

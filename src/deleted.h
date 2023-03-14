@@ -20,10 +20,7 @@ class KWIN_EXPORT Deleted : public Window
 
 public:
     static Deleted *create(Window *c);
-    // used by effects to keep the window around for e.g. fadeout effects when it's destroyed
-    void refWindow();
-    void unrefWindow();
-    void discard();
+
     QMargins frameMargins() const override;
     int desktop() const override;
     QStringList activities() const override;
@@ -40,42 +37,16 @@ public:
     {
         return m_shade;
     }
-    bool isMinimized() const
-    {
-        return m_minimized;
-    }
-    bool isModal() const
-    {
-        return m_modal;
-    }
     QList<Window *> mainWindows() const override
     {
         return m_mainWindows;
     }
     NET::WindowType windowType(bool direct = false, int supported_types = 0) const override;
-    bool wasClient() const
-    {
-        return m_wasClient;
-    }
     QString windowRole() const override;
 
     bool isFullScreen() const override
     {
         return m_fullscreen;
-    }
-
-    bool keepAbove() const
-    {
-        return m_keepAbove;
-    }
-    bool keepBelow() const
-    {
-        return m_keepBelow;
-    }
-
-    QString caption() const
-    {
-        return m_caption;
     }
 
     QString captionNormal() const override { return m_caption; }
@@ -138,7 +109,6 @@ private:
 
     QMargins m_frameMargins;
 
-    int delete_refcount;
     int desk;
     QStringList activityList;
     QRectF contentsRect; // for clientPos()/clientSize()
@@ -151,25 +121,15 @@ private:
     QRectF decoration_bottom;
     Layer m_layer;
     bool m_shade;
-    bool m_minimized;
-    bool m_modal;
     QList<Window *> m_mainWindows;
-    bool m_wasClient;
     NET::WindowType m_type = NET::Unknown;
     QString m_windowRole;
     bool m_fullscreen;
-    bool m_keepAbove;
-    bool m_keepBelow;
     QString m_caption;
     bool m_wasPopupWindow;
     bool m_wasOutline;
     bool m_wasLockScreen;
 };
-
-inline void Deleted::refWindow()
-{
-    ++delete_refcount;
-}
 
 } // namespace
 

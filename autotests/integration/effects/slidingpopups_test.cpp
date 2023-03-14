@@ -10,7 +10,6 @@
 #include "core/outputbackend.h"
 #include "core/renderbackend.h"
 #include "cursor.h"
-#include "deleted.h"
 #include "effectloader.h"
 #include "effects.h"
 #include "kwin_wayland_test.h"
@@ -49,7 +48,6 @@ void SlidingPopupsTest::initTestCase()
 {
     qputenv("XDG_DATA_DIRS", QCoreApplication::applicationDirPath().toUtf8());
     qRegisterMetaType<KWin::Window *>();
-    qRegisterMetaType<KWin::Deleted *>();
     qRegisterMetaType<KWin::Effect *>();
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
@@ -204,10 +202,10 @@ void SlidingPopupsTest::testWithOtherEffect()
     xcb_unmap_window(c.get(), windowId);
     xcb_flush(c.get());
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy closedSpy(window, &X11Window::closed);
 
     QSignalSpy windowDeletedSpy(effects, &EffectsHandler::windowDeleted);
-    QVERIFY(windowClosedSpy.wait());
+    QVERIFY(closedSpy.wait());
 
     // again we should have the sliding popups active
     QVERIFY(slidingPoupus->isActive());
@@ -315,7 +313,7 @@ void SlidingPopupsTest::testWithOtherEffectWayland()
     shellSurface.reset();
     surface.reset();
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
 
     QSignalSpy windowDeletedSpy(effects, &EffectsHandler::windowDeleted);
     QVERIFY(windowClosedSpy.wait());

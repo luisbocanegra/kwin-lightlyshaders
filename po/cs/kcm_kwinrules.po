@@ -9,8 +9,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: kcmkwinrules\n"
 "Report-Msgid-Bugs-To: https://bugs.kde.org\n"
-"POT-Creation-Date: 2023-02-18 01:00+0000\n"
-"PO-Revision-Date: 2023-01-05 09:40+0100\n"
+"POT-Creation-Date: 2023-03-04 02:12+0000\n"
+"PO-Revision-Date: 2023-03-03 11:25+0100\n"
 "Last-Translator: Vit Pelcak <vit@pelcak.org>\n"
 "Language-Team: Czech <kde-i18n-doc@kde.org>\n"
 "Language: cs\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
-"X-Generator: Lokalize 22.12.0\n"
+"X-Generator: Lokalize 22.12.2\n"
 "X-Language: cs_CZ\n"
 "X-Source-Language: en_US\n"
 
@@ -52,33 +52,33 @@ msgstr "Nastavení aplikace pro %1"
 msgid "Window settings for %1"
 msgstr "Nastavení okna pro %1"
 
-#: main.cpp:31
+#: main.cpp:30
 #, kde-format
 msgid "KWinRules KCM launcher"
 msgstr ""
 
-#: main.cpp:32
+#: main.cpp:31
 #, kde-format
 msgid "KWin id of the window for special window settings."
 msgstr "KWin Id okna pro speciální nastavení oken."
 
-#: main.cpp:33
+#: main.cpp:32
 #, kde-format
 msgid "Whether the settings should affect all windows of the application."
 msgstr "Jestli se má nastavení vztahovat na všechna okna aplikace."
 
-#: main.cpp:40
+#: main.cpp:39
 #, kde-format
 msgid "This helper utility is not supposed to be called directly."
 msgstr "Tento pomocný nástroj není určen k samostatnému spouštění."
 
-#: main.cpp:44
+#: main.cpp:43
 #, kde-format
 msgctxt "Window caption for the application wide rules dialog"
 msgid "Edit Application-Specific Settings"
 msgstr "Upravit nastavení specifická pro aplikaci"
 
-#: main.cpp:45
+#: main.cpp:44
 #, kde-format
 msgid "Edit Window-Specific Settings"
 msgstr "Upravit nastavení specifická pro okno"
@@ -176,12 +176,12 @@ msgid ""
 "(this action will be deleted after the window is hidden)."
 msgstr ""
 
-#: package/contents/ui/FileDialogLoader.qml:14
+#: package/contents/ui/FileDialogLoader.qml:15
 #, kde-format
 msgid "Select File"
 msgstr "Vybrat soubor"
 
-#: package/contents/ui/FileDialogLoader.qml:26
+#: package/contents/ui/FileDialogLoader.qml:27
 #, kde-format
 msgid "KWin Rules (*.kwinrule)"
 msgstr "Pravidla KWinu (*.kwinrule)"
@@ -398,6 +398,9 @@ msgid ""
 "initial settings for size and position. To enforce these settings, also "
 "force the property \"%1\" to \"Yes\"."
 msgstr ""
+"Některé aplikace nastavují vlastní rozměry po spuštění, čímž přepíší vaše "
+"původní nastavení pro velikost a umístění. Abyste tato nastavení vynutili, "
+"vynuťte taky vlastnost \"%1\" na \"Ano\"."
 
 #: rulesmodel.cpp:251
 #, kde-format

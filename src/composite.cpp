@@ -20,7 +20,6 @@
 #include "cursordelegate_qpainter.h"
 #include "dbusinterface.h"
 #include "decorations/decoratedclient.h"
-#include "deleted.h"
 #include "effects.h"
 #include "ftrace.h"
 #include "internalwindow.h"
@@ -252,14 +251,6 @@ bool Compositor::setupStart()
 
     initializeX11();
 
-    // There might still be a deleted around, needs to be cleared before
-    // creating the scene (BUG 333275).
-    if (Workspace::self()) {
-        while (!Workspace::self()->deletedList().isEmpty()) {
-            Workspace::self()->deletedList().first()->discard();
-        }
-    }
-
     Q_EMIT aboutToToggleCompositing();
 
     const QVector<CompositingType> availableCompositors = kwinApp()->outputBackend()->supportedCompositors();
@@ -368,7 +359,7 @@ void Compositor::startupWithWorkspace()
     const QList<Output *> outputs = workspace()->outputs();
     if (kwinApp()->operationMode() == Application::OperationModeX11) {
         auto workspaceLayer = new RenderLayer(outputs.constFirst()->renderLoop());
-        workspaceLayer->setDelegate(std::make_unique<SceneDelegate>(m_scene.get()));
+        workspaceLayer->setDelegate(std::make_unique<SceneDelegate>(m_scene.get(), nullptr));
         workspaceLayer->setGeometry(workspace()->geometry());
         connect(workspace(), &Workspace::geometryChanged, workspaceLayer, [workspaceLayer]() {
             workspaceLayer->setGeometry(workspace()->geometry());
@@ -384,7 +375,8 @@ void Compositor::startupWithWorkspace()
 
     m_state = State::On;
 
-    for (X11Window *window : Workspace::self()->clientList()) {
+    const auto windows = workspace()->allClientList();
+    for (Window *window : windows) {
         window->setupCompositing();
     }
     for (Unmanaged *window : Workspace::self()->unmanagedList()) {
@@ -392,13 +384,6 @@ void Compositor::startupWithWorkspace()
     }
     for (InternalWindow *window : workspace()->internalWindows()) {
         window->setupCompositing();
-    }
-
-    if (auto *server = waylandServer()) {
-        const auto windows = server->windows();
-        for (Window *window : windows) {
-            window->setupCompositing();
-        }
     }
 
     // Sets also the 'effects' pointer.
@@ -436,9 +421,9 @@ void Compositor::addOutput(Output *output)
     auto cursorLayer = new RenderLayer(output->renderLoop());
     cursorLayer->setVisible(false);
     if (m_backend->compositingType() == OpenGLCompositing) {
-        cursorLayer->setDelegate(std::make_unique<CursorDelegateOpenGL>());
+        cursorLayer->setDelegate(std::make_unique<CursorDelegateOpenGL>(output));
     } else {
-        cursorLayer->setDelegate(std::make_unique<CursorDelegateQPainter>());
+        cursorLayer->setDelegate(std::make_unique<CursorDelegateQPainter>(output));
     }
     cursorLayer->setParent(workspaceLayer);
     cursorLayer->setSuperlayer(workspaceLayer);
@@ -515,7 +500,8 @@ void Compositor::stop()
     effects = nullptr;
 
     if (Workspace::self()) {
-        for (X11Window *window : Workspace::self()->clientList()) {
+        const auto windows = workspace()->allClientList();
+        for (Window *window : windows) {
             window->finishCompositing();
         }
         for (Unmanaged *window : Workspace::self()->unmanagedList()) {
@@ -528,19 +514,9 @@ void Compositor::stop()
             xcb_composite_unredirect_subwindows(con, kwinApp()->x11RootWindow(),
                                                 XCB_COMPOSITE_REDIRECT_MANUAL);
         }
-        while (!workspace()->deletedList().isEmpty()) {
-            workspace()->deletedList().first()->discard();
-        }
 
         disconnect(workspace(), &Workspace::outputAdded, this, &Compositor::addOutput);
         disconnect(workspace(), &Workspace::outputRemoved, this, &Compositor::removeOutput);
-    }
-
-    if (waylandServer()) {
-        const QList<Window *> toFinishCompositing = waylandServer()->windows();
-        for (Window *window : toFinishCompositing) {
-            window->finishCompositing();
-        }
     }
 
     const auto superlayers = m_superlayers;
@@ -682,12 +658,10 @@ void Compositor::composite(RenderLoop *renderLoop)
 
         if (auto beginInfo = primaryLayer->beginFrame()) {
             auto &[renderTarget, repaint] = beginInfo.value();
-            renderTarget.setDevicePixelRatio(output->scale());
 
             const QRegion bufferDamage = surfaceDamage.united(repaint).intersected(superLayer->rect().toAlignedRect());
-            primaryLayer->aboutToStartPainting(bufferDamage);
 
-            paintPass(superLayer, &renderTarget, bufferDamage);
+            paintPass(superLayer, renderTarget, bufferDamage);
             primaryLayer->endFrame(bufferDamage, surfaceDamage);
         }
     }
@@ -742,14 +716,14 @@ void Compositor::preparePaintPass(RenderLayer *layer, QRegion *repaint)
     }
 }
 
-void Compositor::paintPass(RenderLayer *layer, RenderTarget *target, const QRegion &region)
+void Compositor::paintPass(RenderLayer *layer, const RenderTarget &renderTarget, const QRegion &region)
 {
-    layer->delegate()->paint(target, region);
+    layer->delegate()->paint(renderTarget, region);
 
     const auto sublayers = layer->sublayers();
     for (RenderLayer *sublayer : sublayers) {
         if (sublayer->isVisible()) {
-            paintPass(sublayer, target, region);
+            paintPass(sublayer, renderTarget, region);
         }
     }
 }

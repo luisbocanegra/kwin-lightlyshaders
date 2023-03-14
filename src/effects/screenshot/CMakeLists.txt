@@ -5,7 +5,6 @@
 set(screenshot_SOURCES
     main.cpp
     screenshot.cpp
-    screenshotdbusinterface1.cpp
     screenshotdbusinterface2.cpp
 )
 
@@ -22,10 +21,6 @@ target_link_libraries(screenshot PRIVATE
     Qt::Concurrent
     Qt::DBus
 )
-
-if (KWIN_BUILD_NOTIFICATIONS)
-    target_link_libraries(screenshot PRIVATE KF6::Notifications)
-endif()
 
 ecm_qt_declare_logging_category(screenshot
     HEADER screenshotlogging.h

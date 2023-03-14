@@ -36,7 +36,6 @@ public:
     virtual QRectF frameRectToBufferRect(const QRectF &rect) const;
     bool isHidden() const;
 
-    void updateDepth();
     void setCaption(const QString &caption);
 
 protected:
@@ -48,6 +47,7 @@ protected:
 
     void cleanGrouping();
     void updateGeometry(const QRectF &rect);
+    void markAsMapped();
 
 private:
     void updateClientOutputs();

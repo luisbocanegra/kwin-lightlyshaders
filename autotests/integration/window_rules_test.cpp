@@ -11,7 +11,6 @@
 #include "atoms.h"
 #include "core/output.h"
 #include "core/outputbackend.h"
-#include "deleted.h"
 #include "pointer_input.h"
 #include "rules.h"
 #include "wayland_server.h"
@@ -33,7 +32,6 @@ private Q_SLOTS:
     void initTestCase();
     void init();
     void cleanup();
-    void testApplyInitialMaximizeVert_data();
     void testApplyInitialMaximizeVert();
     void testWindowClassChange();
 };
@@ -41,7 +39,6 @@ private Q_SLOTS:
 void WindowRuleTest::initTestCase()
 {
     qRegisterMetaType<KWin::Window *>();
-    qRegisterMetaType<KWin::Deleted *>();
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
     QMetaObject::invokeMethod(kwinApp()->outputBackend(), "setVirtualOutputs", Qt::DirectConnection, Q_ARG(QVector<QRect>, QVector<QRect>() << QRect(0, 0, 1280, 1024) << QRect(1280, 0, 1280, 1024)));
@@ -76,14 +73,6 @@ struct XcbConnectionDeleter
     }
 };
 
-void WindowRuleTest::testApplyInitialMaximizeVert_data()
-{
-    QTest::addColumn<QByteArray>("role");
-
-    QTest::newRow("lowercase") << QByteArrayLiteral("mainwindow");
-    QTest::newRow("CamelCase") << QByteArrayLiteral("MainWindow");
-}
-
 void WindowRuleTest::testApplyInitialMaximizeVert()
 {
     // this test creates the situation of BUG 367554: creates a window and initial apply maximize vertical
@@ -113,7 +102,7 @@ void WindowRuleTest::testApplyInitialMaximizeVert()
     xcb_icccm_set_wm_normal_hints(c.get(), windowId, &hints);
     xcb_icccm_set_wm_class(c.get(), windowId, 9, "kpat\0kpat");
 
-    QFETCH(QByteArray, role);
+    const QByteArray role = QByteArrayLiteral("mainwindow");
     xcb_change_property(c.get(), XCB_PROP_MODE_REPLACE, windowId, atoms->wm_window_role, XCB_ATOM_STRING, 8, role.length(), role.constData());
 
     NETWinInfo info(c.get(), windowId, rootWindow(), NET::WMAllProperties, NET::WM2AllProperties);
@@ -135,7 +124,7 @@ void WindowRuleTest::testApplyInitialMaximizeVert()
     QCOMPARE(window->maximizeMode(), MaximizeVertical);
 
     // destroy window again
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());
@@ -205,7 +194,7 @@ void WindowRuleTest::testWindowClassChange()
     QCOMPARE(window->keepAbove(), true);
 
     // destroy window
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     xcb_unmap_window(c.get(), windowId);
     xcb_destroy_window(c.get(), windowId);
     xcb_flush(c.get());

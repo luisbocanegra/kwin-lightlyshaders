@@ -84,11 +84,10 @@ WaylandEglLayerBuffer::WaylandEglLayerBuffer(const QSize &size, uint32_t format,
                                        attributes.modifier & 0xffffffff);
     }
 
-    m_buffer = zwp_linux_buffer_params_v1_create_immed(params, size.width(), size.height(), format, ZWP_LINUX_BUFFER_PARAMS_V1_FLAGS_Y_INVERT);
+    m_buffer = zwp_linux_buffer_params_v1_create_immed(params, size.width(), size.height(), format, 0);
     zwp_linux_buffer_params_v1_destroy(params);
 
     m_texture = backend->importDmaBufAsTexture(std::move(attributes));
-    m_texture->setYInverted(false);
     m_framebuffer = std::make_unique<GLFramebuffer>(m_texture.get());
 }
 
@@ -411,7 +410,7 @@ bool WaylandEglBackend::initRenderingContext()
     return makeCurrent();
 }
 
-std::shared_ptr<KWin::GLTexture> WaylandEglBackend::textureForOutput(KWin::Output *output) const
+std::shared_ptr<GLTexture> WaylandEglBackend::textureForOutput(KWin::Output *output) const
 {
     return m_outputs.at(output).primaryLayer->texture();
 }

@@ -107,7 +107,7 @@ Window::Window()
     });
 
     // replace on-screen-display on size changes
-    connect(this, &Window::frameGeometryChanged, this, [this](Window *c, const QRectF &old) {
+    connect(this, &Window::frameGeometryChanged, this, [this](const QRectF &old) {
         if (isOnScreenDisplay() && !frameGeometry().isEmpty() && old.size() != frameGeometry().size() && isPlaceable()) {
             GeometryUpdatesBlocker blocker(this);
             workspace()->placement()->place(this, workspace()->clientArea(PlacementArea, this, workspace()->activeOutput()));
@@ -128,6 +128,19 @@ Window::~Window()
     Q_ASSERT(m_blockGeometryUpdates == 0);
     Q_ASSERT(m_decoration.decoration == nullptr);
     delete info;
+}
+
+void Window::ref()
+{
+    ++m_refCount;
+}
+
+void Window::unref()
+{
+    --m_refCount;
+    if (m_refCount == 0) {
+        delete this;
+    }
 }
 
 QDebug operator<<(QDebug debug, const Window *window)
@@ -207,6 +220,10 @@ void Window::copyToDeleted(Window *c)
     m_shapeRegionIsValid = c->m_shapeRegionIsValid;
     m_shapeRegion = c->m_shapeRegion;
     m_stackingOrder = c->m_stackingOrder;
+    m_minimized = c->m_minimized;
+    m_modal = c->m_modal;
+    m_keepAbove = c->m_keepAbove;
+    m_keepBelow = c->m_keepBelow;
 }
 
 // before being deleted, remove references to everything that's now
@@ -306,7 +323,7 @@ void Window::getResourceClass()
     if (!info) {
         return;
     }
-    setResourceClass(QString::fromLatin1(info->windowClassName()).toLower(), QString::fromLatin1(info->windowClassClass()).toLower());
+    setResourceClass(QString::fromLatin1(info->windowClassName()), QString::fromLatin1(info->windowClassClass()));
 }
 
 void Window::setResourceClass(const QString &name, const QString &className)
@@ -1294,38 +1311,16 @@ bool Window::titlebarPositionUnderMouse() const
 
 void Window::setMinimized(bool set)
 {
-    set ? minimize() : unminimize();
-}
-
-void Window::minimize()
-{
-    if (!isMinimizable() || isMinimized()) {
+    const bool effectiveSet = rules()->checkMinimize(set);
+    if (m_minimized == effectiveSet) {
         return;
     }
 
-    m_minimized = true;
-    doMinimize();
-
-    updateWindowRules(Rules::Minimize);
-
-    if (options->moveMinimizedWindowsToEndOfTabBoxFocusChain()) {
-        Workspace::self()->focusChain()->update(this, FocusChain::MakeFirstMinimized);
-    }
-
-    Q_EMIT minimizedChanged();
-}
-
-void Window::unminimize()
-{
-    if (!isMinimized()) {
+    if (effectiveSet && !isMinimizable()) {
         return;
     }
 
-    if (rules()->checkMinimize(false)) {
-        return;
-    }
-
-    m_minimized = false;
+    m_minimized = effectiveSet;
     doMinimize();
 
     updateWindowRules(Rules::Minimize);
@@ -2179,8 +2174,8 @@ void Window::setupWindowManagementInterface()
     connect(this, &Window::minimizedChanged, w, [w, this] {
         w->setMinimized(isMinimized());
     });
-    connect(this, &Window::maximizedChanged, w, [w](KWin::Window *c, MaximizeMode mode) {
-        w->setMaximized(mode == KWin::MaximizeFull);
+    connect(this, &Window::maximizedChanged, w, [w, this]() {
+        w->setMaximized(maximizeMode() == MaximizeFull);
     });
     connect(this, &Window::demandsAttentionChanged, w, [w, this] {
         w->setDemandsAttention(isDemandingAttention());
@@ -2217,11 +2212,7 @@ void Window::setupWindowManagementInterface()
         setFullScreen(set, false);
     });
     connect(w, &PlasmaWindowInterface::minimizedRequested, this, [this](bool set) {
-        if (set) {
-            minimize();
-        } else {
-            unminimize();
-        }
+        setMinimized(set);
     });
     connect(w, &PlasmaWindowInterface::maximizedRequested, this, [this](bool set) {
         maximize(set ? MaximizeFull : MaximizeRestore);
@@ -2423,7 +2414,7 @@ bool Window::performMouseCommand(Options::MouseCommand cmd, const QPointF &globa
         maximize(MaximizeRestore);
         break;
     case Options::MouseMinimize:
-        minimize();
+        setMinimized(true);
         break;
     case Options::MouseAbove: {
         StackingUpdatesBlocker blocker(workspace());
@@ -2962,7 +2953,7 @@ void Window::setDecoration(std::shared_ptr<KDecoration2::Decoration> decoration)
             if (!isShade()) {
                 checkWorkspacePosition(oldGeometry);
             }
-            Q_EMIT geometryShapeChanged(this, oldGeometry);
+            Q_EMIT geometryShapeChanged(oldGeometry);
         });
         connect(decoratedClient()->decoratedClient(), &KDecoration2::DecoratedClient::sizeChanged,
                 this, &Window::updateDecorationInputShape);
@@ -3125,12 +3116,12 @@ void Window::showContextHelp()
 {
 }
 
-QPointer<Decoration::DecoratedClientImpl> Window::decoratedClient() const
+Decoration::DecoratedClientImpl *Window::decoratedClient() const
 {
     return m_decoration.client;
 }
 
-void Window::setDecoratedClient(QPointer<Decoration::DecoratedClientImpl> client)
+void Window::setDecoratedClient(Decoration::DecoratedClientImpl *client)
 {
     m_decoration.client = client;
 }
@@ -3388,7 +3379,7 @@ Window *Window::findWindowWithSameCaption() const
     auto fetchNameInternalPredicate = [this](const Window *cl) {
         return (!cl->isSpecialWindow() || cl->isToolbar()) && cl != this && cl->captionNormal() == captionNormal() && cl->captionSuffix() == captionSuffix();
     };
-    return workspace()->findAbstractClient(fetchNameInternalPredicate);
+    return workspace()->findWindow(fetchNameInternalPredicate);
 }
 
 QString Window::caption() const
@@ -3523,7 +3514,7 @@ void Window::updateActivities(bool includeTransients)
         m_blockedActivityUpdatesRequireTransients |= includeTransients;
         return;
     }
-    Q_EMIT activitiesChanged(this);
+    Q_EMIT activitiesChanged();
     m_blockedActivityUpdatesRequireTransients = false; // reset
     Workspace::self()->focusChain()->update(this, FocusChain::MakeFirst);
     updateWindowRules(Rules::Activity);
@@ -4413,12 +4404,7 @@ void Window::applyWindowRules()
     setOnActivities(activities());
     // Type
     maximize(requestedMaximizeMode());
-    // Minimize : functions don't check, and there are two functions
-    if (client_rules->checkMinimize(isMinimized())) {
-        minimize();
-    } else {
-        unminimize();
-    }
+    setMinimized(isMinimized());
     setShade(shadeMode());
     setOriginalSkipTaskbar(skipTaskbar());
     setSkipPager(skipPager());

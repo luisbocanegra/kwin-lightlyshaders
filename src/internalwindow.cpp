@@ -315,7 +315,7 @@ void InternalWindow::createDecoration(const QRectF &oldGeometry)
     setDecoration(std::shared_ptr<KDecoration2::Decoration>(Workspace::self()->decorationBridge()->createDecoration(this)));
     moveResize(QRectF(oldGeometry.topLeft(), clientSizeToFrameSize(clientSize())));
 
-    Q_EMIT geometryShapeChanged(this, oldGeometry);
+    Q_EMIT geometryShapeChanged(oldGeometry);
 }
 
 void InternalWindow::destroyDecoration()
@@ -365,16 +365,16 @@ void InternalWindow::destroyWindow()
     }
 
     Deleted *deleted = Deleted::create(this);
-    Q_EMIT windowClosed(this, deleted);
+    Q_EMIT closed(deleted);
 
     destroyDecoration();
 
     workspace()->removeInternalWindow(this);
 
-    deleted->unrefWindow();
+    deleted->unref();
     m_handle = nullptr;
 
-    delete this;
+    unref();
 }
 
 bool InternalWindow::hasPopupGrab() const
@@ -392,8 +392,12 @@ void InternalWindow::present(const std::shared_ptr<QOpenGLFramebufferObject> fbo
     Q_ASSERT(m_internalImage.isNull());
 
     const QSizeF bufferSize = fbo->size() / bufferScale();
+    QRectF geometry(pos(), clientSizeToFrameSize(bufferSize));
+    if (isInteractiveResize()) {
+        geometry = gravitateGeometry(geometry, moveResizeGeometry(), interactiveMoveResizeGravity());
+    }
 
-    commitGeometry(QRectF(pos(), clientSizeToFrameSize(bufferSize)));
+    commitGeometry(geometry);
     markAsMapped();
 
     m_internalFBO = fbo;
@@ -407,8 +411,12 @@ void InternalWindow::present(const QImage &image, const QRegion &damage)
     Q_ASSERT(m_internalFBO == nullptr);
 
     const QSize bufferSize = image.size() / bufferScale();
+    QRectF geometry(pos(), clientSizeToFrameSize(bufferSize));
+    if (isInteractiveResize()) {
+        geometry = gravitateGeometry(geometry, moveResizeGeometry(), interactiveMoveResizeGravity());
+    }
 
-    commitGeometry(QRectF(pos(), clientSizeToFrameSize(bufferSize)));
+    commitGeometry(geometry);
     markAsMapped();
 
     m_internalImage = image;
@@ -475,7 +483,7 @@ void InternalWindow::commitGeometry(const QRectF &rect)
     const QRectF oldFrameGeometry = m_frameGeometry;
     const Output *oldOutput = m_output;
 
-    Q_EMIT frameGeometryAboutToChange(this);
+    Q_EMIT frameGeometryAboutToChange();
 
     m_clientGeometry = frameRectToClientRect(rect);
     m_frameGeometry = rect;
@@ -489,16 +497,16 @@ void InternalWindow::commitGeometry(const QRectF &rect)
     syncGeometryToInternalWindow();
 
     if (oldClientGeometry != m_clientGeometry) {
-        Q_EMIT bufferGeometryChanged(this, oldClientGeometry);
-        Q_EMIT clientGeometryChanged(this, oldClientGeometry);
+        Q_EMIT bufferGeometryChanged(oldClientGeometry);
+        Q_EMIT clientGeometryChanged(oldClientGeometry);
     }
     if (oldFrameGeometry != m_frameGeometry) {
-        Q_EMIT frameGeometryChanged(this, oldFrameGeometry);
+        Q_EMIT frameGeometryChanged(oldFrameGeometry);
     }
     if (oldOutput != m_output) {
         Q_EMIT outputChanged();
     }
-    Q_EMIT geometryShapeChanged(this, oldFrameGeometry);
+    Q_EMIT geometryShapeChanged(oldFrameGeometry);
 }
 
 void InternalWindow::setCaption(const QString &caption)

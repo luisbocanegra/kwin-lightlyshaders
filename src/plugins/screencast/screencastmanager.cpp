@@ -10,7 +10,6 @@
 #include "composite.h"
 #include "core/output.h"
 #include "core/outputbackend.h"
-#include "deleted.h"
 #include "effects.h"
 #include "kwingltexture.h"
 #include "outputscreencastsource.h"
@@ -101,7 +100,7 @@ void ScreencastManager::streamWindow(KWaylandServer::ScreencastStreamV1Interface
                                      const QString &winid,
                                      KWaylandServer::ScreencastV1Interface::CursorMode mode)
 {
-    auto window = Workspace::self()->findToplevel(QUuid(winid));
+    auto window = Workspace::self()->findWindow(QUuid(winid));
     if (!window) {
         waylandStream->sendFailed(i18n("Could not find window id %1", winid));
         return;

@@ -166,7 +166,7 @@ void ClientModel::createFocusChainClientList(int desktop,
     do {
         QSharedPointer<TabBoxClient> add = tabBox->clientToAddToList(c.data(), desktop);
         if (!add.isNull()) {
-            m_clientList += add;
+            m_mutableClientList += add;
             if (add.data()->isFirstInTabBox()) {
                 stickyClients << add;
             }
@@ -187,10 +187,10 @@ void ClientModel::createStackingOrderClientList(int desktop,
         QSharedPointer<TabBoxClient> add = tabBox->clientToAddToList(c.data(), desktop);
         if (!add.isNull()) {
             if (start == add.data()) {
-                m_clientList.removeAll(add);
-                m_clientList.prepend(add);
+                m_mutableClientList.removeAll(add);
+                m_mutableClientList.prepend(add);
             } else {
-                m_clientList += add;
+                m_mutableClientList += add;
             }
             if (add.data()->isFirstInTabBox()) {
                 stickyClients << add;
@@ -212,15 +212,14 @@ void ClientModel::createClientList(int desktop, bool partialReset)
 {
     auto start = tabBox->activeClient().toStrongRef();
     // TODO: new clients are not added at correct position
-    if (partialReset && !m_clientList.isEmpty()) {
-        QSharedPointer<TabBoxClient> firstClient = m_clientList.constFirst();
+    if (partialReset && !m_mutableClientList.isEmpty()) {
+        QSharedPointer<TabBoxClient> firstClient = m_mutableClientList.constFirst();
         if (firstClient) {
             start = firstClient;
         }
     }
 
-    beginResetModel();
-    m_clientList.clear();
+    m_mutableClientList.clear();
     TabBoxClientList stickyClients;
 
     switch (tabBox->config().clientSwitchingMode()) {
@@ -236,22 +235,29 @@ void ClientModel::createClientList(int desktop, bool partialReset)
 
     if (tabBox->config().orderMinimizedMode() == TabBoxConfig::GroupByMinimized) {
         // Put all non-minimized included clients first.
-        std::stable_partition(m_clientList.begin(), m_clientList.end(), [](const auto &client) {
+        std::stable_partition(m_mutableClientList.begin(), m_mutableClientList.end(), [](const auto &client) {
             return !client.toStrongRef()->isMinimized();
         });
     }
 
     for (const QWeakPointer<TabBoxClient> &c : std::as_const(stickyClients)) {
-        m_clientList.removeAll(c);
-        m_clientList.prepend(c);
+        m_mutableClientList.removeAll(c);
+        m_mutableClientList.prepend(c);
     }
     if (tabBox->config().clientApplicationsMode() != TabBoxConfig::AllWindowsCurrentApplication
-        && (tabBox->config().showDesktopMode() == TabBoxConfig::ShowDesktopClient || m_clientList.isEmpty())) {
+        && (tabBox->config().showDesktopMode() == TabBoxConfig::ShowDesktopClient || m_mutableClientList.isEmpty())) {
         QWeakPointer<TabBoxClient> desktopClient = tabBox->desktopClient();
         if (!desktopClient.isNull()) {
-            m_clientList.append(desktopClient);
+            m_mutableClientList.append(desktopClient);
         }
     }
+
+    if (m_clientList == m_mutableClientList) {
+        return;
+    }
+
+    beginResetModel();
+    m_clientList = m_mutableClientList;
     endResetModel();
 }
 
@@ -261,7 +267,7 @@ void ClientModel::close(int i)
     if (!ind.isValid()) {
         return;
     }
-    QSharedPointer<TabBoxClient> client = m_clientList.at(i).toStrongRef();
+    QSharedPointer<TabBoxClient> client = m_mutableClientList.at(i).toStrongRef();
     if (client) {
         client->close();
     }

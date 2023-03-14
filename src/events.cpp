@@ -524,7 +524,7 @@ bool X11Window::mapRequestEvent(xcb_map_request_event_t *e)
     }
     // also copied in clientMessage()
     if (isMinimized()) {
-        unminimize();
+        setMinimized(false);
     }
     if (isShade()) {
         setShade(ShadeNone);
@@ -590,7 +590,7 @@ void X11Window::clientMessageEvent(xcb_client_message_event_t *e)
     // WM_STATE
     if (e->type == atoms->wm_change_state) {
         if (e->data.data32[0] == XCB_ICCCM_WM_STATE_ICONIC) {
-            minimize();
+            setMinimized(true);
         }
         return;
     }
@@ -1276,7 +1276,7 @@ bool Unmanaged::windowEvent(xcb_generic_event_t *e)
     default: {
         if (eventType == Xcb::Extensions::self()->shapeNotifyEvent()) {
             detectShape(window());
-            Q_EMIT geometryShapeChanged(this, frameGeometry());
+            Q_EMIT geometryShapeChanged(frameGeometry());
         }
         if (eventType == Xcb::Extensions::self()->damageNotifyEvent()) {
             damageNotifyEvent();
@@ -1294,17 +1294,17 @@ void Unmanaged::configureNotifyEvent(xcb_configure_notify_event_t *e)
     }
     QRectF newgeom(Xcb::fromXNative(e->x), Xcb::fromXNative(e->y), Xcb::fromXNative(e->width), Xcb::fromXNative(e->height));
     if (newgeom != m_frameGeometry) {
-        Q_EMIT frameGeometryAboutToChange(this);
+        Q_EMIT frameGeometryAboutToChange();
 
         QRectF old = m_frameGeometry;
         m_clientGeometry = newgeom;
         m_frameGeometry = newgeom;
         m_bufferGeometry = newgeom;
         checkOutput();
-        Q_EMIT bufferGeometryChanged(this, old);
-        Q_EMIT clientGeometryChanged(this, old);
-        Q_EMIT frameGeometryChanged(this, old);
-        Q_EMIT geometryShapeChanged(this, old);
+        Q_EMIT bufferGeometryChanged(old);
+        Q_EMIT clientGeometryChanged(old);
+        Q_EMIT frameGeometryChanged(old);
+        Q_EMIT geometryShapeChanged(old);
     }
 }
 

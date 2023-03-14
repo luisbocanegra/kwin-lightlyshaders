@@ -13,7 +13,6 @@
 #include "core/outputbackend.h"
 #include "decorations/decorationbridge.h"
 #include "decorations/settings.h"
-#include "deleted.h"
 #include "effects.h"
 #include "pointer_input.h"
 #include "virtualdesktops.h"
@@ -160,7 +159,6 @@ void TestXdgShellWindow::testXdgWindowRepositioning()
 
 void TestXdgShellWindow::initTestCase()
 {
-    qRegisterMetaType<KWin::Deleted *>();
     qRegisterMetaType<KWin::Window *>();
     qRegisterMetaType<KWayland::Client::Output *>();
 
@@ -307,7 +305,7 @@ void TestXdgShellWindow::testMinimizeActiveWindow()
     QVERIFY(window->isMinimized());
 
     // unminimize again
-    window->unminimize();
+    window->setMinimized(false);
     QVERIFY(!window->isMinimized());
     QVERIFY(!window->isActive());
     QVERIFY(window->wantsInput());
@@ -905,12 +903,12 @@ void TestXdgShellWindow::testMinimizeWindowWithTransients()
     QVERIFY(window->hasTransient(transient, false));
 
     // minimize the main window, the transient should be minimized as well
-    window->minimize();
+    window->setMinimized(true);
     QVERIFY(window->isMinimized());
     QVERIFY(transient->isMinimized());
 
     // unminimize the main window, the transient should be unminimized as well
-    window->unminimize();
+    window->setMinimized(false);
     QVERIFY(!window->isMinimized());
     QVERIFY(!transient->isMinimized());
 }

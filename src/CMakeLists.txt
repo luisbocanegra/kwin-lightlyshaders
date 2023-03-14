@@ -27,6 +27,10 @@ set_target_properties(kwin PROPERTIES
    SOVERSION ${PROJECT_VERSION_MAJOR}
 )
 
+target_compile_definitions(kwin PRIVATE
+    -DTRANSLATION_DOMAIN=\"kwin\"
+)
+
 target_sources(kwin PRIVATE
     3rdparty/xcursor.c
     activation.cpp
@@ -51,7 +55,6 @@ target_sources(kwin PRIVATE
     core/renderlayer.cpp
     core/renderlayerdelegate.cpp
     core/renderloop.cpp
-    core/rendertarget.cpp
     core/session.cpp
     core/session_consolekit.cpp
     core/session_logind.cpp
@@ -93,6 +96,7 @@ target_sources(kwin PRIVATE
     keyboard_layout_switching.cpp
     keyboard_repeat.cpp
     killwindow.cpp
+    kscreenintegration.cpp
     layers.cpp
     layershellv1integration.cpp
     layershellv1window.cpp
@@ -144,6 +148,7 @@ target_sources(kwin PRIVATE
     scripting/scripting.cpp
     scripting/scripting_logging.cpp
     scripting/scriptingutils.cpp
+    scripting/shortcuthandler.cpp
     scripting/tilemodel.cpp
     scripting/virtualdesktopmodel.cpp
     scripting/windowmodel.cpp
@@ -304,6 +309,9 @@ target_link_libraries(kwin_x11
     KWinX11Platform
     kwin
 )
+target_compile_definitions(kwin_x11 PRIVATE
+    -DTRANSLATION_DOMAIN=\"kwin\"
+)
 kcoreaddons_target_static_plugins(kwin_x11 "kwin/effects/plugins")
 
 install(TARGETS kwin ${KDE_INSTALL_TARGETS_DEFAULT_ARGS} LIBRARY NAMELINK_SKIP)
@@ -314,6 +322,9 @@ add_executable(kwin_wayland main_wayland.cpp)
 target_link_libraries(kwin_wayland
     kwin
     KWinXwaylandServerModule
+)
+target_compile_definitions(kwin_wayland PRIVATE
+    -DTRANSLATION_DOMAIN=\"kwin\"
 )
 kcoreaddons_target_static_plugins(kwin_wayland "kwin/effects/plugins")
 
@@ -344,10 +355,6 @@ add_custom_target(
     DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/org.kde.kwin.VirtualKeyboard.xml
             ${CMAKE_CURRENT_BINARY_DIR}/org.kde.KWin.TabletModeManager.xml
 )
-
-if (PipeWire_FOUND)
-    target_link_libraries(kwin_wayland KWinScreencastPlugin)
-endif()
 
 install(FILES kwin.kcfg DESTINATION ${KDE_INSTALL_KCFGDIR})
 if (KWIN_BUILD_NOTIFICATIONS)

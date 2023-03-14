@@ -10,7 +10,6 @@
 
 #include "core/output.h"
 #include "core/outputbackend.h"
-#include "deleted.h"
 #include "pointer_input.h"
 #include "screenedge.h"
 #include "virtualdesktops.h"
@@ -60,7 +59,6 @@ private:
 void StrutsTest::initTestCase()
 {
     qRegisterMetaType<KWin::Window *>();
-    qRegisterMetaType<KWin::Deleted *>();
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
     QVERIFY(waylandServer()->init(s_socketName));
     QMetaObject::invokeMethod(kwinApp()->outputBackend(), "setVirtualOutputs", Qt::DirectConnection, Q_ARG(QVector<QRect>, QVector<QRect>() << QRect(0, 0, 1280, 1024) << QRect(1280, 0, 1280, 1024)));
@@ -641,7 +639,7 @@ void StrutsTest::testX11Struts()
     xcb_flush(c.get());
     c.reset();
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
 
     // now struts should be removed again
@@ -739,7 +737,7 @@ void StrutsTest::test363804()
     xcb_flush(c.get());
     c.reset();
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
 }
 
@@ -839,7 +837,7 @@ void StrutsTest::testLeftScreenSmallerBottomAligned()
     QCOMPARE(window2->frameGeometry(), QRect(0, 306, 1366, 744));
     QCOMPARE(window2->maximizeMode(), KWin::MaximizeFull);
     // destroy window again
-    QSignalSpy normalWindowClosedSpy(window2, &X11Window::windowClosed);
+    QSignalSpy normalWindowClosedSpy(window2, &X11Window::closed);
     xcb_unmap_window(c.get(), w2);
     xcb_destroy_window(c.get(), w2);
     xcb_flush(c.get());
@@ -851,7 +849,7 @@ void StrutsTest::testLeftScreenSmallerBottomAligned()
     xcb_flush(c.get());
     c.reset();
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
 }
 

@@ -8,6 +8,9 @@
 
 #include "kwinglplatform.h"
 #include "kwingltexture.h"
+#include "kwinglutils.h"
+#include <spa/buffer/buffer.h>
+#include <spa/param/video/raw.h>
 
 namespace KWin
 {
@@ -25,30 +28,29 @@ static void mirrorVertically(uchar *data, int height, int stride)
     }
 }
 
-static GLenum closestGLType(const QImage &image)
+static GLenum closestGLType(spa_video_format format)
 {
-    switch (image.format()) {
-    case QImage::Format_RGB888:
+    switch (format) {
+    case SPA_VIDEO_FORMAT_RGB:
         return GL_RGB;
-    case QImage::Format_BGR888:
+    case SPA_VIDEO_FORMAT_BGR:
         return GL_BGR;
-    case QImage::Format_RGB32:
-    case QImage::Format_RGBX8888:
-    case QImage::Format_RGBA8888:
-    case QImage::Format_RGBA8888_Premultiplied:
+    case SPA_VIDEO_FORMAT_RGBx:
+    case SPA_VIDEO_FORMAT_RGBA:
         return GL_RGBA;
+    case SPA_VIDEO_FORMAT_BGRA:
+    case SPA_VIDEO_FORMAT_BGRx:
+        return GL_BGRA;
     default:
-        qDebug() << "unknown format" << image.format();
+        qDebug() << "unknown format" << format;
         return GL_RGBA;
     }
 }
 
-static void grabTexture(GLTexture *texture, QImage *image)
+static void doGrabTexture(GLTexture *texture, spa_data *spa, spa_video_format format)
 {
-    const bool invert = !texture->isYInverted();
-    Q_ASSERT(texture->size() == image->size());
-    bool isGLES = GLPlatform::instance()->isGLES();
-    bool invertNeeded = isGLES ^ invert;
+    const QSize size = texture->size();
+    const bool invertNeeded = GLPlatform::instance()->isGLES() ^ !(texture->contentTransforms() & TextureTransform::MirrorY);
     const bool invertNeededAndSupported = invertNeeded && GLPlatform::instance()->supports(PackInvert);
     GLboolean prev;
     if (invertNeededAndSupported) {
@@ -58,11 +60,11 @@ static void grabTexture(GLTexture *texture, QImage *image)
 
     texture->bind();
     if (GLPlatform::instance()->isGLES()) {
-        glReadPixels(0, 0, image->width(), image->height(), closestGLType(*image), GL_UNSIGNED_BYTE, (GLvoid *)image->bits());
+        glReadPixels(0, 0, size.width(), size.height(), closestGLType(format), GL_UNSIGNED_BYTE, spa->data);
     } else if (GLPlatform::instance()->glVersion() >= kVersionNumber(4, 5)) {
-        glGetTextureImage(texture->texture(), 0, closestGLType(*image), GL_UNSIGNED_BYTE, image->sizeInBytes(), image->bits());
+        glGetTextureImage(texture->texture(), 0, closestGLType(format), GL_UNSIGNED_BYTE, spa->chunk->size, spa->data);
     } else {
-        glGetTexImage(texture->target(), 0, closestGLType(*image), GL_UNSIGNED_BYTE, image->bits());
+        glGetTexImage(texture->target(), 0, closestGLType(format), GL_UNSIGNED_BYTE, spa->data);
     }
 
     if (invertNeededAndSupported) {
@@ -70,7 +72,33 @@ static void grabTexture(GLTexture *texture, QImage *image)
             glPixelStorei(GL_PACK_INVERT_MESA, prev);
         }
     } else if (invertNeeded) {
-        mirrorVertically(image->bits(), image->height(), image->bytesPerLine());
+        mirrorVertically(static_cast<uchar *>(spa->data), size.height(), spa->chunk->stride);
+    }
+}
+
+static void grabTexture(GLTexture *texture, spa_data *spa, spa_video_format format)
+{
+    // transform to correct orientation with the GPU first
+    const QSize size = texture->contentTransformMatrix().mapRect(QRect(QPoint(), texture->size())).size();
+    constexpr auto everythingExceptY = TextureTransforms() | TextureTransform::MirrorX | TextureTransform::Rotate90 | TextureTransform::Rotate180 | TextureTransform::Rotate270;
+    if (texture->contentTransforms() & everythingExceptY) {
+        // need to transform the texture to a usable transformation first
+        GLTexture backingTexture(GL_RGBA8, size);
+        GLFramebuffer fbo(&backingTexture);
+
+        ShaderBinder shaderBinder(ShaderTrait::MapTexture);
+        QMatrix4x4 projectionMatrix;
+        projectionMatrix.ortho(QRect(QPoint(), size));
+        shaderBinder.shader()->setUniform(GLShader::ModelViewProjectionMatrix, projectionMatrix);
+
+        GLFramebuffer::pushFramebuffer(&fbo);
+        texture->bind();
+        texture->render(size, 1);
+        texture->unbind();
+        GLFramebuffer::popFramebuffer();
+        doGrabTexture(&backingTexture, spa, format);
+    } else {
+        doGrabTexture(texture, spa, format);
     }
 }
 

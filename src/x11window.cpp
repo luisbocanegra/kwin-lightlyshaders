@@ -46,6 +46,7 @@
 #include <QFile>
 #include <QFileInfo>
 #include <QMouseEvent>
+#include <QPainter>
 #include <QProcess>
 // xcb
 #include <xcb/xcb_icccm.h>
@@ -194,7 +195,32 @@ void X11DecorationRenderer::render(const QRegion &region)
         if (!geo.isValid()) {
             return;
         }
-        QImage image = renderToImage(geo);
+
+        // Guess the pixel format of the X pixmap into which the QImage will be copied.
+        QImage::Format format;
+        const int depth = client()->window()->depth();
+        switch (depth) {
+        case 30:
+            format = QImage::Format_A2RGB30_Premultiplied;
+            break;
+        case 24:
+        case 32:
+            format = QImage::Format_ARGB32_Premultiplied;
+            break;
+        default:
+            qCCritical(KWIN_CORE) << "Unsupported client depth" << depth;
+            format = QImage::Format_ARGB32_Premultiplied;
+            break;
+        };
+
+        QImage image(geo.width(), geo.height(), format);
+        image.fill(Qt::transparent);
+        QPainter p(&image);
+        p.setRenderHint(QPainter::Antialiasing);
+        p.setWindow(geo);
+        p.setClipRect(geo);
+        renderToPainter(&p, geo);
+
         xcb_put_image(c, XCB_IMAGE_FORMAT_Z_PIXMAP, client()->window()->frameId(), m_gc,
                       image.width(), image.height(), geo.x(), geo.y(), 0, client()->window()->depth(),
                       image.sizeInBytes(), image.constBits());
@@ -341,7 +367,7 @@ void X11Window::releaseWindow(bool on_shutdown)
     if (isInteractiveMoveResize()) {
         Q_EMIT interactiveMoveResizeFinished();
     }
-    Q_EMIT windowClosed(this, del);
+    Q_EMIT closed(del);
     finishCompositing();
     workspace()->rulebook()->discardUsed(this, true); // Remove ForceTemporarily rules
     StackingUpdatesBlocker blocker(workspace());
@@ -389,9 +415,9 @@ void X11Window::releaseWindow(bool on_shutdown)
     unblockGeometryUpdates(); // Don't use GeometryUpdatesBlocker, it would now set the geometry
     if (!on_shutdown) {
         disownDataPassedToDeleted();
-        del->unrefWindow();
+        del->unref();
     }
-    deleteClient(this);
+    unref();
     ungrabXServer();
 }
 
@@ -407,7 +433,7 @@ void X11Window::destroyWindow()
     if (isInteractiveMoveResize()) {
         Q_EMIT interactiveMoveResizeFinished();
     }
-    Q_EMIT windowClosed(this, del);
+    Q_EMIT closed(del);
     finishCompositing(ReleaseReason::Destroyed);
     workspace()->rulebook()->discardUsed(this, true); // Remove ForceTemporarily rules
     StackingUpdatesBlocker blocker(workspace());
@@ -427,8 +453,8 @@ void X11Window::destroyWindow()
     m_frame.reset();
     unblockGeometryUpdates(); // Don't use GeometryUpdatesBlocker, it would now set the geometry
     disownDataPassedToDeleted();
-    del->unrefWindow();
-    deleteClient(this);
+    del->unref();
+    unref();
 }
 
 /**
@@ -1184,7 +1210,7 @@ void X11Window::createDecoration(const QRectF &oldgeom)
 
     moveResize(QRectF(calculateGravitation(false), clientSizeToFrameSize(clientSize())));
     maybeCreateX11DecorationRenderer();
-    Q_EMIT geometryShapeChanged(this, oldgeom);
+    Q_EMIT geometryShapeChanged(oldgeom);
 }
 
 void X11Window::destroyDecoration()
@@ -1196,7 +1222,7 @@ void X11Window::destroyDecoration()
         maybeDestroyX11DecorationRenderer();
         moveResize(QRectF(grav, clientSizeToFrameSize(clientSize())));
         if (!isZombie()) {
-            Q_EMIT geometryShapeChanged(this, oldgeom);
+            Q_EMIT geometryShapeChanged(oldgeom);
         }
     }
     m_decoInputExtent.reset();
@@ -1287,7 +1313,7 @@ void X11Window::setClientFrameExtents(const NETStrut &strut)
     moveResize(moveResizeGeometry());
 
     // This will invalidate the window quads cache.
-    Q_EMIT geometryShapeChanged(this, frameGeometry());
+    Q_EMIT geometryShapeChanged(frameGeometry());
 }
 
 /**
@@ -1390,7 +1416,7 @@ void X11Window::updateShape()
     // Decoration mask (i.e. 'else' here) setting is done in setMask()
     // when the decoration calls it or when the decoration is created/destroyed
     updateInputShape();
-    Q_EMIT geometryShapeChanged(this, frameGeometry());
+    Q_EMIT geometryShapeChanged(frameGeometry());
 }
 
 static Xcb::Window shape_helper_window(XCB_WINDOW_NONE);
@@ -4195,7 +4221,7 @@ void X11Window::moveResizeInternal(const QRectF &rect, MoveResizeMode mode)
         return;
     }
 
-    Q_EMIT frameGeometryAboutToChange(this);
+    Q_EMIT frameGeometryAboutToChange();
     const QRectF oldBufferGeometry = m_lastBufferGeometry;
     const QRectF oldFrameGeometry = m_lastFrameGeometry;
     const QRectF oldClientGeometry = m_lastClientGeometry;
@@ -4215,18 +4241,18 @@ void X11Window::moveResizeInternal(const QRectF &rect, MoveResizeMode mode)
     workspace()->updateStackingOrder();
 
     if (oldBufferGeometry != m_bufferGeometry) {
-        Q_EMIT bufferGeometryChanged(this, oldBufferGeometry);
+        Q_EMIT bufferGeometryChanged(oldBufferGeometry);
     }
     if (oldClientGeometry != m_clientGeometry) {
-        Q_EMIT clientGeometryChanged(this, oldClientGeometry);
+        Q_EMIT clientGeometryChanged(oldClientGeometry);
     }
     if (oldFrameGeometry != m_frameGeometry) {
-        Q_EMIT frameGeometryChanged(this, oldFrameGeometry);
+        Q_EMIT frameGeometryChanged(oldFrameGeometry);
     }
     if (oldOutput != m_output) {
         Q_EMIT outputChanged();
     }
-    Q_EMIT geometryShapeChanged(this, oldFrameGeometry);
+    Q_EMIT geometryShapeChanged(oldFrameGeometry);
 }
 
 void X11Window::updateServerGeometry()
@@ -4326,7 +4352,7 @@ void X11Window::maximize(MaximizeMode mode)
         maximize(MaximizeRestore); // restore
     }
 
-    Q_EMIT maximizedAboutToChange(this, mode);
+    Q_EMIT maximizedAboutToChange(mode);
     max_mode = mode;
 
     // save sizes for restoring, if maximalizing
@@ -4353,7 +4379,7 @@ void X11Window::maximize(MaximizeMode mode)
     // call into decoration update borders
     if (isDecorated() && decoration()->client() && !(options->borderlessMaximizedWindows() && max_mode == KWin::MaximizeFull)) {
         changeMaximizeRecursion = true;
-        const auto c = decoration()->client().toStrongRef();
+        const auto c = decoration()->client();
         if ((max_mode & MaximizeVertical) != (old_mode & MaximizeVertical)) {
             Q_EMIT c->maximizedVerticallyChanged(max_mode & MaximizeVertical);
         }
@@ -4536,7 +4562,7 @@ void X11Window::maximize(MaximizeMode mode)
     Q_EMIT quickTileModeChanged();
 
     if (max_mode != old_mode) {
-        Q_EMIT maximizedChanged(this, max_mode);
+        Q_EMIT maximizedChanged();
     }
 }
 

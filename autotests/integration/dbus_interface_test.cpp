@@ -12,7 +12,6 @@
 
 #include "atoms.h"
 #include "core/outputbackend.h"
-#include "deleted.h"
 #include "rules.h"
 #include "virtualdesktops.h"
 #include "wayland_server.h"
@@ -54,7 +53,6 @@ private Q_SLOTS:
 
 void TestDbusInterface::initTestCase()
 {
-    qRegisterMetaType<KWin::Deleted *>();
     qRegisterMetaType<KWin::Window *>();
 
     QSignalSpy applicationStartedSpy(kwinApp(), &Application::started);
@@ -207,7 +205,7 @@ void TestDbusInterface::testGetWindowInfoXdgShellClient()
 
     // finally close window
     const auto id = window->internalId();
-    QSignalSpy windowClosedSpy(window, &Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &Window::closed);
     shellSurface.reset();
     surface.reset();
     QVERIFY(windowClosedSpy.wait());
@@ -365,7 +363,7 @@ void TestDbusInterface::testGetWindowInfoX11Client()
     xcb_unmap_window(c.get(), windowId);
     xcb_flush(c.get());
 
-    QSignalSpy windowClosedSpy(window, &X11Window::windowClosed);
+    QSignalSpy windowClosedSpy(window, &X11Window::closed);
     QVERIFY(windowClosedSpy.wait());
     xcb_destroy_window(c.get(), windowId);
     c.reset();

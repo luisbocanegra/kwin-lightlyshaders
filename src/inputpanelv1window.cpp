@@ -157,12 +157,12 @@ void InputPanelV1Window::destroyWindow()
     markAsZombie();
 
     Deleted *deleted = Deleted::create(this);
-    Q_EMIT windowClosed(this, deleted);
+    Q_EMIT closed(deleted);
     StackingUpdatesBlocker blocker(workspace());
     waylandServer()->removeWindow(this);
-    deleted->unrefWindow();
+    deleted->unref();
 
-    delete this;
+    unref();
 }
 
 NET::WindowType InputPanelV1Window::windowType(bool, int) const
@@ -182,7 +182,6 @@ void InputPanelV1Window::moveResizeInternal(const QRectF &rect, MoveResizeMode m
 
 void InputPanelV1Window::handleMapped()
 {
-    updateDepth();
     maybeShow();
 }
 
@@ -190,7 +189,7 @@ void InputPanelV1Window::maybeShow()
 {
     const bool shouldShow = m_mode == Mode::Overlay || (m_mode == Mode::VirtualKeyboard && m_allowed && m_virtualKeyboardShouldBeShown);
     if (shouldShow && !isZombie() && surface()->isMapped()) {
-        setReadyForPainting();
+        markAsMapped();
         reposition();
         showClient();
     }
